@@ -1,1 +1,0 @@
-ALTER TABLE chart_nodes ADD COLUMN divorced INTEGER NOT NULL DEFAULT 0 CHECK(divorced IN(0,1));

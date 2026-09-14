@@ -7,8 +7,10 @@ import "@xyflow/react/dist/style.css";
 import "./styles.css";
 const client = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, staleTime: 20_000 },
-    mutations: { retry: 0 },
+    // ローカル保存なのでネットワーク再試行は無意味。networkMode を明示しないと
+    // オフライン時にクエリが paused のまま止まる (PWA でオフライン利用するため必須)。
+    queries: { retry: false, networkMode: "always", staleTime: 20_000 },
+    mutations: { retry: 0, networkMode: "always" },
   },
 });
 async function clearLegacyWorker() {
