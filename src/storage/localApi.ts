@@ -1,4 +1,5 @@
 import type { User } from "../types";
+import { createBackupApi } from "./localBackup";
 import { createChartApi } from "./localCharts";
 import { createSettingsApi } from "./localSettings";
 import {
@@ -26,6 +27,7 @@ export function createLocalApi(store: DocumentStore) {
     logout: async () => undefined,
     ...createChartApi(repository),
     ...createSettingsApi(repository),
+    ...createBackupApi(repository),
     /** 設定画面の「このブラウザの全データを削除」から呼ぶ (Phase 5)。 */
     clearAllData: () => repository.clear(),
   };
@@ -71,4 +73,9 @@ export const localApi = {
   updateGender: lazy((api) => api.updateGender),
   deleteGender: lazy((api) => api.deleteGender),
   clearAllData: lazy((api) => api.clearAllData),
+  backupStatus: lazy((api) => api.backupStatus),
+  createBackup: lazy((api) => api.createBackup),
+  markExported: lazy((api) => api.markExported),
+  inspectBackup: lazy((api) => api.inspectBackup),
+  importBackup: lazy((api) => api.importBackup),
 };

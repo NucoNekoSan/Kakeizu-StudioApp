@@ -1,6 +1,7 @@
 import { useCallback, useState, type RefObject } from "react";
 import type { Node } from "@xyflow/react";
 import type { FamilyNodeData } from "../../familyGraph";
+import { dataUrlToBlob, saveFile } from "../../storage/fileIo";
 import {
   drawPngFrame,
   getPngViewport,
@@ -40,13 +41,18 @@ export function usePngExport(
               !node.classList.contains("react-flow__background")),
         }),
         context = canvas.getContext("2d"),
-        link = document.createElement("a"),
         stamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, "-");
       if (!context) throw new Error("PNG canvas context was not found");
       drawPngFrame(context);
-      link.download = `${title || "相関図"}-${stamp}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      await saveFile(
+        `${title || "相関図"}-${stamp}.png`,
+        dataUrlToBlob(canvas.toDataURL("image/png")),
+        {
+          description: "PNG画像",
+          mimeType: "image/png",
+          extension: ".png",
+        },
+      );
     } catch {
       setExportError("PNGの保存に失敗しました。再度お試しください。");
     } finally {
