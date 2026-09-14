@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { GitBranch, LayoutGrid, LogOut, Settings, X } from "lucide-react";
 import { api } from "../api";
+import TemporaryModeBanner from "../features/storage/TemporaryModeBanner";
 import type { Shape } from "../types";
 
 export function Logo() {
@@ -44,6 +45,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </button>
         </nav>
       </header>
+      <TemporaryModeBanner />
       {children}
     </div>
   );

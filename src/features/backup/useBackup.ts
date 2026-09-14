@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../api";
 import { getErrorMessage } from "../../domain";
-import { saveJsonFile, readTextFile } from "../../storage/fileIo";
+import { readTextFile, saveJsonFile } from "../../storage/fileIo";
 import type { ImportMode } from "../../storage/backupModel";
 
 export const backupStatusKey = ["backup-status"];
@@ -25,32 +25,37 @@ export function useBackup() {
     await queryClient.invalidateQueries();
   }, [queryClient]);
 
-  const exportBackup = useCallback(async () => {
-    setBusy("export");
-    setError("");
-    setMessage("");
-    try {
-      const { fileName, json } = await api.createBackup();
-      const saved = await saveJsonFile(fileName, json);
-      if (!saved) return;
-      await api.markExported();
-      await queryClient.invalidateQueries({ queryKey: backupStatusKey });
-      setMessage(`${fileName} を書き出しました。`);
-    } catch (caught) {
-      setError(getErrorMessage(caught));
-    } finally {
-      setBusy(null);
-    }
-  }, [queryClient]);
+  const exportBackup = useCallback(
+    async (passphrase?: string) => {
+      setBusy("export");
+      setError("");
+      setMessage("");
+      try {
+        const { fileName, json } = await api.createBackup(passphrase);
+        const saved = await saveJsonFile(fileName, json);
+        if (!saved) return;
+        await api.markExported();
+        await queryClient.invalidateQueries({ queryKey: backupStatusKey });
+        setMessage(
+          `${fileName} を書き出しました。` +
+            (passphrase ? "パスフレーズを忘れると復元できません。" : ""),
+        );
+      } catch (caught) {
+        setError(getErrorMessage(caught));
+      } finally {
+        setBusy(null);
+      }
+    },
+    [queryClient],
+  );
 
   const importBackup = useCallback(
-    async (file: File, mode: ImportMode) => {
+    async (raw: string, mode: ImportMode, passphrase?: string) => {
       setBusy("import");
       setError("");
       setMessage("");
       try {
-        const raw = await readTextFile(file);
-        const result = await api.importBackup(raw, mode);
+        const result = await api.importBackup(raw, mode, passphrase);
         await refresh();
         setMessage(
           result.mode === "replace"
@@ -70,5 +75,13 @@ export function useBackup() {
     [refresh],
   );
 
-  return { busy, error, message, fileRef, exportBackup, importBackup };
+  return {
+    busy,
+    error,
+    message,
+    fileRef,
+    exportBackup,
+    importBackup,
+    readTextFile,
+  };
 }

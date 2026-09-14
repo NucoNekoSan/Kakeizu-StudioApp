@@ -5,9 +5,15 @@ import { createSettingsApi } from "./localSettings";
 import {
   createIndexedDbStore,
   createMemoryStore,
+  DATABASE_NAME,
   type DocumentStore,
 } from "./kv";
 import { Repository } from "./repository";
+import {
+  appStorageKeys,
+  readStorageMode,
+  STORAGE_MODE_KEY,
+} from "./storageMode";
 
 /**
  * ローカル版のセッション。サーバーがないので認証は行わない。
@@ -36,13 +42,51 @@ export function createLocalApi(store: DocumentStore) {
 export type LocalApi = ReturnType<typeof createLocalApi>;
 
 /**
- * 実行環境に応じたストアを1度だけ解決する。
- * IndexedDB が使えない環境 (プライベートウィンドウの一部、file:// 等) では
+ * 実行環境と保存モードに応じたストアを1度だけ解決する。
+ *
+ * 「今回だけ使う」を選んだ場合はインメモリ実装を返し、IndexedDB へは触れない。
+ * IndexedDB が使えない環境 (プライベートウィンドウの一部、file:// 等) でも
  * インメモリへ自動フォールバックし、アプリは動くがタブを閉じると消える。
  */
 let resolved: Promise<DocumentStore> | null = null;
 const defaultStore = () =>
-  (resolved ??= createIndexedDbStore().catch(() => createMemoryStore()));
+  (resolved ??=
+    readStorageMode() === "session"
+      ? Promise.resolve(createMemoryStore())
+      : createIndexedDbStore().catch(() => createMemoryStore()));
+
+/** 保存モードを切り替えたときに、次の呼び出しでストアを取り直す。 */
+export const resetStoreCache = () => {
+  resolved = null;
+};
+
+/**
+ * この端末に残るアプリのデータをすべて消す。
+ * IndexedDB のデータベースごと削除し、localStorage に残る同居データの
+ * 旧キー (kakeizu:cohabitation-*) もまとめて消す。
+ */
+export async function clearBrowserData(): Promise<void> {
+  resolved = null;
+  for (const key of appStorageKeys())
+    if (key !== STORAGE_MODE_KEY) {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // 消せないキーがあっても続行する
+      }
+    }
+  await deleteDatabase();
+}
+
+const deleteDatabase = () =>
+  new Promise<void>((resolve) => {
+    if (typeof indexedDB === "undefined") return resolve();
+    const request = indexedDB.deleteDatabase(DATABASE_NAME);
+    request.onsuccess = () => resolve();
+    request.onerror = () => resolve();
+    // 別タブが開いているとブロックされる。待ち続けないよう解決してしまう。
+    request.onblocked = () => resolve();
+  });
 
 const lazy =
   <A extends unknown[], R>(
@@ -77,5 +121,6 @@ export const localApi = {
   createBackup: lazy((api) => api.createBackup),
   markExported: lazy((api) => api.markExported),
   inspectBackup: lazy((api) => api.inspectBackup),
+  isEncryptedFile: lazy((api) => api.isEncryptedFile),
   importBackup: lazy((api) => api.importBackup),
 };

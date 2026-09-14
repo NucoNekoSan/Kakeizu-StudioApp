@@ -8,6 +8,8 @@ import {
   type BackupFileV1,
   type ImportMode,
 } from "./backupModel";
+import { decryptBackup, encryptBackup, isEncryptedBackup } from "./crypto";
+import { ApiError } from "../api/errors";
 import type { Repository } from "./repository";
 
 export interface BackupStatus {
@@ -27,6 +29,24 @@ export interface ImportResult {
 const APP_VERSION = "3.0.0-dev";
 const DAY = 24 * 60 * 60 * 1000;
 
+/** 暗号化されていれば復号し、平文の JSON 文字列を返す。 */
+async function unseal(raw: string, passphrase?: string): Promise<string> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return raw; // 形式エラーは parseBackup 側で統一して扱う
+  }
+  if (!isEncryptedBackup(parsed)) return raw;
+  if (!passphrase)
+    throw new ApiError(
+      401,
+      "PASSPHRASE_REQUIRED",
+      "このファイルは暗号化されています。パスフレーズを入力してください。",
+    );
+  return decryptBackup(parsed, passphrase);
+}
+
 export function createBackupApi(repository: Repository) {
   return {
     backupStatus: async (): Promise<BackupStatus> => {
@@ -44,21 +64,37 @@ export function createBackupApi(repository: Repository) {
       };
     },
 
-    /** 書き出すだけで保存はしない。ファイル保存は呼び出し側 (fileIo) が行う。 */
-    createBackup: async (): Promise<{
+    /**
+     * 書き出すだけで保存はしない。ファイル保存は呼び出し側 (fileIo) が行う。
+     * パスフレーズを渡すとファイル全体を暗号化する。
+     */
+    createBackup: async (
+      passphrase?: string,
+    ): Promise<{
       fileName: string;
       json: string;
       backup: BackupFileV1;
+      encrypted: boolean;
     }> => {
       const [definitions, charts] = await Promise.all([
         repository.definitions(),
         repository.allCharts(),
       ]);
       const backup = buildBackup(definitions, charts, APP_VERSION);
+      const plain = JSON.stringify(backup, null, 2);
+      if (!passphrase)
+        return {
+          fileName: backupFileName(),
+          json: plain,
+          backup,
+          encrypted: false,
+        };
+      const sealed = await encryptBackup(plain, passphrase);
       return {
-        fileName: backupFileName(),
-        json: JSON.stringify(backup, null, 2),
+        fileName: backupFileName().replace(/\.json$/, "-encrypted.json"),
+        json: JSON.stringify(sealed),
         backup,
+        encrypted: true,
       };
     },
 
@@ -71,9 +107,18 @@ export function createBackupApi(repository: Repository) {
       });
     },
 
+    /** ファイルが暗号化されているかだけを先に判定する (入力欄の出し分け用)。 */
+    isEncryptedFile: async (raw: string): Promise<boolean> => {
+      try {
+        return isEncryptedBackup(JSON.parse(raw));
+      } catch {
+        return false;
+      }
+    },
+
     /** ファイルの中身だけ検証する (取り込み前の確認表示用)。 */
-    inspectBackup: async (raw: string) => {
-      const backup = parseBackup(raw);
+    inspectBackup: async (raw: string, passphrase?: string) => {
+      const backup = parseBackup(await unseal(raw, passphrase));
       return {
         exportedAt: backup.exportedAt,
         appVersion: backup.appVersion,
@@ -85,8 +130,9 @@ export function createBackupApi(repository: Repository) {
     importBackup: async (
       raw: string,
       mode: ImportMode = "merge",
+      passphrase?: string,
     ): Promise<ImportResult> => {
-      const backup = parseBackup(raw);
+      const backup = parseBackup(await unseal(raw, passphrase));
 
       if (mode === "replace") {
         // 置き換えは現在のデータを完全に捨てる。UI 側で必ず確認を取ること。

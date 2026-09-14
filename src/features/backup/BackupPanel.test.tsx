@@ -20,6 +20,7 @@ vi.mock("../../api", () => ({
     createBackup: vi.fn(),
     markExported: vi.fn(),
     importBackup: vi.fn(),
+    isEncryptedFile: vi.fn(async () => false),
   },
   ApiError: class ApiError extends Error {},
 }));
@@ -50,6 +51,7 @@ describe("BackupPanel", () => {
       fileName: "kakeizu-backup-20260914-0705.json",
       json: "{}",
       backup: {} as never,
+      encrypted: false,
     });
     vi.mocked(saveJsonFile).mockResolvedValue(true);
   });
@@ -101,7 +103,7 @@ describe("BackupPanel", () => {
 
     fireEvent.click(screen.getByText("読み込む"));
     await waitFor(() =>
-      expect(api.importBackup).toHaveBeenCalledWith("{}", "replace"),
+      expect(api.importBackup).toHaveBeenCalledWith("{}", "replace", undefined),
     );
   });
 });

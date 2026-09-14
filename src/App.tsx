@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "./api";
 import { Spinner } from "./components/ui";
 import AuthPage from "./features/auth/AuthPage";
+import StorageModeGate from "./features/storage/StorageModeGate";
 import ChartsPage from "./features/charts/ChartsPage";
 import SettingsPage from "./features/settings/SettingsPage";
 
@@ -24,37 +25,39 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<AuthPage />} />
-      <Route
-        path="/charts"
-        element={
-          <RequireAuth>
-            <ChartsPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/charts/:id"
-        element={
-          <RequireAuth>
-            <Suspense
-              fallback={<Spinner label="エディターを読み込んでいます" />}
-            >
-              <ChartEditor />
-            </Suspense>
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <RequireAuth>
-            <SettingsPage />
-          </RequireAuth>
-        }
-      />
-      <Route path="*" element={<Navigate to="/charts" replace />} />
-    </Routes>
+    <StorageModeGate>
+      <Routes>
+        <Route path="/login" element={<AuthPage />} />
+        <Route
+          path="/charts"
+          element={
+            <RequireAuth>
+              <ChartsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/charts/:id"
+          element={
+            <RequireAuth>
+              <Suspense
+                fallback={<Spinner label="エディターを読み込んでいます" />}
+              >
+                <ChartEditor />
+              </Suspense>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <RequireAuth>
+              <SettingsPage />
+            </RequireAuth>
+          }
+        />
+        <Route path="*" element={<Navigate to="/charts" replace />} />
+      </Routes>
+    </StorageModeGate>
   );
 }

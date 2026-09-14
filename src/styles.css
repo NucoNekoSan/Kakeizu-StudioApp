@@ -1330,3 +1330,109 @@ p {
 .backup-reminder .button {
   flex: none;
 }
+
+/* ---- 保存モードと危険操作 ---- */
+.welcome {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+.welcome-card {
+  display: grid;
+  gap: 14px;
+  width: min(560px, 100%);
+  padding: 28px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+.welcome-card h1 {
+  margin: 6px 0 0;
+  font-family: var(--font-serif);
+  font-size: 1.32rem;
+}
+.welcome-lead {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+.welcome-option {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.welcome-option:hover,
+.welcome-option:focus-visible {
+  border-color: var(--forest-2);
+  background: var(--mint);
+}
+.welcome-option strong {
+  display: block;
+  margin-bottom: 4px;
+}
+.welcome-option small {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.welcome-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.temporary-banner {
+  padding: 8px 18px;
+  background: var(--forest);
+  color: var(--paper);
+  font-size: 0.85rem;
+  text-align: center;
+}
+.storage-mode,
+.danger-zone {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.danger-zone {
+  border-color: var(--danger);
+}
+.storage-mode h3,
+.danger-zone h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+.storage-mode p,
+.danger-zone p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+.danger-zone .button.danger {
+  justify-self: start;
+}
+.backup-protect {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.export-caution {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}

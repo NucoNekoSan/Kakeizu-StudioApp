@@ -3,22 +3,28 @@ import { Download, Upload } from "lucide-react";
 import { Modal, Notice, Spinner } from "../../components/ui";
 import { formatDate } from "../../domain";
 import type { ImportMode } from "../../storage/backupModel";
+import { api } from "../../api";
+import DangerZone from "../storage/DangerZone";
+import StorageModeSection from "../storage/StorageModeSection";
 import { useBackup, useBackupStatus } from "./useBackup";
 
 function ImportConfirm({
-  file,
+  fileName,
+  encrypted,
   onCancel,
   onConfirm,
 }: {
-  file: File;
+  fileName: string;
+  encrypted: boolean;
   onCancel(): void;
-  onConfirm(mode: ImportMode): void;
+  onConfirm(mode: ImportMode, passphrase?: string): void;
 }) {
   const [mode, setMode] = useState<ImportMode>("merge");
+  const [passphrase, setPassphrase] = useState("");
   return (
     <Modal title="バックアップを読み込む" onClose={onCancel}>
       <div className="modal-body">
-        <p className="muted">{file.name}</p>
+        <p className="muted">{fileName}</p>
         <label className="check">
           <input
             type="radio"
@@ -42,6 +48,18 @@ function ImportConfirm({
             この端末に保存されている相関図と表示設定はすべて削除され、ファイルの内容に置き換わります。必要な場合は先に書き出してください。
           </Notice>
         )}
+        {encrypted && (
+          <label>
+            パスフレーズ
+            <input
+              type="password"
+              autoComplete="off"
+              value={passphrase}
+              onChange={(event) => setPassphrase(event.target.value)}
+              placeholder="書き出したときのパスフレーズ"
+            />
+          </label>
+        )}
         <div className="modal-actions">
           <button type="button" className="button" onClick={onCancel}>
             キャンセル
@@ -49,7 +67,8 @@ function ImportConfirm({
           <button
             type="button"
             className="button primary"
-            onClick={() => onConfirm(mode)}
+            disabled={encrypted && !passphrase}
+            onClick={() => onConfirm(mode, encrypted ? passphrase : undefined)}
           >
             読み込む
           </button>
@@ -61,9 +80,23 @@ function ImportConfirm({
 
 export default function BackupPanel() {
   const status = useBackupStatus();
-  const { busy, error, message, fileRef, exportBackup, importBackup } =
-    useBackup();
-  const [pending, setPending] = useState<File | null>(null);
+  const {
+    busy,
+    error,
+    message,
+    fileRef,
+    exportBackup,
+    importBackup,
+    readTextFile,
+  } = useBackup();
+  const [pending, setPending] = useState<{
+    fileName: string;
+    raw: string;
+    encrypted: boolean;
+  } | null>(null);
+  const [protect, setProtect] = useState(false);
+  const [passphrase, setPassphrase] = useState("");
+  const [acknowledged, setAcknowledged] = useState(false);
   const liveRef = useRef<HTMLDivElement>(null);
 
   if (status.isLoading) return <Spinner />;
@@ -94,12 +127,50 @@ export default function BackupPanel() {
       {error && <Notice tone="error">{error}</Notice>}
       {message && <Notice tone="success">{message}</Notice>}
 
+      <div className="backup-protect">
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={protect}
+            onChange={(event) => {
+              setProtect(event.target.checked);
+              setPassphrase("");
+              setAcknowledged(false);
+            }}
+          />
+          パスフレーズで保護して書き出す
+        </label>
+        {protect && (
+          <>
+            <label>
+              パスフレーズ
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={passphrase}
+                onChange={(event) => setPassphrase(event.target.value)}
+              />
+            </label>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(event) => setAcknowledged(event.target.checked)}
+              />
+              パスフレーズを忘れると復元できないことを理解しました
+            </label>
+          </>
+        )}
+      </div>
+
       <div className="backup-actions">
         <button
           type="button"
           className="button primary"
-          onClick={exportBackup}
-          disabled={busy !== null}
+          onClick={() => void exportBackup(protect ? passphrase : undefined)}
+          disabled={
+            busy !== null || (protect && (!passphrase || !acknowledged))
+          }
         >
           <Download size={17} aria-hidden="true" />
           {busy === "export" ? "書き出しています…" : "JSONファイルに書き出す"}
@@ -118,9 +189,13 @@ export default function BackupPanel() {
           type="file"
           accept="application/json,.json"
           className="visually-hidden"
-          onChange={(event) => {
+          onChange={async (event) => {
             const file = event.target.files?.[0];
-            if (file) setPending(file);
+            if (!file) return;
+            // ここで一度だけ読み、暗号化の有無で入力欄を出し分ける
+            const raw = await readTextFile(file);
+            const encrypted = await api.isEncryptedFile(raw).catch(() => false);
+            setPending({ fileName: file.name, raw, encrypted });
           }}
         />
       </div>
@@ -140,17 +215,21 @@ export default function BackupPanel() {
         </ul>
       </div>
 
+      <StorageModeSection />
+      <DangerZone />
+
       {pending && (
         <ImportConfirm
-          file={pending}
+          fileName={pending.fileName}
+          encrypted={pending.encrypted}
           onCancel={() => {
             setPending(null);
             if (fileRef.current) fileRef.current.value = "";
           }}
-          onConfirm={(mode) => {
-            const file = pending;
+          onConfirm={(mode, entered) => {
+            const { raw } = pending;
             setPending(null);
-            void importBackup(file, mode);
+            void importBackup(raw, mode, entered);
           }}
         />
       )}
