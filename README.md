@@ -4,6 +4,11 @@
 
 **データは利用者の端末内にのみ保存され、サーバーへ送信されません。**
 
+## 提供形態
+
+- **ブラウザ版**: Cloudflare Pages で配信する静的サイト
+- **ローカルインストール版**: 同じURLからPWAとしてインストール。オフラインで動作し、コード署名を必要としない
+
 ## 設計方針
 
 想定利用者に福祉・医療の対人援助職や士業が含まれるため、メモ欄には支援対象者の病歴や障害に関する記述が入り得ます。これは個人情報保護法上の要配慮個人情報にあたるため、提供者がサーバーで預からない構成を選んでいます。
@@ -41,7 +46,9 @@
 
 - Frontend: React 19 / TypeScript / Vite / React Flow / TanStack Query
 - Storage: IndexedDB（`idb-keyval`）
+- PWA: vite-plugin-pwa（Workbox）
 - Testing: Vitest / Testing Library
+- 外部フォント・解析タグ・CDNは使用しません（自オリジン以外への通信がゼロになるため）
 
 ## ローカル開発
 
@@ -63,15 +70,19 @@ npm run format:check
 npm run build
 ```
 
-## 配布
+## 配信
 
 ```powershell
 npm run build
 ```
 
-`dist` をそのまま静的ホスティングへ配置します。`public/_headers` がCloudflare Pages向けのセキュリティヘッダを含みます。別のホスティングを使う場合は、同等のヘッダをサーバー側で設定してください。
+`dist` をそのまま静的ホスティングへ配置します。`public/_headers` がセキュリティヘッダとキャッシュ制御、`public/_redirects` がSPAのルーティングを担います。
 
-サブディレクトリに配置する場合は `VITE_BASE_PATH` を公開パスに合わせます。HTTPSへの転送とHSTSはホスティング側で設定します。
+手順の詳細は [docs/deployment.md](docs/deployment.md) を参照してください。別のホスティングを使う場合は、同等のヘッダをサーバー側で設定してください。
+
+サブディレクトリに配置する場合は `VITE_BASE_PATH` を公開パスに合わせます。
+
+アイコンを作り直す場合は `npm run icons` を実行します（画像処理ライブラリへの依存を避け、Node標準のzlibでPNGを生成しています）。
 
 ## 環境変数
 
