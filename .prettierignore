@@ -1,7 +1,5 @@
 dist/
 release/
-server/vendor/
-server/**/*.php
 .claude/
 package-lock.json
 *.sqlite*

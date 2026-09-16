@@ -1,6 +1,14 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Shippori+Mincho:wght@600;700&display=swap");
 :root {
-  font-family: "Noto Sans JP", "Yu Gothic UI", sans-serif;
+  /* 外部フォントは読み込まない。CDN への通信は利用者の IP を第三者へ送ることになり、
+     「外部送信ゼロ」というこのアプリの前提 (docs/architecture-decisions.md ADR-001) と
+     両立しないため、端末にあるフォントだけで組む。 */
+  --font-sans:
+    "Noto Sans JP", "Yu Gothic UI", "Hiragino Sans",
+    "Hiragino Kaku Gothic ProN", "Meiryo", system-ui, sans-serif;
+  --font-serif:
+    "Shippori Mincho", "Noto Serif JP", "Yu Mincho", "YuMincho",
+    "Hiragino Mincho ProN", "MS PMincho", serif;
+  font-family: var(--font-sans);
   color: #18231f;
   background: #f4f2eb;
   font-synthesis: none;
@@ -81,7 +89,7 @@ p {
 }
 .brand b {
   display: block;
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
   font-size: 19px;
   line-height: 1;
 }
@@ -98,8 +106,7 @@ p {
   gap: 6px;
   align-items: center;
 }
-.topbar nav a,
-.nav-button {
+.topbar nav a {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -112,8 +119,7 @@ p {
   font-size: 14px;
 }
 .topbar nav a.active,
-.topbar nav a:hover,
-.nav-button:hover {
+.topbar nav a:hover {
   background: #e8eee9;
   color: var(--forest);
 }
@@ -203,7 +209,7 @@ p {
   margin-bottom: 36px;
 }
 .page-head h1 {
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
   font-size: 38px;
   margin-bottom: 8px;
   letter-spacing: 0.02em;
@@ -249,131 +255,6 @@ p {
   background: #e7f4eb;
   color: #27623c;
 }
-.auth-page {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: minmax(380px, 1fr) minmax(420px, 1fr);
-}
-.auth-art {
-  position: relative;
-  overflow: hidden;
-  background: var(--forest);
-  color: #fff;
-  padding: 42px clamp(36px, 6vw, 92px);
-  display: flex;
-  flex-direction: column;
-  overflow: clip;
-  justify-content: space-between;
-}
-.auth-art .brand {
-  color: #fff;
-}
-.auth-art .brand-mark {
-  background: #fff;
-  color: var(--forest);
-}
-.auth-art .brand small {
-  color: #a8c5b9;
-}
-.auth-art h1 {
-  font-family: "Shippori Mincho", serif;
-  font-size: clamp(44px, 5vw, 72px);
-  line-height: 1.34;
-  margin: 20px 0;
-}
-.auth-art p {
-  color: #bad0c7;
-  max-width: 440px;
-  line-height: 1.9;
-}
-.art-tree {
-  position: absolute;
-  width: 390px;
-  height: 390px;
-  right: -110px;
-  bottom: -80px;
-  border: 1px solid #54796b;
-  border-radius: 50%;
-}
-.art-tree:before,
-.art-tree:after {
-  content: "";
-  position: absolute;
-  background: #54796b;
-}
-.art-tree:before {
-  width: 1px;
-  height: 240px;
-  left: 110px;
-  top: 50px;
-  transform: rotate(38deg);
-}
-.art-tree:after {
-  height: 1px;
-  width: 250px;
-  left: 40px;
-  top: 170px;
-  transform: rotate(-22deg);
-}
-.art-tree i {
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  background: var(--gold);
-  border: 8px solid var(--forest);
-  border-radius: 50%;
-  z-index: 1;
-}
-.art-tree i:nth-child(1) {
-  left: 86px;
-  top: 36px;
-}
-.art-tree i:nth-child(2) {
-  left: 260px;
-  top: 94px;
-  border-radius: 5px;
-}
-.art-tree i:nth-child(3) {
-  left: 52px;
-  top: 170px;
-}
-.art-tree i:nth-child(4) {
-  left: 220px;
-  top: 230px;
-  border-radius: 5px;
-}
-.art-tree i:nth-child(5) {
-  left: 120px;
-  top: 286px;
-  transform: rotate(45deg);
-  border-radius: 5px;
-}
-.auth-panel {
-  display: grid;
-  place-items: center;
-  padding: 40px;
-  background: #f4f2eb;
-}
-.auth-card {
-  width: min(430px, 100%);
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 38px;
-  box-shadow: var(--shadow);
-}
-.auth-card h2 {
-  font-family: "Shippori Mincho", serif;
-  font-size: 30px;
-  margin: 5px 0 10px;
-}
-.auth-card > p {
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.7;
-  margin-bottom: 25px;
-}
-.auth-card label,
 .modal label,
 .node-form label {
   display: block;
@@ -382,7 +263,6 @@ p {
   color: #45514b;
   margin-bottom: 17px;
 }
-.auth-card input,
 .modal input,
 .modal select,
 .node-form input,
@@ -396,13 +276,11 @@ p {
   background: #fff;
   color: var(--ink);
 }
-.auth-card input,
 .modal input,
 .modal select,
 .node-form select {
   height: 44px;
 }
-.auth-card input:focus-visible,
 .modal input:focus-visible,
 .modal select:focus-visible,
 .node-form input:focus-visible,
@@ -412,15 +290,6 @@ p {
   box-shadow: 0 0 0 3px rgba(36, 87, 71, 0.1);
   outline: 3px solid var(--gold);
   outline-offset: 2px;
-}
-.auth-links {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-.auth-links a {
-  font-size: 13px;
-  color: var(--forest-2);
 }
 .simple-page {
   min-height: 100vh;
@@ -530,7 +399,7 @@ p {
   color: var(--forest);
 }
 .empty h2 {
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
   margin: 20px 0 8px;
 }
 .empty p {
@@ -562,7 +431,7 @@ p {
   margin-bottom: 20px;
 }
 .modal h2 {
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
   margin: 0;
 }
 .modal-actions {
@@ -618,7 +487,7 @@ p {
   margin-bottom: 18px;
 }
 .section-toolbar h2 {
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
   font-size: 24px;
   margin-bottom: 4px;
 }
@@ -708,7 +577,7 @@ p {
 .title-input {
   border: 0;
   background: transparent;
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 18px;
   min-width: 0;
@@ -781,7 +650,7 @@ p {
 }
 .quick-add h2 {
   margin: 0 0 4px;
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
   font-size: 16px;
 }
 .quick-add p,
@@ -827,7 +696,7 @@ p {
   background: var(--mint);
 }
 .panel-title h2 {
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
   font-size: 23px;
   margin-bottom: 22px;
 }
@@ -904,7 +773,7 @@ p {
 .cohabitation-label {
   text-anchor: middle;
   dominant-baseline: middle;
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
   font-weight: 700;
   cursor: move;
   pointer-events: auto;
@@ -997,7 +866,7 @@ p {
   border-radius: 22px 22px 22px 7px;
 }
 .flow-empty h2 {
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
   margin: 18px 0 6px;
 }
 .flow-empty p {
@@ -1048,7 +917,7 @@ p {
 }
 .family-node strong {
   display: block;
-  font-family: "Shippori Mincho", serif;
+  font-family: var(--font-serif);
 }
 .family-node-resize-handle {
   width: 24px !important;
@@ -1142,12 +1011,6 @@ p {
   margin-top: 6px;
 }
 @media (max-width: 850px) {
-  .auth-page {
-    grid-template-columns: 1fr;
-  }
-  .auth-art {
-    display: none;
-  }
   .chart-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -1180,8 +1043,7 @@ p {
   .topbar {
     padding: 0 14px;
   }
-  .topbar nav a,
-  .nav-button {
+  .topbar nav a {
     font-size: 0;
     padding: 10px;
   }
@@ -1226,10 +1088,283 @@ p {
     align-items: flex-start;
     gap: 15px;
   }
-  .auth-panel {
-    padding: 18px;
-  }
-  .auth-card {
-    padding: 27px;
-  }
+}
+
+/* ---- バックアップ ---- */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.modal-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 20px 20px;
+}
+.modal-body .muted {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+.backup-panel {
+  display: grid;
+  gap: 18px;
+}
+.backup-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+}
+.backup-status > div {
+  flex: 1 1 200px;
+  padding: 14px 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.backup-status dt {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.backup-status dd {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.backup-guidance {
+  padding: 16px 18px;
+  background: var(--mint);
+  border-radius: 12px;
+}
+.backup-guidance h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+.backup-guidance ul {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 6px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.backup-reminder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  background: #fdf6e6;
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+.backup-reminder .button {
+  flex: none;
+}
+
+/* ---- 保存モードと危険操作 ---- */
+.welcome {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+.welcome-card {
+  display: grid;
+  gap: 14px;
+  width: min(560px, 100%);
+  padding: 28px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+.welcome-card h1 {
+  margin: 6px 0 0;
+  font-family: var(--font-serif);
+  font-size: 1.32rem;
+}
+.welcome-lead {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+.welcome-option {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.welcome-option:hover,
+.welcome-option:focus-visible {
+  border-color: var(--forest-2);
+  background: var(--mint);
+}
+.welcome-option strong {
+  display: block;
+  margin-bottom: 4px;
+}
+.welcome-option small {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.welcome-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.temporary-banner {
+  padding: 8px 18px;
+  background: var(--forest);
+  color: var(--paper);
+  font-size: 0.85rem;
+  text-align: center;
+}
+.storage-mode,
+.danger-zone {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.danger-zone {
+  border-color: var(--danger);
+}
+.storage-mode h3,
+.danger-zone h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+.storage-mode p,
+.danger-zone p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+.danger-zone .button.danger {
+  justify-self: start;
+}
+.backup-protect {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.export-caution {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+/* ---- 文書ページとフッター ---- */
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 18px;
+  margin-top: auto;
+  padding: 18px 28px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.app-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.app-footer a {
+  color: inherit;
+}
+.app-footer p {
+  margin: 0;
+}
+.document-page {
+  display: grid;
+  justify-items: center;
+  padding: 32px 20px 56px;
+}
+.document {
+  width: min(760px, 100%);
+  padding: 32px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.document h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+}
+.document h2 {
+  margin: 28px 0 8px;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+}
+.document p,
+.document li {
+  line-height: 1.85;
+  font-size: 0.92rem;
+}
+.document ul {
+  padding-left: 1.3em;
+  display: grid;
+  gap: 8px;
+}
+.document-revised {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.document-lead {
+  margin-top: 20px;
+  padding: 14px 16px;
+  background: var(--mint);
+  border-radius: 10px;
+}
+.document-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 32px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: 0.88rem;
+}
+.welcome-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 6px;
+  font-size: 0.82rem;
 }

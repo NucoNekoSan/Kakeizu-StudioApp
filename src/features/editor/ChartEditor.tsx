@@ -315,6 +315,7 @@ function ChartEditor() {
           className="button primary"
           onClick={exportPng}
           disabled={isExporting}
+          title="画像には入力した氏名やメモがそのまま含まれます"
         >
           <Download size={17} />
           {isExporting ? "PNG作成中…" : "PNG保存"}
@@ -410,6 +411,9 @@ function ChartEditor() {
             </Notice>
           )}
           {exportError && <Notice tone="error">{exportError}</Notice>}
+          <p className="export-caution">
+            PNGには入力した氏名やメモがそのまま含まれます。保存先と共有範囲にご注意ください。
+          </p>
           {cohabitationStorageError && (
             <Notice tone="error">
               同居要素をこの端末に保存できません。ブラウザの保存設定を確認してください。

@@ -9,6 +9,7 @@ import type {
 } from "../../types";
 import { Modal, Notice, ShapeMark, Shell, Spinner } from "../../components/ui";
 import { getErrorMessage, kindLabels, lineLabels } from "../../domain";
+import BackupPanel from "../backup/BackupPanel";
 import { useSettingsDefinitions } from "./useSettingsDefinitions";
 import {
   useGenderMutations,
@@ -16,7 +17,9 @@ import {
 } from "./useDefinitionMutations";
 
 function SettingsPage() {
-  const [tab, setTab] = useState<"relationships" | "genders">("relationships"),
+  const [tab, setTab] = useState<"relationships" | "genders" | "backup">(
+      "relationships",
+    ),
     { relationships, genders } = useSettingsDefinitions();
   return (
     <Shell>
@@ -25,7 +28,9 @@ function SettingsPage() {
           <div>
             <span className="eyebrow">CUSTOM DEFINITIONS</span>
             <h1>表示設定</h1>
-            <p>相関図で使用する続柄と性別の見た目を管理します。</p>
+            <p>
+              相関図で使用する続柄と性別の見た目、データのバックアップを管理します。
+            </p>
           </div>
         </div>
         <div className="tabs" role="tablist">
@@ -49,25 +54,35 @@ function SettingsPage() {
           >
             性別 <span>{genders.data?.length || 0}</span>
           </button>
+          <button
+            id="backup-tab"
+            role="tab"
+            aria-selected={tab === "backup"}
+            aria-controls="settings-panel"
+            className={tab === "backup" ? "active" : ""}
+            onClick={() => setTab("backup")}
+          >
+            バックアップ
+          </button>
         </div>
         <div
           id="settings-panel"
           role="tabpanel"
-          aria-labelledby={
-            tab === "relationships" ? "relationships-tab" : "genders-tab"
-          }
+          aria-labelledby={`${tab === "relationships" ? "relationships" : tab === "genders" ? "genders" : "backup"}-tab`}
         >
-          {tab === "relationships" ? (
+          {tab === "relationships" && (
             <RelationshipSettings
               data={relationships.data || []}
               loading={relationships.isLoading}
             />
-          ) : (
+          )}
+          {tab === "genders" && (
             <GenderSettings
               data={genders.data || []}
               loading={genders.isLoading}
             />
           )}
+          {tab === "backup" && <BackupPanel />}
         </div>
       </main>
     </Shell>

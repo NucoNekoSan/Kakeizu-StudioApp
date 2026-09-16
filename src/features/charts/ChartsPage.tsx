@@ -5,6 +5,7 @@ import { GitBranch, Plus, Trash2 } from "lucide-react";
 import { api } from "../../api";
 import { Modal, Notice, Shell, Spinner } from "../../components/ui";
 import { formatDate, getErrorMessage } from "../../domain";
+import BackupReminder from "../backup/BackupReminder";
 
 function ChartsPage() {
   const nav = useNavigate(),
@@ -70,6 +71,7 @@ function ChartsPage() {
             新しい相関図
           </button>
         </div>
+        <BackupReminder />
         {charts.isLoading ? (
           <Spinner />
         ) : charts.isError ? (

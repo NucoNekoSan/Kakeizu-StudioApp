@@ -72,7 +72,3 @@ export interface ChartDetail {
   genders: GenderDefinition[];
   updatedAt: string;
 }
-export interface User {
-  id: string;
-  loginId: string;
-}

@@ -1,93 +1,131 @@
 # Kakeizu Studio
 
-続柄と性別を選ぶだけで家族相関図を作成できる、React・PHP・SQLite製のWebアプリです。クライアントワークを基に、実データや固有のインフラ情報を含まないポートフォリオ版として再構成しています。
+続柄と性別を選ぶだけで家族相関図を作成できる、React製のWebアプリです。クライアントワークを基に、実データや固有のインフラ情報を含まないポートフォリオ版として再構成しています。
+
+**データは利用者の端末内にのみ保存され、サーバーへ送信されません。**
+
+## 提供形態
+
+- **ブラウザ版**: Cloudflare Pages で配信する静的サイト
+- **ローカルインストール版**: 同じURLからPWAとしてインストール。オフラインで動作し、コード署名を必要としない
+
+## 設計方針
+
+想定利用者に福祉・医療の対人援助職や士業が含まれるため、メモ欄には支援対象者の病歴や障害に関する記述が入り得ます。これは個人情報保護法上の要配慮個人情報にあたるため、提供者がサーバーで預からない構成を選んでいます。
+
+- 相関図・設定はブラウザのIndexedDBに保存し、外部への通信を行いません
+- アカウント登録・ログインはありません
+- 同一の成果物をPWAとしてインストールし、オフラインで利用できます
+- 共有端末では「今回だけ使う」を選ぶと、端末に一切保存されません
+- 端末内保存のため、バックアップ（JSONエクスポート）は利用者が行います
 
 ## 担当範囲と工夫
 
 - ReactとTypeScriptによる画面設計・実装
-- PHP APIとSQLiteスキーマの設計・実装
 - 続柄からノードと関係線を生成するドメインロジック
 - ドラッグ、リサイズ、表示設定、PNG出力を備えた編集体験
-- CSRF・Origin検証、認証試行制限、セッション期限、利用者間のデータ分離
-- フロントエンド、API、マイグレーション、配布物の自動テスト
+- 保存ドキュメントのスキーマ設計とバージョニング、型ガードによる破損検知
+- Content-Security-Policyを中心とした多層防御
+- ドメインロジック、ストレージ層、UIの自動テスト
 
 ## 主な機能
 
-- ログインIDとパスワードによる管理者ログイン
-- 利用者ごとに複数の相関図を保存
+- 複数の相関図を保存
 - 続柄、性別、基準ノードから人物と関係線を自動生成
 - 配偶者、子、親、兄弟姉妹を選択中の人物から追加
 - 複数配偶者、片親の子、義父母を含む多世代表示
+- 三親等程度までの続柄を既定で用意（直系・兄弟姉妹・姻族・養子縁組・傍系）
 - 続柄の接続規則、線種、線色のカスタマイズ
 - 性別の名称、形、塗り色、文字色のカスタマイズ
 - ノードごとの複数行メモ、フォントサイズ、表示サイズの調整
-- ドラッグ＆ドロップによる配置変更とSQLiteへの保存
+- ドラッグ＆ドロップによる配置変更
 - 相関図全体の高解像度PNG出力
+- 全データのJSONバックアップと復元（追加／置き換えを選択可）
+- バックアップのパスフレーズ暗号化（AES-GCM）
+- 前回のバックアップから7日以上経過した場合の警告
+- 共有端末向けの一時利用モード（端末に一切保存しない）
+- この端末のデータをすべて削除する機能
+- 利用規約・プライバシーポリシー・使い方をアプリ内に同梱（オフラインでも閲覧可）
 
 ## 技術構成
 
 - Frontend: React 19 / TypeScript / Vite / React Flow / TanStack Query
-- Backend: PHP 8 / PDO
-- Database: SQLite（WALモード、外部キー有効）
-- Testing: Vitest / Testing Library / PHPスモークテスト
+- Storage: IndexedDB（`idb-keyval`）
+- PWA: vite-plugin-pwa（Workbox）
+- Testing: Vitest / Testing Library
+- 外部フォント・解析タグ・CDNは使用しません（自オリジン以外への通信がゼロになるため）
 
 ## ローカル開発
 
-Node.js、npm、PHP 8、Composerを用意します。
+Node.jsとnpmを用意します。
 
 ```powershell
 npm install
-Copy-Item .env.example .env
-Set-Location server
-composer install
-Copy-Item .env.example .env
-php bin/migrate.php
-php -S 127.0.0.1:8080 -t public/api public/api/index.php
-```
-
-別のターミナルでフロントエンドを起動します。
-
-```powershell
 npm run dev
 ```
 
-画面は `http://127.0.0.1:5173` で開きます。実際の認証情報は `.env` に設定し、リポジトリへ追加しないでください。
+画面は `http://127.0.0.1:5173` で開きます。
 
 ## 検証
 
 ```powershell
 npm test
-npm run test:php
 npm run lint
 npm run format:check
 npm run build
 ```
 
-## 配布パッケージ
+## 配信
 
 ```powershell
-npm run package:deploy
+npm run build
 ```
 
-`release/kakeizu-studio` に静的ファイルとPHP APIの実行時ファイルが生成されます。`.env`、SQLiteデータ、テスト、開発用依存物は含まれません。生成された `server/.env.example` を参考に、配置環境で `.env` を作成してください。
+`dist` をそのまま静的ホスティングへ配置します。`public/_headers` がセキュリティヘッダとキャッシュ制御、`public/_redirects` がSPAのルーティングを担います。
 
-サブディレクトリに配置する場合は、`VITE_BASE_PATH`、`APP_BASE_PATH`、Apacheの `RewriteBase` を同じ公開パスに合わせてください。HTTPSへの転送はホスティング環境またはリバースプロキシ側で設定します。
+手順の詳細は [docs/deployment.md](docs/deployment.md) を参照してください。別のホスティングを使う場合は、同等のヘッダをサーバー側で設定してください。
+
+サブディレクトリに配置する場合は `VITE_BASE_PATH` を公開パスに合わせます。
+
+アイコンを作り直す場合は `npm run icons` を実行します（画像処理ライブラリへの依存を避け、Node標準のzlibでPNGを生成しています）。
 
 ## 環境変数
 
 | 変数             | 内容                        |
 | ---------------- | --------------------------- |
 | `VITE_BASE_PATH` | Reactアプリの公開ベースパス |
-| `APP_URL`        | Origin検証に使う公開URL     |
-| `APP_BASE_PATH`  | CookieとAPIの公開パス       |
-| `DB_PATH`        | SQLiteファイルの保存先      |
-
-## 公開時の注意
-
-- `.env`、SQLite本体、WAL、SHMを公開ディレクトリやGitへ含めないでください。
-- 本番ではHTTPSを有効化し、`APP_URL`を実際のHTTPS URLへ変更してください。
-- SQLiteと環境変数ファイルは、可能な限り公開ディレクトリ外へ配置してください。
 
 ## データについて
 
-このリポジトリには実案件のデータベース、利用者情報、認証情報、クライアント固有のURLや配置情報を含めていません。初回セットアップ時に空のSQLiteデータベースを生成して利用します。
+このリポジトリには実案件のデータ、利用者情報、認証情報、クライアント固有のURLや配置情報を含めていません。
+
+保存先はブラウザのIndexedDBです。ブラウザの「Cookieとサイトデータを削除」や端末の故障でデータは失われるため、定期的なJSONエクスポートを前提とした設計にしています。設定画面の「バックアップ」タブから書き出しと復元ができます。
+
+書き出したファイルには入力内容がそのまま含まれます。第三者の情報を含む場合は、保存先と共有範囲にご注意ください。
+
+## 公開前の準備
+
+**`src/features/legal/publisher.ts` の連絡先メールアドレスを設定してください。** このリポジトリは public のため、連絡先を直接書き込まずプレースホルダにしています。未設定のまま利用規約やプライバシーポリシーを開くと、何が未設定かを示す警告が画面上に表示されます。
+
+提供者名は `NucoNekoSan` を設定済みです。
+
+公開資材:
+
+- 利用規約・プライバシーポリシー: アプリ内 `/terms` `/privacy`（本文は `src/features/legal/legalContent.ts`）
+- 使い方: アプリ内 `/help`
+- 導入検討用の技術仕様書: [docs/technical-overview.md](docs/technical-overview.md)
+
+法的文書は雛形です。内容の妥当性については公開前にご確認ください。
+
+## 設計上の決定
+
+主要な設計判断とその理由は [docs/architecture-decisions.md](docs/architecture-decisions.md) にまとめています。
+
+- ADR-001: 利用者データをサーバーに保存しない（ローカルファースト）
+- ADR-002: サーバーサイドを導入する場合は TypeScript（Next.js / Node.js）を用いる
+
+脅威モデルと対策は [docs/security-assessment.md](docs/security-assessment.md) にまとめています。
+
+## 旧バージョン
+
+v2系はPHP 8 + SQLiteのサーバーAPIを持つ構成でした。`legacy/php-server` ブランチを参照してください。
