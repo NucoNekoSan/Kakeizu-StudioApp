@@ -34,7 +34,7 @@ npx wrangler pages deploy dist --project-name kakeizu-studio
 
 ## 3. サブドメインの割り当て
 
-プロジェクト → Custom domains → Set up a custom domain でサブドメイン（例: `kakeizu.example.com`）を追加する。同一アカウントでドメインを管理していれば CNAME は自動で作成される。
+プロジェクト → Custom domains → Set up a custom domain で `kakeizu.nuconeko-garden.com` を追加する。メインドメイン `nuconeko-garden.com` を同一アカウントで管理しているため、CNAME は自動で作成される。
 
 ## 4. HTTPS の強制
 
@@ -49,12 +49,12 @@ v2 系で `.htaccess` が行っていた HTTP→HTTPS の 308 転送は、この
 ## 5. 配信後の確認
 
 ```powershell
-curl.exe -I https://kakeizu.example.com/
+curl.exe -I https://kakeizu.nuconeko-garden.com/
 ```
 
 - `Content-Security-Policy` が返ること
 - `X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY` が返ること
-- `curl.exe -I https://kakeizu.example.com/sw.js` が `Cache-Control: no-cache` を返すこと
+- `curl.exe -I https://kakeizu.nuconeko-garden.com/sw.js` が `Cache-Control: no-cache` を返すこと
 - HTTP でアクセスすると HTTPS へ転送されること
 
 ブラウザでの確認:
