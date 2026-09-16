@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Laptop, ShieldOff } from "lucide-react";
 import { Logo } from "../../components/ui";
 import { resetStoreCache } from "../../storage/localApi";
@@ -15,14 +16,18 @@ import {
  * そのまま残る。最初に保存先を選ばせることで、残したくない場面を
  * 利用者が明示的に選べるようにしている。
  */
+const OPEN_PATHS = new Set(["/terms", "/privacy", "/help"]);
+
 export default function StorageModeGate({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [mode, setMode] = useState<StorageMode | null>(() => readStorageMode());
+  const { pathname } = useLocation();
 
-  if (mode) return <>{children}</>;
+  // 規約・ポリシー・ヘルプは利用開始の判断材料なので、選択前でも読めるようにする
+  if (mode || OPEN_PATHS.has(pathname)) return <>{children}</>;
 
   const choose = (selected: StorageMode) => {
     writeStorageMode(selected);
@@ -70,6 +75,12 @@ export default function StorageModeGate({
         <p className="welcome-note">
           この選択はあとから設定画面で変更できます。
         </p>
+
+        <nav className="welcome-links">
+          <Link to="/terms">利用規約</Link>
+          <Link to="/privacy">プライバシーポリシー</Link>
+          <Link to="/help">使い方</Link>
+        </nav>
       </div>
     </div>
   );

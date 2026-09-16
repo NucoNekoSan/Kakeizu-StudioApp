@@ -47,6 +47,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </header>
       <TemporaryModeBanner />
       {children}
+      <footer className="app-footer">
+        <nav aria-label="このアプリについて">
+          <NavLink to="/help">使い方</NavLink>
+          <NavLink to="/terms">利用規約</NavLink>
+          <NavLink to="/privacy">プライバシーポリシー</NavLink>
+        </nav>
+        <p>データはこの端末内にのみ保存されます。</p>
+      </footer>
     </div>
   );
 }
