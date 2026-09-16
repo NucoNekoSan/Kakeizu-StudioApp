@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { GitBranch, LayoutGrid, LogOut, Settings, X } from "lucide-react";
-import { api } from "../api";
+import { NavLink } from "react-router-dom";
+import { GitBranch, LayoutGrid, Settings, X } from "lucide-react";
 import TemporaryModeBanner from "../features/storage/TemporaryModeBanner";
 import type { Shape } from "../types";
 
@@ -19,7 +18,6 @@ export function Logo() {
   );
 }
 export function Shell({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
   return (
     <div className="shell">
       <header className="topbar">
@@ -33,16 +31,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Settings size={17} aria-hidden="true" />
             設定
           </NavLink>
-          <button
-            className="nav-button"
-            onClick={async () => {
-              await api.logout();
-              navigate("/login");
-            }}
-          >
-            <LogOut size={17} aria-hidden="true" />
-            ログアウト
-          </button>
         </nav>
       </header>
       <TemporaryModeBanner />

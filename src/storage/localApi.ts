@@ -1,4 +1,3 @@
-import type { User } from "../types";
 import { createBackupApi } from "./localBackup";
 import { createChartApi } from "./localCharts";
 import { createSettingsApi } from "./localSettings";
@@ -15,22 +14,9 @@ import {
   STORAGE_MODE_KEY,
 } from "./storageMode";
 
-/**
- * ローカル版のセッション。サーバーがないので認証は行わない。
- * Phase 2 で `RequireAuth` ごと撤去するまでの間、既存のルーティングを
- * そのまま通すための固定値を返す。
- */
-const LOCAL_USER: User = { id: "local", loginId: "local" };
-
 export function createLocalApi(store: DocumentStore) {
   const repository = new Repository(store);
   return {
-    session: async () => ({ user: LOCAL_USER, csrfToken: "" }),
-    login: async (_loginId: string, _password: string) => ({
-      user: LOCAL_USER,
-      csrfToken: "",
-    }),
-    logout: async () => undefined,
     ...createChartApi(repository),
     ...createSettingsApi(repository),
     ...createBackupApi(repository),
@@ -96,9 +82,6 @@ const lazy =
     pick(createLocalApi(await defaultStore()))(...args);
 
 export const localApi = {
-  session: lazy((api) => api.session),
-  login: lazy((api) => api.login),
-  logout: lazy((api) => api.logout),
   charts: lazy((api) => api.charts),
   chart: lazy((api) => api.chart),
   createChart: lazy((api) => api.createChart),
