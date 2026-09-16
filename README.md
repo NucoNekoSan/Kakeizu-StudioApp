@@ -81,7 +81,7 @@ npm run build
 npm run build
 ```
 
-`dist` をそのまま静的ホスティングへ配置します。`public/_headers` がセキュリティヘッダとキャッシュ制御、`public/_redirects` がSPAのルーティングを担います。
+`dist` をそのまま静的ホスティングへ配置します。`public/_headers` がセキュリティヘッダとキャッシュ制御を担います。SPAのルーティングはホスティング側の設定で行います（Cloudflare では `not_found_handling`）。
 
 手順の詳細は [docs/deployment.md](docs/deployment.md) を参照してください。別のホスティングを使う場合は、同等のヘッダをサーバー側で設定してください。
 

@@ -1,3 +1,0 @@
-# SPA のクライアントルーティング (/charts/:id 等) を index.html へ渡す。
-# Service Worker と manifest は実体を返す必要があるため対象外。
-/*    /index.html   200

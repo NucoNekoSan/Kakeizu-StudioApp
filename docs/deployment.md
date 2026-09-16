@@ -9,7 +9,9 @@ npm ci
 npm run build
 ```
 
-`dist` に配信物が生成される。`dist/_headers` と `dist/_redirects` が Cloudflare Pages の設定として読まれる。
+`dist` に配信物が生成される。`dist/_headers` がセキュリティヘッダとキャッシュ制御の設定として読まれる。
+
+**SPA のルーティングに `_redirects` を置かないこと。** Git 連携で作成したプロジェクトは Workers として構成され（`wrangler deploy` で配信される）、静的アセットの `_redirects` は検証が厳しい。`/* /index.html 200` のような全体を受けるルールは「無限ループ」と判定されてデプロイが失敗する。クライアントルーティングは wrangler 設定の `not_found_handling: "single-page-application"` が担うため、`_redirects` は不要。
 
 ## 2. Cloudflare Pages プロジェクトの作成
 
