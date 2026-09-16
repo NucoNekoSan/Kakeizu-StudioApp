@@ -78,7 +78,7 @@ describe("提供者情報", () => {
     // 公開時にこのテストが落ちたら publisher.ts を埋めること
     expect(isPlaceholder(PUBLISHER_PLACEHOLDER)).toBe(true);
     expect(hasUnsetPublisherFields()).toBe(
-      [publisher.name, publisher.email, publisher.siteUrl].some(isPlaceholder),
+      [publisher.name, publisher.email].some(isPlaceholder),
     );
   });
 

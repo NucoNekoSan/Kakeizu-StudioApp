@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { Notice } from "../../components/ui";
 import { legalDocuments, type LegalSlug } from "./legalContent";
-import { hasUnsetPublisherFields, publisher } from "./publisher";
+import { publisher, unsetPublisherFields } from "./publisher";
 
 /**
  * 利用規約とプライバシーポリシーの表示。
@@ -30,9 +30,11 @@ export default function LegalPage({ slug }: { slug?: LegalSlug }) {
           <p className="document-revised">最終改定日: {publisher.revisedOn}</p>
         </header>
 
-        {hasUnsetPublisherFields() && (
+        {unsetPublisherFields().length > 0 && (
           <Notice tone="error">
-            提供者名と連絡先が未設定です。公開前に設定してください。
+            {unsetPublisherFields().join("と")}
+            が未設定です。公開前に src/features/legal/publisher.ts
+            を設定してください。
           </Notice>
         )}
 

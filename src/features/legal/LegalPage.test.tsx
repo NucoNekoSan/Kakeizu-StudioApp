@@ -43,9 +43,13 @@ describe("法的文書ページ", () => {
     expect(screen.getByText(/個人情報を収集しません/)).toBeTruthy();
   });
 
-  it("提供者が未設定なら警告を出す", () => {
+  it("未設定の項目を名指しして警告する", () => {
     renderAt("/terms", <LegalPage slug="terms" />);
-    expect(screen.getByText(/公開前に設定してください/)).toBeTruthy();
+    // 何が足りないか分かる形で出す（現状は連絡先が未設定）
+    const alert = screen.getByRole("alert");
+    expect(alert.textContent).toContain("連絡先");
+    expect(alert.textContent).toContain("publisher.ts");
+    expect(alert.textContent).not.toContain("提供者名");
   });
 
   it("使い方に共有端末の案内がある", () => {
