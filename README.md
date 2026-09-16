@@ -126,4 +126,4 @@ npm run build
 
 ## 旧バージョン
 
-v2系はPHP 8 + SQLiteのサーバーAPIを持つ構成でした。`legacy/php-server` ブランチおよびタグ `v2.0.0-php` を参照してください。
+v2系はPHP 8 + SQLiteのサーバーAPIを持つ構成でした。`legacy/php-server` ブランチを参照してください。
