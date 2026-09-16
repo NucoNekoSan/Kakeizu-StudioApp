@@ -41,6 +41,16 @@ describe("法的文書", () => {
       expect(headings.some((heading) => heading.includes(expected))).toBe(true);
   });
 
+  it("免責に故意・重過失の留保がある", () => {
+    // 全部免責は消費者契約法 8 条により無効となり得るため、留保を外さない
+    const disclaimer = legalDocuments.terms.sections.find((section) =>
+      section.heading.includes("免責"),
+    );
+    const text = disclaimer?.paragraphs?.join("\n") ?? "";
+    expect(text).toContain("責任を負いません");
+    expect(text).toContain("故意または重大な過失による場合を除き");
+  });
+
   it("利用規約が端末内保存と利用者責任を明記している", () => {
     const text = JSON.stringify(legalDocuments.terms);
     expect(text).toContain("端末");
