@@ -19,12 +19,14 @@ GitHub 連携で作る場合のビルド設定:
 
 | 項目                   | 値              |
 | ---------------------- | --------------- |
+| Production branch      | `main`          |
 | Framework preset       | None            |
 | Build command          | `npm run build` |
 | Build output directory | `dist`          |
-| Node version           | 22              |
 
-環境変数は不要（`VITE_BASE_PATH` はサブドメイン運用では未設定でよい）。
+**Node のバージョンは環境変数で固定する。** Environment variables に `NODE_VERSION` = `22` を追加すること。Pages の既定 Node は古く、指定しないとビルドが失敗することがある。
+
+`VITE_BASE_PATH` はサブドメイン運用では未設定でよい。
 
 手元から直接上げる場合は Wrangler を使う。
 
@@ -74,6 +76,22 @@ curl.exe -I https://kakeizu.nuconeko-garden.com/
 ## 7. 更新の反映
 
 `registerType: "prompt"` のため、新しいバージョンを配信しても自動では切り替わらない。利用者の画面に「新しいバージョンがあります」のバーが出て、「更新する」を押したときに適用される。編集途中の入力を失わせないための挙動。
+
+## 8. メール窓口の設定（Cloudflare Email Routing）
+
+利用規約とプライバシーポリシーの問い合わせ先 `kakeizu@nuconeko-garden.com` は、Cloudflare Email Routing で受けて普段のメールへ転送する構成。**公開前にこの設定が必要**（規約に載っている窓口が届かない状態を避けるため）。
+
+1. ダッシュボードで `nuconeko-garden.com` を選択し、Email → Email Routing を開く
+2. 初回は有効化を求められる。必要な DNS レコード（MX と SPF）をまとめて追加する操作が案内されるので、それに従う
+3. 転送先（Destination addresses）に普段使うメールアドレスを登録する。**確認メールのリンクを開いて承認するまで転送は行われない**
+4. ルーティング規則で、カスタムアドレス `kakeizu` を作成し、宛先に承認済みの転送先を指定する
+5. 外部（スマートフォンのメール等）から `kakeizu@nuconeko-garden.com` へテスト送信し、転送先に届くことを確認する
+
+### 注意
+
+- **有効化するとドメインの MX レコードが Cloudflare のものに置き換わる。** `nuconeko-garden.com` を他のメールサービスで受信している場合、そちらの受信が止まる
+- **このアドレスから送信することはできない。** Email Routing は受信と転送のみを行う。問い合わせに返信すると、相手には転送先アドレスがそのまま見える。独自ドメインのアドレスで送信もしたい場合は、別途メールサービス（独自ドメインに対応した無料プランのあるサービス等）が必要になる
+- 連絡先を変更する場合は、ここの設定とあわせて `src/features/legal/publisher.ts` の 1 行を書き換える
 
 ## 注意
 
