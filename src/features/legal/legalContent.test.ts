@@ -5,6 +5,7 @@ import {
   isPlaceholder,
   publisher,
   PUBLISHER_PLACEHOLDER,
+  unsetPublisherFields,
 } from "./publisher";
 
 const documents = Object.values(legalDocuments);
@@ -74,17 +75,29 @@ describe("法的文書", () => {
 });
 
 describe("提供者情報", () => {
-  it("公開前に埋めるべき項目を検知できる", () => {
-    // 公開時にこのテストが落ちたら publisher.ts を埋めること
-    expect(isPlaceholder(PUBLISHER_PLACEHOLDER)).toBe(true);
-    expect(hasUnsetPublisherFields()).toBe(
-      [publisher.name, publisher.email].some(isPlaceholder),
-    );
+  it("公開に必要な項目がすべて埋まっている", () => {
+    // 公開前ガード。プレースホルダを持ち込んだらここで落ちる
+    expect(hasUnsetPublisherFields()).toBe(false);
+    expect(unsetPublisherFields()).toEqual([]);
   });
 
-  it("未設定の値が文書本文へそのまま出る", () => {
-    // 埋め忘れたまま公開しても、画面上で気づけるようにしておく
-    if (hasUnsetPublisherFields())
-      expect(allText).toContain(PUBLISHER_PLACEHOLDER);
+  it("文書本文にプレースホルダが残っていない", () => {
+    expect(allText).not.toContain(PUBLISHER_PLACEHOLDER);
+  });
+
+  it("連絡先がメールアドレスの体裁になっている", () => {
+    // 打ち間違いの検知。規約の窓口が届かないアドレスになるのを防ぐ
+    expect(publisher.email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+    expect(isPlaceholder(publisher.email)).toBe(false);
+  });
+
+  it("提供者名と連絡先が両方の文書に出る", () => {
+    for (const document of documents) {
+      const contact = document.sections.find((section) =>
+        section.heading.includes("お問い合わせ"),
+      );
+      expect(contact?.paragraphs?.join("\n")).toContain(publisher.name);
+      expect(contact?.paragraphs?.join("\n")).toContain(publisher.email);
+    }
   });
 });

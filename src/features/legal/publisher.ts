@@ -1,19 +1,22 @@
 /**
- * 提供者の識別情報。
+ * 提供者の識別情報。規約・プライバシーポリシーの「お問い合わせ」欄に出る。
  *
- * このリポジトリは public のため、連絡先を直接書き込むと公開される。
- * 公開前にこのファイルだけを書き換える運用にしている。
+ * 連絡先を変えたいときはこのファイルの 1 行を書き換えるだけでよい。
+ * 文書本文 (legalContent.ts) はここを参照しているだけなので修正は不要。
  *
- * 未設定の項目が残っているかは `legalContent.test.ts` が検知し、
- * 文書ページを開いたときにも画面上に警告が出る。
+ * プレースホルダのまま残っている項目があれば、文書ページに警告が出て
+ * `legalContent.test.ts` も落ちる（公開前の埋め忘れを防ぐため）。
  */
 export const PUBLISHER_PLACEHOLDER = "__未設定__";
 
 export const publisher = {
   /** 提供者名（個人名または屋号）。規約・ポリシーの「提供者」欄に出る */
   name: "NucoNekoSan",
-  /** 問い合わせ先メールアドレス。未設定のままでは規約が機能しない */
-  email: PUBLISHER_PLACEHOLDER,
+  /**
+   * 問い合わせ先メールアドレス。
+   * Cloudflare Email Routing でアプリ専用の窓口として受け、普段のメールへ転送する。
+   */
+  email: "kakeizu@nuconeko-garden.com",
   /** 各文書の最終改定日 */
   revisedOn: "2026-09-16",
 } as const;

@@ -43,13 +43,17 @@ describe("法的文書ページ", () => {
     expect(screen.getByText(/個人情報を収集しません/)).toBeTruthy();
   });
 
-  it("未設定の項目を名指しして警告する", () => {
+  it("提供者情報が揃っていれば警告を出さない", () => {
+    // 実際の設定に対する検証。プレースホルダを持ち込んだらここが落ちる
     renderAt("/terms", <LegalPage slug="terms" />);
-    // 何が足りないか分かる形で出す（現状は連絡先が未設定）
-    const alert = screen.getByRole("alert");
-    expect(alert.textContent).toContain("連絡先");
-    expect(alert.textContent).toContain("publisher.ts");
-    expect(alert.textContent).not.toContain("提供者名");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("設定した連絡先を文書に表示する", () => {
+    renderAt("/privacy", <LegalPage slug="privacy" />);
+    expect(
+      screen.getByText(/連絡先: kakeizu@nuconeko-garden\.com/),
+    ).toBeTruthy();
   });
 
   it("使い方に共有端末の案内がある", () => {
