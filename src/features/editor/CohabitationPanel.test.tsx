@@ -42,7 +42,7 @@ describe("CohabitationPanel", () => {
     expect(onCreateGroup).toHaveBeenCalledWith(["a", "b"]);
   });
 
-  it("uses Shift+Arrow for ten-pixel adjustments", () => {
+  it("uses Shift+Arrow for ten-point font size adjustments", () => {
     const onUpdateLabel = vi.fn();
     render(
       <CohabitationPanel
@@ -59,10 +59,10 @@ describe("CohabitationPanel", () => {
         onDelete={vi.fn()}
       />,
     );
-    fireEvent.keyDown(screen.getByRole("spinbutton", { name: "X" }), {
+    fireEvent.keyDown(screen.getByRole("spinbutton", { name: "文字サイズ" }), {
       key: "ArrowUp",
       shiftKey: true,
     });
-    expect(onUpdateLabel).toHaveBeenCalledWith("label", { x: 20 });
+    expect(onUpdateLabel).toHaveBeenCalledWith("label", { fontSize: 28 });
   });
 });
