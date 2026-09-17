@@ -1,3 +1,4 @@
+import { isFrameWidth } from "../frameSettings";
 import { ApiError } from "../api/errors";
 import {
   isCohabitationDocument,
@@ -22,6 +23,7 @@ export const BACKUP_VERSION = 1;
  * 当時の見た目を再現できるようにするため。
  */
 export interface BackupChart {
+  frameWidth?: number;
   id: string;
   title: string;
   createdAt: string;
@@ -67,6 +69,7 @@ export function buildBackup(
     charts: charts.map((chart) => ({
       id: chart.id,
       title: chart.title,
+      frameWidth: isFrameWidth(chart.frameWidth) ? chart.frameWidth : undefined,
       createdAt: chart.createdAt,
       updatedAt: chart.updatedAt,
       nodes: chart.nodes,
@@ -129,6 +132,7 @@ export function parseBackup(raw: string): BackupFileV1 {
     return {
       id: chart.id,
       title: chart.title,
+      frameWidth: isFrameWidth(chart.frameWidth) ? chart.frameWidth : undefined,
       createdAt:
         typeof chart.createdAt === "string"
           ? chart.createdAt
@@ -165,6 +169,7 @@ export function toChartDocument(
     schemaVersion: 1,
     id,
     title: chart.title,
+    frameWidth: isFrameWidth(chart.frameWidth) ? chart.frameWidth : undefined,
     createdAt: chart.createdAt,
     updatedAt: chart.updatedAt,
     nodes: chart.nodes as ChartDocumentV1["nodes"],

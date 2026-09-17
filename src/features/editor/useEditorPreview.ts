@@ -12,6 +12,7 @@ export function useEditorPreview(
     direction: FamilyNodeData["connectionDirection"];
   } | null,
   nodeDraft: NodeDraft | null,
+  frameWidth?: number,
 ) {
   const display = useMemo(
     () =>
@@ -44,8 +45,8 @@ export function useEditorPreview(
     [nodes, edges, connectionPreview, nodeDraft],
   );
   const pngFrame = useMemo(
-    () => getPngFramePreview(display.nodes),
-    [display.nodes],
+    () => getPngFramePreview(display.nodes, frameWidth),
+    [display.nodes, frameWidth],
   );
   return { display, pngFrame };
 }

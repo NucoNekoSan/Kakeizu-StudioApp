@@ -1,7 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { api } from "../../api";
-import type { ChartDetail, ChartNodeRecord } from "../../types";
+import type {
+  ChartDetail,
+  ChartNodeRecord,
+  ChartNodeLayout,
+} from "../../types";
 
 type SaveState = (state: "saved" | "saving" | "error") => void;
 
@@ -83,5 +87,15 @@ export function useChartNodeMutations(
       refresh(detail);
     },
   });
-  return { create, update, remove };
+  const frame = useMutation({
+    mutationFn: ({
+      width,
+      layouts,
+    }: {
+      width: number;
+      layouts: ChartNodeLayout[];
+    }) => api.updateNodeLayout(chartId, layouts, width),
+    ...mutationOptions,
+  });
+  return { create, update, remove, frame };
 }

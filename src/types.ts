@@ -64,6 +64,7 @@ export interface ChartEdgeRecord {
   lineColor: string;
 }
 export interface ChartDetail {
+  frameWidth?: number;
   id: string;
   title: string;
   nodes: ChartNodeRecord[];

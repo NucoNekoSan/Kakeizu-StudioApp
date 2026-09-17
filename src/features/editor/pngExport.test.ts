@@ -154,3 +154,17 @@ describe("PNG export viewport", () => {
     expect(context.fill).not.toHaveBeenCalled();
   });
 });
+
+describe("custom frame width", () => {
+  it("uses a centered custom width for the viewport and frame", () => {
+    const nodes = [
+      { id: "person", position: { x: 0, y: 0 }, data },
+    ] as Node<FamilyNodeData>[];
+    const viewport = getPngViewport(nodes, 3200);
+    const frame = getPngFramePreview(nodes, 3200)!;
+    expect(viewport.x).toBe(1600);
+    expect(viewport.style.width).toBe("3200px");
+    expect(frame.x + frame.width / 2).toBe(0);
+    expect(frame.width * viewport.zoom).toBe(3200 - PNG_FRAME.inset * 2);
+  });
+});

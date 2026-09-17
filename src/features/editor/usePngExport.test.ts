@@ -40,7 +40,7 @@ describe("usePngExport", () => {
 
     await act(() => result.current.exportPng());
 
-    expect(getPngViewport).toHaveBeenCalledWith([]);
+    expect(getPngViewport).toHaveBeenCalledWith([], 1080);
     expect(toCanvas).toHaveBeenCalledWith(
       viewport,
       expect.objectContaining({
@@ -50,7 +50,7 @@ describe("usePngExport", () => {
         style: { transform: "translated" },
       }),
     );
-    expect(drawPngFrame).toHaveBeenCalledWith(context);
+    expect(drawPngFrame).toHaveBeenCalledWith(context, 1080);
     expect(click).toHaveBeenCalledOnce();
     expect(result.current).toMatchObject({
       exportError: "",
@@ -70,5 +70,39 @@ describe("usePngExport", () => {
       "PNGの保存に失敗しました。再度お試しください。",
     );
     expect(result.current.isExporting).toBe(false);
+  });
+  it("previews a custom-width PNG and saves the same image without rendering again", async () => {
+    const root = document.createElement("div");
+    const viewport = document.createElement("div");
+    viewport.className = "react-flow__viewport";
+    root.append(viewport);
+    const canvas = document.createElement("canvas");
+    const context = {} as CanvasRenderingContext2D;
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+    vi.spyOn(canvas, "getContext").mockReturnValue(context);
+    vi.spyOn(canvas, "toDataURL").mockReturnValue("data:image/png;base64,cG5n");
+    vi.mocked(toCanvas).mockResolvedValue(canvas);
+    const { result } = renderHook(() =>
+      usePngExport({ current: root }, [], "家族", 3200),
+    );
+    await act(() => result.current.previewPng());
+    expect(click).not.toHaveBeenCalled();
+    expect(result.current.preview).toMatchObject({
+      width: 3200,
+      height: 540,
+      dataUrl: "data:image/png;base64,cG5n",
+    });
+    expect(toCanvas).toHaveBeenCalledWith(
+      viewport,
+      expect.objectContaining({ width: 3200 }),
+    );
+    expect(drawPngFrame).toHaveBeenCalledWith(context, 3200);
+    await act(() => result.current.savePreview());
+    expect(toCanvas).toHaveBeenCalledOnce();
+    expect(click).toHaveBeenCalledOnce();
+    act(() => result.current.closePreview());
+    expect(result.current.preview).toBeNull();
   });
 });

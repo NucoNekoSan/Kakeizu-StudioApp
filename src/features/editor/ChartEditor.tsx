@@ -45,7 +45,12 @@ import { CohabitationToolOverlay } from "./CohabitationToolOverlay";
 import { NodeForm, QuickAddActions } from "./NodeForm";
 import { FamilyNode } from "./FamilyNode";
 import { ResizeContext } from "./resizeContext";
+import { DEFAULT_FRAME_WIDTH } from "../../frameSettings";
+import { FrameSettings } from "./FrameSettings";
+import { readFrameVisibility, writeFrameVisibility } from "./frameVisibility";
+import { getPngFramePreview } from "./pngExport";
 import { PNG_FRAME } from "./pngExport";
+import { PngPreviewDialog } from "./PngPreviewDialog";
 import { usePngExport } from "./usePngExport";
 import {
   BASE_NODE_HEIGHT,
@@ -71,6 +76,7 @@ function ChartEditor() {
     [saveState, setSaveState] = useState<"saved" | "saving" | "error">("saved"),
     [announcement, setAnnouncement] = useState(""),
     [nodeDraft, setNodeDraft] = useState<NodeDraft | null>(null),
+    [frameVisible, setFrameVisible] = useState(readFrameVisibility),
     [lassoMode, setLassoMode] = useState(false),
     [labelMode, setLabelMode] = useState(false),
     {
@@ -172,7 +178,7 @@ function ChartEditor() {
     setConnectionPreview(null);
     setNodeDraft(null);
   };
-  const { create, update, remove } = useChartNodeMutations(
+  const { create, update, remove, frame } = useChartNodeMutations(
     id,
     refresh,
     setSaveState,
@@ -214,11 +220,21 @@ function ChartEditor() {
       edges,
       connectionPreview,
       nodeDraft,
+      chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH,
     ),
-    { exportPng, exportError, isExporting } = usePngExport(
+    {
+      exportPng,
+      previewPng,
+      preview,
+      closePreview,
+      savePreview,
+      exportError,
+      isExporting,
+    } = usePngExport(
       flowRef,
       display.nodes,
       chart.data?.title,
+      chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH,
     ),
     resizeActions = useNodeResize(nodes, pngFrame, (nodeId, input) =>
       update.mutate({ chartId: id, nodeId, input }),
@@ -247,6 +263,13 @@ function ChartEditor() {
   const selectedNode = nodes.find((n) => n.id === selected) || null;
   return (
     <div className="editor-shell">
+      <PngPreviewDialog
+        preview={preview}
+        onClose={closePreview}
+        onSave={savePreview}
+        isSaving={isExporting}
+        error={exportError}
+      />
       <header className="editor-topbar">
         <button
           className="icon"
@@ -281,6 +304,40 @@ function ChartEditor() {
               ? "保存失敗"
               : "保存済み"}
         </div>
+        <FrameSettings
+          visible={frameVisible}
+          width={chart.data.frameWidth ?? DEFAULT_FRAME_WIDTH}
+          isSaving={frame.isPending}
+          error={frame.error ? getErrorMessage(frame.error) : ""}
+          willMove={(width) => {
+            const bounds = getPngFramePreview(nodes, width);
+            return nodes.some((node) => {
+              const position = clampNodeToFrame(
+                node.position,
+                nodeSize(node),
+                bounds,
+              );
+              return (
+                position.x !== node.position.x || position.y !== node.position.y
+              );
+            });
+          }}
+          onApply={async (visible, width) => {
+            frame.reset();
+            if (width !== (chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH)) {
+              flushDebouncedNodeUpdate();
+              const bounds = getPngFramePreview(nodes, width);
+              const layouts = nodes.map((node) => ({
+                id: node.id,
+                scale: node.data.scale,
+                ...clampNodeToFrame(node.position, nodeSize(node), bounds),
+              }));
+              await frame.mutateAsync({ width, layouts });
+            }
+            writeFrameVisibility(visible);
+            setFrameVisible(visible);
+          }}
+        />
         <button className="button" onClick={() => nav("/settings")}>
           <SettingsIcon size={17} />
           表示設定
@@ -312,9 +369,16 @@ function ChartEditor() {
           </button>
         )}
         <button
+          className="button"
+          onClick={previewPng}
+          disabled={isExporting || frame.isPending}
+        >
+          {isExporting ? "PNG作成中…" : "PNGプレビュー"}
+        </button>
+        <button
           className="button primary"
           onClick={exportPng}
-          disabled={isExporting}
+          disabled={isExporting || frame.isPending}
           title="画像には入力した氏名やメモがそのまま含まれます"
         >
           <Download size={17} />
@@ -554,7 +618,7 @@ function ChartEditor() {
               fitView
             >
               <Background color="#c7cdc8" gap={24} size={1} />
-              {pngFrame && (
+              {frameVisible && pngFrame && (
                 <ViewportPortal>
                   <svg
                     className="png-frame-preview"

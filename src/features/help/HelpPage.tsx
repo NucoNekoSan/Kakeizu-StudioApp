@@ -124,6 +124,18 @@ export default function HelpPage() {
           </p>
         </section>
 
+        <section>
+          <h2>外枠とPNGプレビュー</h2>
+          <p>
+            エディター上部の「外枠」から、画面の点線の表示とPNGの横幅を設定できます。初期状態では点線は非表示ですが、人物の配置制限と保存PNGの点線は残ります。
+          </p>
+          <p>
+            横幅は図ごとに保存されます。幅を狭めると、はみ出す人物を内側へ移動するため、人物が重なる場合があります。
+          </p>
+          <p>
+            「PNGプレビュー」で保存画像を確認できます。「このPNGを保存」は表示した画像をそのまま保存し、「編集に戻る」で調整を続けられます。
+          </p>
+        </section>
         <footer className="document-footer">
           <Link to="/terms">利用規約</Link>
           <Link to="/privacy">プライバシーポリシー</Link>

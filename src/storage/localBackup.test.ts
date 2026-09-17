@@ -274,3 +274,14 @@ describe("前方互換", () => {
     expect(summary.titles).toEqual(["家族A"]);
   });
 });
+
+describe("外枠設定のバックアップ", () => {
+  it("図ごとの横幅を復元する", async () => {
+    const { api, chartId } = await setup();
+    await api.updateNodeLayout(chartId, [], 3200);
+    const backup = await api.createBackup();
+    const restored = createLocalApi(createMemoryStore());
+    await restored.importBackup(backup.json, "replace");
+    expect((await restored.chart(chartId)).frameWidth).toBe(3200);
+  });
+});

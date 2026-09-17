@@ -431,3 +431,65 @@ describe("永続化", () => {
     expect((await api.relationships()).length).toBeGreaterThan(0);
   });
 });
+
+describe("外枠の横幅", () => {
+  it("図ごとの横幅と座標をまとめて保存し、旧図の設定は省略できる", async () => {
+    const { api, chartId, genders, kind } = await setup();
+    const other = await api.createChart("別の図");
+    const before = await api.createNode(
+      chartId,
+      baseNode(kind("本人"), genders[0].id),
+    );
+    const first = before.nodes[0];
+    await api.updateNodeLayout(
+      chartId,
+      [{ id: first.id, x: 10, y: 20, scale: 1 }],
+      1800,
+    );
+    const saved = await api.chart(chartId);
+    expect(saved.frameWidth).toBe(1800);
+    expect(saved.nodes[0]).toMatchObject({ x: 10, y: 20 });
+    expect((await api.chart(other.id)).frameWidth).toBeUndefined();
+    await expect(
+      api.updateNodeLayout(chartId, [], 1199),
+    ).rejects.toBeInstanceOf(ApiError);
+    await expect(
+      api.updateNodeLayout(
+        chartId,
+        [{ id: "missing", x: 0, y: 0, scale: 1 }],
+        1600,
+      ),
+    ).rejects.toBeInstanceOf(ApiError);
+    expect((await api.chart(chartId)).frameWidth).toBe(1800);
+  });
+});
+
+describe("外枠保存の失敗", () => {
+  it("保存失敗時に横幅と人物座標を維持する", async () => {
+    const store = createMemoryStore();
+    const api = createLocalApi(store);
+    const chart = await api.createChart("保存失敗");
+    const relationships = await api.relationships();
+    const genders = await api.genders();
+    const before = await api.createNode(
+      chart.id,
+      baseNode(relationships[0].id, genders[0].id),
+    );
+    const first = before.nodes[0];
+    const set = store.set;
+    store.set = async () => {
+      throw new Error("storage unavailable");
+    };
+    await expect(
+      api.updateNodeLayout(
+        chart.id,
+        [{ id: first.id, x: 0, y: 0, scale: 1 }],
+        1800,
+      ),
+    ).rejects.toThrow("storage unavailable");
+    store.set = set;
+    const after = await api.chart(chart.id);
+    expect(after.frameWidth).toBeUndefined();
+    expect(after.nodes).toEqual(before.nodes);
+  });
+});

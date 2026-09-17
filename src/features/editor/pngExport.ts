@@ -22,14 +22,17 @@ export interface PngFramePreview {
   radius: number;
 }
 
-export function getPngViewport(nodes: Node<FamilyNodeData>[]) {
+export function getPngViewport(
+  nodes: Node<FamilyNodeData>[],
+  width = PNG_WIDTH,
+) {
   if (!nodes.length) {
     return {
       x: 0,
       y: 0,
       zoom: 1,
       style: {
-        width: `${PNG_WIDTH}px`,
+        width: `${width}px`,
         height: `${PNG_HEIGHT}px`,
         transform: "translate(0px, 0px) scale(1)",
       },
@@ -37,7 +40,7 @@ export function getPngViewport(nodes: Node<FamilyNodeData>[]) {
   }
 
   const viewport = {
-      x: PNG_WIDTH / 2,
+      x: width / 2,
       y: PNG_HEIGHT / 2,
       zoom: PNG_EXPORT_SCALE,
     },
@@ -50,7 +53,7 @@ export function getPngViewport(nodes: Node<FamilyNodeData>[]) {
     y,
     zoom,
     style: {
-      width: `${PNG_WIDTH}px`,
+      width: `${width}px`,
       height: `${PNG_HEIGHT}px`,
       transform: `translate(${x}px, ${y}px) scale(${zoom})`,
     },
@@ -59,16 +62,17 @@ export function getPngViewport(nodes: Node<FamilyNodeData>[]) {
 
 export function getPngFramePreview(
   nodes: Node<FamilyNodeData>[],
+  width = PNG_WIDTH,
 ): PngFramePreview | null {
   if (!nodes.length) return null;
 
-  const { x, y, zoom } = getPngViewport(nodes),
+  const { x, y, zoom } = getPngViewport(nodes, width),
     { dash, inset, lineWidth, radius } = PNG_FRAME;
 
   return {
     x: (inset - x) / zoom,
     y: (inset - y) / zoom,
-    width: (PNG_WIDTH - inset * 2) / zoom,
+    width: (width - inset * 2) / zoom,
     height: (PNG_HEIGHT - inset * 2) / zoom,
     strokeWidth: lineWidth / zoom,
     dash: [dash[0] / zoom, dash[1] / zoom],
@@ -76,11 +80,14 @@ export function getPngFramePreview(
   };
 }
 
-export function drawPngFrame(context: CanvasRenderingContext2D) {
+export function drawPngFrame(
+  context: CanvasRenderingContext2D,
+  width = PNG_WIDTH,
+) {
   const { color, dash, inset, lineWidth, radius } = PNG_FRAME,
     left = inset,
     top = inset,
-    right = PNG_WIDTH - inset,
+    right = width - inset,
     bottom = PNG_HEIGHT - inset;
 
   context.save();
