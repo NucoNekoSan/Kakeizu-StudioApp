@@ -145,18 +145,6 @@ export function CohabitationPanel({
       {group && (
         <div className="cohabitation-fields">
           <NumericField
-            label="幅"
-            value={group.rx * 2}
-            min={60}
-            onChange={(width) => onUpdateGroup(group.id, { rx: width / 2 })}
-          />
-          <NumericField
-            label="高さ"
-            value={group.ry * 2}
-            min={60}
-            onChange={(height) => onUpdateGroup(group.id, { ry: height / 2 })}
-          />
-          <NumericField
             label="文字サイズ"
             value={group.fontSize}
             min={8}
