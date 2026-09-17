@@ -37,6 +37,25 @@ describe("外部送信ゼロ", () => {
   });
 });
 
+describe("キャンバスの操作性", () => {
+  const styles = read("src/styles.css");
+
+  it("同居輪レイヤーがキャンバス全面のポインタ操作を奪わない", () => {
+    // このSVGは React Flow の viewport-portal 内でキャンバス全面を覆う。
+    // pointer-events: auto にすると、同居輪が1つも無くてもノードの
+    // ドラッグと選択がすべて奪われる（実ブラウザで確認済みの不具合）。
+    const layer = styles.match(/\.cohabitation-layer\s*\{[^}]*\}/)?.[0] ?? "";
+    expect(layer).toContain("pointer-events: none");
+    expect(layer).not.toMatch(/pointer-events:\s*auto/);
+  });
+
+  it("同居輪のリサイズつまみは操作を受け取る", () => {
+    // 親レイヤーが none なので、つまみ側の明示指定が無いと掴めなくなる
+    const handle = styles.match(/\.cohabitation-handle\s*\{[^}]*\}/)?.[0] ?? "";
+    expect(handle).toContain("pointer-events: auto");
+  });
+});
+
 describe("_headers", () => {
   const headers = read("public/_headers");
 
