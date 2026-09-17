@@ -28,7 +28,12 @@ export function FamilyNodeCard({
         <span className="gender-label">{data.genderName}</span>
         {data.memo && (
           <p
-            className="nowheel nodrag"
+            /* nowheel は残す: メモは overflow-y:auto でスクロールするため、
+               ホイールでキャンバスを拡大縮小せずメモを送れるようにする。
+               nodrag は付けない: メモがカード中央を占めるため、付けると
+               一番自然に掴む場所がドラッグの死角になる。ノード上のメモは
+               表示専用で、編集は右パネルで行うので文字選択より移動を優先する。 */
+            className="nowheel"
             style={{
               fontSize: `${(data.fontSize / BASE_NODE_WIDTH) * 100}cqi`,
             }}
