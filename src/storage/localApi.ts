@@ -35,16 +35,25 @@ export type LocalApi = ReturnType<typeof createLocalApi>;
  * インメモリへ自動フォールバックし、アプリは動くがタブを閉じると消える。
  */
 let resolved: Promise<DocumentStore> | null = null;
+let didFallback = false;
+
 const defaultStore = () =>
   (resolved ??=
     readStorageMode() === "session"
       ? Promise.resolve(createMemoryStore())
-      : createIndexedDbStore().catch(() => createMemoryStore()));
+      : createIndexedDbStore().catch(() => {
+          didFallback = true;
+          return createMemoryStore();
+        }));
 
 /** 保存モードを切り替えたときに、次の呼び出しでストアを取り直す。 */
 export const resetStoreCache = () => {
   resolved = null;
+  didFallback = false;
 };
+
+/** 永続モードを選んだが IndexedDB が使えずメモリへ退避したか */
+export const isStorageFallback = () => didFallback;
 
 /**
  * この端末に残るアプリのデータをすべて消す。
