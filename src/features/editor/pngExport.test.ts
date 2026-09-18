@@ -61,7 +61,7 @@ describe("PNG export viewport", () => {
     expect(viewport.zoom).toBe(2);
   });
 
-  it("keeps the origin fixed when no self node exists", () => {
+  it("keeps the initial card center fixed when no self node exists", () => {
     const otherData = { ...data, relationKind: "other" as const },
       nodes: Node<FamilyNodeData>[] = [
         {
@@ -79,11 +79,11 @@ describe("PNG export viewport", () => {
       ],
       viewport = getPngViewport(nodes);
 
-    expect(viewport.x).toBeCloseTo(PNG_WIDTH / 2);
-    expect(viewport.y).toBeCloseTo(PNG_HEIGHT / 2);
+    expect(viewport.x + 90 * viewport.zoom).toBeCloseTo(PNG_WIDTH / 2);
+    expect(viewport.y + 60 * viewport.zoom).toBeCloseTo(PNG_HEIGHT / 2);
   });
 
-  it("maps the exported frame back to the self card center", () => {
+  it("maps the exported frame back to the initial card center", () => {
     const self: Node<FamilyNodeData> = {
         id: "self",
         position: { x: 100, y: 200 },
@@ -99,8 +99,8 @@ describe("PNG export viewport", () => {
       preview = getPngFramePreview([self, other]);
 
     expect(preview).not.toBeNull();
-    expect(preview!.x + preview!.width / 2).toBeCloseTo(190);
-    expect(preview!.y + preview!.height / 2).toBeCloseTo(260);
+    expect(preview!.x + preview!.width / 2).toBeCloseTo(90);
+    expect(preview!.y + preview!.height / 2).toBeCloseTo(60);
 
     const viewport = getPngViewport([self, other]);
     expect(preview!.x * viewport.zoom + viewport.x).toBeCloseTo(
@@ -170,17 +170,17 @@ describe("custom frame width", () => {
   });
 });
 
-describe("self-centered frame", () => {
+describe("fixed initial frame", () => {
   it.each([
-    { data: { ...data, scale: 2 }, expected: { x: 640, y: 300 } },
-    { data, width: 240, height: 160, expected: { x: 580, y: 260 } },
+    { data: { ...data, scale: 2 }, expected: { x: 90, y: 60 } },
+    { data, width: 240, height: 160, expected: { x: 90, y: 60 } },
     {
       data,
       measured: { width: 200, height: 150 },
-      expected: { x: 560, y: 255 },
+      expected: { x: 90, y: 60 },
     },
   ])(
-    "uses card dimensions with a scaled fallback: %j",
+    "ignores subsequent card dimensions and scale: %j",
     ({ expected, ...props }) => {
       const self: Node<FamilyNodeData> = {
         id: "self",
@@ -193,8 +193,8 @@ describe("self-centered frame", () => {
     },
   );
 
-  it("follows self movement and ignores other node movement without changing positions", () => {
-    const self = { id: "self", position: { x: 460, y: 180 }, data };
+  it("keeps the frame fixed after movement and self deletion without changing positions", () => {
+    const self = { id: "self", position: { x: 0, y: 0 }, data };
     const other = {
       id: "other",
       position: { x: 0, y: 0 },
@@ -208,14 +208,22 @@ describe("self-centered frame", () => {
       { ...self, position: { x: 510, y: 250 } },
       other,
     ])!;
-    expect(moved.x - frame.x).toBe(50);
-    expect(moved.y - frame.y).toBe(70);
+    expect(moved).toEqual(frame);
+    expect(
+      getPngViewport([{ ...self, position: { x: 510, y: 250 } }, other]),
+    ).toEqual(getPngViewport([self, other]));
+    expect(
+      getPngFramePreview(JSON.parse(JSON.stringify([self, other]))),
+    ).toEqual(frame);
+    expect(getPngFramePreview([other])).toEqual(frame);
     for (const width of [1200, 2400, 4800]) {
       const resized = getPngFramePreview([self, other], width)!;
+      expect(resized.x + resized.width / 2).toBe(90);
+      expect(resized.y + resized.height / 2).toBe(60);
       expect(clampNodeToFrame(self.position, nodeSize(self), resized)).toEqual(
         self.position,
       );
     }
-    expect(self.position).toEqual({ x: 460, y: 180 });
+    expect(self.position).toEqual({ x: 0, y: 0 });
   });
 });

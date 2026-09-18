@@ -1,6 +1,6 @@
 import { type Node } from "@xyflow/react";
 import type { FamilyNodeData } from "../../familyGraph";
-import { nodeSize } from "./nodeLayout";
+import { BASE_NODE_HEIGHT, BASE_NODE_WIDTH } from "./nodeLayout";
 
 export const PNG_WIDTH = 2400;
 export const PNG_HEIGHT = 1200;
@@ -40,15 +40,8 @@ export function getPngViewport(
     };
   }
 
-  const self = nodes.find((node) => node.data.relationKind === "self"),
-    size = self ? nodeSize(self) : null,
-    center =
-      self && size
-        ? {
-            x: self.position.x + size.width / 2,
-            y: self.position.y + size.height / 2,
-          }
-        : { x: 0, y: 0 },
+  // Keep the frame centered on the initial self card at (0, 0).
+  const center = { x: BASE_NODE_WIDTH / 2, y: BASE_NODE_HEIGHT / 2 },
     viewport = {
       x: width / 2 - center.x * PNG_EXPORT_SCALE,
       y: PNG_HEIGHT / 2 - center.y * PNG_EXPORT_SCALE,
