@@ -110,6 +110,50 @@ const record = (
   y: 320,
 });
 
+describe("initial self placement", () => {
+  it.each(["above", "below", "left", "right"])(
+    "places the first self at the origin for direction %s",
+    (direction) => {
+      const chart = detail();
+      chart.relationships.unshift({
+        ...relationship("self-relationship", "本人", "child"),
+        kind: "self",
+      });
+      const onSubmit = vi.fn();
+      render(
+        <NodeForm mode="add" detail={chart} nodes={[]} onSubmit={onSubmit} />,
+      );
+      fireEvent.change(screen.getByLabelText("配置方向"), {
+        target: { value: direction },
+      });
+      fireEvent.click(screen.getByRole("button", { name: "自動配置して追加" }));
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ x: 0, y: 0, anchorNodeId: null }),
+      );
+    },
+  );
+
+  it("keeps later self nodes relative to their anchor", () => {
+    const chart = detail();
+    chart.relationships.unshift({
+      ...relationship("self-relationship", "本人", "child"),
+      kind: "self",
+    });
+    const onSubmit = vi.fn();
+    render(
+      <NodeForm
+        mode="add"
+        detail={chart}
+        nodes={[node("person", "本人", null, "self")]}
+        onSubmit={onSubmit}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "自動配置して追加" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ x: 320, y: 100, anchorNodeId: "person" }),
+    );
+  });
+});
 describe("relationship quick add form", () => {
   it("automatically selects the only partner as the child's second parent", () => {
     const nodes = [

@@ -181,11 +181,15 @@ export function NodeForm({
         base = anchor?.position || value?.position || { x: 240, y: 180 },
         placed =
           mode === "add"
-            ? findFreePosition(
-                base,
-                placementDirection,
-                nodes.filter((n) => n.id !== value?.id).map((n) => n.position),
-              )
+            ? !nodes.length && selectedRelation?.kind === "self"
+              ? { x: 0, y: 0 }
+              : findFreePosition(
+                  base,
+                  placementDirection,
+                  nodes
+                    .filter((n) => n.id !== value?.id)
+                    .map((n) => n.position),
+                )
             : value?.position || base;
       onSubmit({
         relationshipId,

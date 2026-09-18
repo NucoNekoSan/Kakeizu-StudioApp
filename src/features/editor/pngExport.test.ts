@@ -9,6 +9,7 @@ import {
   PNG_HEIGHT,
   PNG_WIDTH,
 } from "./pngExport";
+import { clampNodeToFrame, nodeSize } from "./nodeLayout";
 
 const data: FamilyNodeData = {
   relationshipId: "self",
@@ -34,7 +35,7 @@ const data: FamilyNodeData = {
 };
 
 describe("PNG export viewport", () => {
-  it("uses a fixed 2x viewport centered on the world origin", () => {
+  it("uses a fixed 2x viewport centered on the first self card", () => {
     const nodes: Node<FamilyNodeData>[] = [
         {
           id: "self",
@@ -55,8 +56,8 @@ describe("PNG export viewport", () => {
       width: "2400px",
       height: "1200px",
     });
-    expect(viewport.x).toBeCloseTo(PNG_WIDTH / 2);
-    expect(viewport.y).toBeCloseTo(PNG_HEIGHT / 2);
+    expect(viewport.x + 90 * viewport.zoom).toBeCloseTo(PNG_WIDTH / 2);
+    expect(viewport.y + 60 * viewport.zoom).toBeCloseTo(PNG_HEIGHT / 2);
     expect(viewport.zoom).toBe(2);
   });
 
@@ -82,7 +83,7 @@ describe("PNG export viewport", () => {
     expect(viewport.y).toBeCloseTo(PNG_HEIGHT / 2);
   });
 
-  it("maps the exported frame back to fixed origin flow coordinates", () => {
+  it("maps the exported frame back to the self card center", () => {
     const self: Node<FamilyNodeData> = {
         id: "self",
         position: { x: 100, y: 200 },
@@ -98,8 +99,8 @@ describe("PNG export viewport", () => {
       preview = getPngFramePreview([self, other]);
 
     expect(preview).not.toBeNull();
-    expect(preview!.x + preview!.width / 2).toBeCloseTo(0);
-    expect(preview!.y + preview!.height / 2).toBeCloseTo(0);
+    expect(preview!.x + preview!.width / 2).toBeCloseTo(190);
+    expect(preview!.y + preview!.height / 2).toBeCloseTo(260);
 
     const viewport = getPngViewport([self, other]);
     expect(preview!.x * viewport.zoom + viewport.x).toBeCloseTo(
@@ -162,9 +163,59 @@ describe("custom frame width", () => {
     ] as Node<FamilyNodeData>[];
     const viewport = getPngViewport(nodes, 3200);
     const frame = getPngFramePreview(nodes, 3200)!;
-    expect(viewport.x).toBe(1600);
+    expect(viewport.x).toBe(1420);
     expect(viewport.style.width).toBe("3200px");
-    expect(frame.x + frame.width / 2).toBe(0);
+    expect(frame.x + frame.width / 2).toBe(90);
     expect(frame.width * viewport.zoom).toBe(3200 - PNG_FRAME.inset * 2);
+  });
+});
+
+describe("self-centered frame", () => {
+  it.each([
+    { data: { ...data, scale: 2 }, expected: { x: 640, y: 300 } },
+    { data, width: 240, height: 160, expected: { x: 580, y: 260 } },
+    {
+      data,
+      measured: { width: 200, height: 150 },
+      expected: { x: 560, y: 255 },
+    },
+  ])(
+    "uses card dimensions with a scaled fallback: %j",
+    ({ expected, ...props }) => {
+      const self: Node<FamilyNodeData> = {
+        id: "self",
+        position: { x: 460, y: 180 },
+        ...props,
+      };
+      const frame = getPngFramePreview([self])!;
+      expect(frame.x + frame.width / 2).toBe(expected.x);
+      expect(frame.y + frame.height / 2).toBe(expected.y);
+    },
+  );
+
+  it("follows self movement and ignores other node movement without changing positions", () => {
+    const self = { id: "self", position: { x: 460, y: 180 }, data };
+    const other = {
+      id: "other",
+      position: { x: 0, y: 0 },
+      data: { ...data, relationKind: "other" as const },
+    };
+    const frame = getPngFramePreview([self, other])!;
+    expect(
+      getPngFramePreview([self, { ...other, position: { x: 900, y: 600 } }]),
+    ).toEqual(frame);
+    const moved = getPngFramePreview([
+      { ...self, position: { x: 510, y: 250 } },
+      other,
+    ])!;
+    expect(moved.x - frame.x).toBe(50);
+    expect(moved.y - frame.y).toBe(70);
+    for (const width of [1200, 2400, 4800]) {
+      const resized = getPngFramePreview([self, other], width)!;
+      expect(clampNodeToFrame(self.position, nodeSize(self), resized)).toEqual(
+        self.position,
+      );
+    }
+    expect(self.position).toEqual({ x: 460, y: 180 });
   });
 });

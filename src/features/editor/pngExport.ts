@@ -1,5 +1,6 @@
 import { type Node } from "@xyflow/react";
 import type { FamilyNodeData } from "../../familyGraph";
+import { nodeSize } from "./nodeLayout";
 
 export const PNG_WIDTH = 2400;
 export const PNG_HEIGHT = 1200;
@@ -39,9 +40,18 @@ export function getPngViewport(
     };
   }
 
-  const viewport = {
-      x: width / 2,
-      y: PNG_HEIGHT / 2,
+  const self = nodes.find((node) => node.data.relationKind === "self"),
+    size = self ? nodeSize(self) : null,
+    center =
+      self && size
+        ? {
+            x: self.position.x + size.width / 2,
+            y: self.position.y + size.height / 2,
+          }
+        : { x: 0, y: 0 },
+    viewport = {
+      x: width / 2 - center.x * PNG_EXPORT_SCALE,
+      y: PNG_HEIGHT / 2 - center.y * PNG_EXPORT_SCALE,
       zoom: PNG_EXPORT_SCALE,
     },
     zoom = viewport.zoom,
