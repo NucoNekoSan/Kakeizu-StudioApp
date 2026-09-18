@@ -90,11 +90,13 @@ export function useChartNodeMutations(
   const frame = useMutation({
     mutationFn: ({
       width,
+      height,
       layouts,
     }: {
       width: number;
+      height: number;
       layouts: ChartNodeLayout[];
-    }) => api.updateNodeLayout(chartId, layouts, width),
+    }) => api.updateNodeLayout(chartId, layouts, width, height),
     ...mutationOptions,
   });
   return { create, update, remove, frame };

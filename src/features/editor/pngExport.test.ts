@@ -157,6 +157,42 @@ describe("PNG export viewport", () => {
 });
 
 describe("custom frame width", () => {
+  it.each([600, 1200, 4800])(
+    "uses height %d with the fixed center and matching export bounds",
+    (height) => {
+      const nodes = [{ id: "self", position: { x: 0, y: 0 }, data }];
+      const viewport = getPngViewport(nodes, 2400, height);
+      const frame = getPngFramePreview(nodes, 2400, height)!;
+      expect(viewport.style.height).toBe(`${height}px`);
+      expect(frame.x + frame.width / 2).toBe(90);
+      expect(frame.y + frame.height / 2).toBe(60);
+      expect(frame.y * viewport.zoom + viewport.y).toBe(PNG_FRAME.inset);
+      expect(frame.height * viewport.zoom).toBe(height - 2 * PNG_FRAME.inset);
+      expect(
+        clampNodeToFrame({ x: 0, y: -10000 }, nodeSize(nodes[0]), frame).y,
+      ).toBe(frame.y);
+      expect(
+        clampNodeToFrame({ x: 0, y: 10000 }, nodeSize(nodes[0]), frame).y,
+      ).toBe(frame.y + frame.height - 120);
+      expect(getPngViewport([], 2400, height).style.height).toBe(`${height}px`);
+    },
+  );
+  it("draws the frame inside the custom canvas height", () => {
+    const context = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      setLineDash: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      quadraticCurveTo: vi.fn(),
+      closePath: vi.fn(),
+      stroke: vi.fn(),
+    };
+    drawPngFrame(context as unknown as CanvasRenderingContext2D, 1800, 600);
+    expect(context.lineTo).toHaveBeenCalledWith(1776, 548);
+    expect(context.quadraticCurveTo).toHaveBeenCalledWith(1776, 576, 1748, 576);
+  });
   it("uses a centered custom width for the viewport and frame", () => {
     const nodes = [
       { id: "person", position: { x: 0, y: 0 }, data },

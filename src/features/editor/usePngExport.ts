@@ -28,6 +28,7 @@ export function usePngExport(
   nodes: Node<FamilyNodeData>[],
   title?: string,
   frameWidth = PNG_WIDTH,
+  frameHeight = PNG_HEIGHT,
 ) {
   const [isExporting, setIsExporting] = useState(false),
     [exportError, setExportError] = useState(""),
@@ -44,10 +45,10 @@ export function usePngExport(
       try {
         if (!viewport) throw new Error("React Flow viewport was not found");
         const { toCanvas } = await import("html-to-image"),
-          exportViewport = getPngViewport(nodes, frameWidth),
+          exportViewport = getPngViewport(nodes, frameWidth, frameHeight),
           canvas = await toCanvas(viewport, {
             width: frameWidth,
-            height: PNG_HEIGHT,
+            height: frameHeight,
             pixelRatio: 1,
             style: exportViewport.style,
             filter: (node) =>
@@ -60,14 +61,14 @@ export function usePngExport(
           context = canvas.getContext("2d"),
           stamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, "-");
         if (!context) throw new Error("PNG canvas context was not found");
-        drawPngFrame(context, frameWidth);
+        drawPngFrame(context, frameWidth, frameHeight);
         const dataUrl = canvas.toDataURL("image/png");
         const image = {
           dataUrl,
           blob: dataUrlToBlob(dataUrl),
           fileName: `${title || "相関図"}-${stamp}.png`,
           width: frameWidth,
-          height: PNG_HEIGHT,
+          height: frameHeight,
         };
         if (showPreview) setPreview(image);
         else await saveFile(image.fileName, image.blob, pngFileType);
@@ -81,7 +82,7 @@ export function usePngExport(
         setIsExporting(false);
       }
     },
-    [flowRef, nodes, title, frameWidth],
+    [flowRef, nodes, title, frameWidth, frameHeight],
   );
 
   const exportPng = useCallback(() => generatePng(false), [generatePng]);

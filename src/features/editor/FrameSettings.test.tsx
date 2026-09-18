@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FrameSettings } from "./FrameSettings";
+import "@testing-library/jest-dom/vitest";
 import { readFrameVisibility, writeFrameVisibility } from "./frameVisibility";
 import { writeStorageMode } from "../../storage/storageMode";
 
@@ -25,6 +26,7 @@ describe("外枠設定", () => {
       <FrameSettings
         visible={false}
         width={2400}
+        height={1200}
         isSaving={false}
         error=""
         willMove={() => true}
@@ -49,19 +51,19 @@ describe("外枠設定", () => {
   it("幅の変更と移動の案内を表示して適用する", async () => {
     const apply = setup();
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.change(screen.getByRole("spinbutton"), {
+    fireEvent.change(screen.getByLabelText("PNGの横幅（px）"), {
       target: { value: "1800" },
     });
     expect(screen.getByRole("status").textContent).toContain(
       "重なる場合があります",
     );
     fireEvent.click(screen.getByRole("button", { name: "適用" }));
-    await waitFor(() => expect(apply).toHaveBeenCalledWith(true, 1800));
+    await waitFor(() => expect(apply).toHaveBeenCalledWith(true, 1800, 1200));
     expect(HTMLDialogElement.prototype.close).toHaveBeenCalled();
   });
   it("不正な幅は適用できず、キャンセルで保存しない", () => {
     const apply = setup();
-    fireEvent.change(screen.getByRole("spinbutton"), {
+    fireEvent.change(screen.getByLabelText("PNGの横幅（px）"), {
       target: { value: "1100" },
     });
     expect(
@@ -76,5 +78,65 @@ describe("外枠設定", () => {
     fireEvent.click(screen.getByRole("button", { name: "適用" }));
     await waitFor(() => expect(apply).toHaveBeenCalled());
     expect(HTMLDialogElement.prototype.close).not.toHaveBeenCalled();
+  });
+  it.each([600, 1200, 4800])(
+    "縦幅%dpxを横幅と独立して適用する",
+    async (height) => {
+      const apply = setup();
+      fireEvent.change(screen.getByLabelText("PNGの縦幅（px）"), {
+        target: { value: String(height) },
+      });
+      fireEvent.click(screen.getByRole("button", { name: "適用" }));
+      await waitFor(() =>
+        expect(apply).toHaveBeenCalledWith(false, 2400, height),
+      );
+    },
+  );
+  it.each(["", "599", "4801", "1200.5"])(
+    "不正な縦幅%sは適用できない",
+    (height) => {
+      setup();
+      fireEvent.change(screen.getByLabelText("PNGの縦幅（px）"), {
+        target: { value: height },
+      });
+      expect(screen.getByRole("alert").textContent).toContain("縦幅");
+      expect(screen.getByRole("button", { name: "適用" })).toBeDisabled();
+    },
+  );
+  it("縦幅ボタンは100px刻みで境界を超えない", () => {
+    setup();
+    const input = screen.getByLabelText("PNGの縦幅（px）") as HTMLInputElement;
+    fireEvent.click(screen.getByRole("button", { name: "縦幅を100px増やす" }));
+    expect(input.value).toBe("1300");
+    fireEvent.change(input, { target: { value: "650" } });
+    fireEvent.click(screen.getByRole("button", { name: "縦幅を100px減らす" }));
+    expect(input.value).toBe("600");
+    expect(
+      screen.getByRole("button", { name: "縦幅を100px減らす" }),
+    ).toBeDisabled();
+    fireEvent.change(input, { target: { value: "4750" } });
+    fireEvent.click(screen.getByRole("button", { name: "縦幅を100px増やす" }));
+    expect(input.value).toBe("4800");
+    expect(
+      screen.getByRole("button", { name: "縦幅を100px増やす" }),
+    ).toBeDisabled();
+  });
+  it("縦横を変更後キャンセルして開き直すと保存値に戻る", () => {
+    const apply = setup();
+    fireEvent.change(screen.getByLabelText("PNGの横幅（px）"), {
+      target: { value: "1800" },
+    });
+    fireEvent.change(screen.getByLabelText("PNGの縦幅（px）"), {
+      target: { value: "600" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "キャンセル" }));
+    fireEvent.click(screen.getByRole("button", { name: "外枠" }));
+    expect(
+      (screen.getByLabelText("PNGの横幅（px）") as HTMLInputElement).value,
+    ).toBe("2400");
+    expect(
+      (screen.getByLabelText("PNGの縦幅（px）") as HTMLInputElement).value,
+    ).toBe("1200");
+    expect(apply).not.toHaveBeenCalled();
   });
 });

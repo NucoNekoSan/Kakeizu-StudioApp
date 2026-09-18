@@ -55,6 +55,23 @@ afterEach(() => {
 });
 
 describe("useChartNodeMutations", () => {
+  it("saves both frame dimensions with the layout", async () => {
+    vi.mocked(api.updateNodeLayout).mockResolvedValueOnce(
+      detail("chart-a", "frame"),
+    );
+    const { result } = renderHook(
+      () => useChartNodeMutations("chart-a", vi.fn(), vi.fn(), vi.fn()),
+      { wrapper: createWrapper() },
+    );
+    await act(() =>
+      result.current.frame.mutateAsync({
+        width: 1800,
+        height: 600,
+        layouts: [],
+      }),
+    );
+    expect(api.updateNodeLayout).toHaveBeenCalledWith("chart-a", [], 1800, 600);
+  });
   it("serializes chart writes and stays saving until all writes settle", async () => {
     const first = deferred<ChartDetail>();
     const second = deferred<ChartDetail>();

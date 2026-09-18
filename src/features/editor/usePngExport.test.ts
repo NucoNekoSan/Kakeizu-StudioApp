@@ -40,7 +40,7 @@ describe("usePngExport", () => {
 
     await act(() => result.current.exportPng());
 
-    expect(getPngViewport).toHaveBeenCalledWith([], 1080);
+    expect(getPngViewport).toHaveBeenCalledWith([], 1080, 540);
     expect(toCanvas).toHaveBeenCalledWith(
       viewport,
       expect.objectContaining({
@@ -50,7 +50,7 @@ describe("usePngExport", () => {
         style: { transform: "translated" },
       }),
     );
-    expect(drawPngFrame).toHaveBeenCalledWith(context, 1080);
+    expect(drawPngFrame).toHaveBeenCalledWith(context, 1080, 540);
     expect(click).toHaveBeenCalledOnce();
     expect(result.current).toMatchObject({
       exportError: "",
@@ -85,20 +85,20 @@ describe("usePngExport", () => {
     vi.spyOn(canvas, "toDataURL").mockReturnValue("data:image/png;base64,cG5n");
     vi.mocked(toCanvas).mockResolvedValue(canvas);
     const { result } = renderHook(() =>
-      usePngExport({ current: root }, [], "家族", 3200),
+      usePngExport({ current: root }, [], "家族", 3200, 1800),
     );
     await act(() => result.current.previewPng());
     expect(click).not.toHaveBeenCalled();
     expect(result.current.preview).toMatchObject({
       width: 3200,
-      height: 540,
+      height: 1800,
       dataUrl: "data:image/png;base64,cG5n",
     });
     expect(toCanvas).toHaveBeenCalledWith(
       viewport,
-      expect.objectContaining({ width: 3200 }),
+      expect.objectContaining({ width: 3200, height: 1800 }),
     );
-    expect(drawPngFrame).toHaveBeenCalledWith(context, 3200);
+    expect(drawPngFrame).toHaveBeenCalledWith(context, 3200, 1800);
     await act(() => result.current.savePreview());
     expect(toCanvas).toHaveBeenCalledOnce();
     expect(click).toHaveBeenCalledOnce();

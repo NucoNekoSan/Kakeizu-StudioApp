@@ -26,6 +26,7 @@ export interface PngFramePreview {
 export function getPngViewport(
   nodes: Node<FamilyNodeData>[],
   width = PNG_WIDTH,
+  height = PNG_HEIGHT,
 ) {
   if (!nodes.length) {
     return {
@@ -34,7 +35,7 @@ export function getPngViewport(
       zoom: 1,
       style: {
         width: `${width}px`,
-        height: `${PNG_HEIGHT}px`,
+        height: `${height}px`,
         transform: "translate(0px, 0px) scale(1)",
       },
     };
@@ -44,7 +45,7 @@ export function getPngViewport(
   const center = { x: BASE_NODE_WIDTH / 2, y: BASE_NODE_HEIGHT / 2 },
     viewport = {
       x: width / 2 - center.x * PNG_EXPORT_SCALE,
-      y: PNG_HEIGHT / 2 - center.y * PNG_EXPORT_SCALE,
+      y: height / 2 - center.y * PNG_EXPORT_SCALE,
       zoom: PNG_EXPORT_SCALE,
     },
     zoom = viewport.zoom,
@@ -57,7 +58,7 @@ export function getPngViewport(
     zoom,
     style: {
       width: `${width}px`,
-      height: `${PNG_HEIGHT}px`,
+      height: `${height}px`,
       transform: `translate(${x}px, ${y}px) scale(${zoom})`,
     },
   };
@@ -66,17 +67,18 @@ export function getPngViewport(
 export function getPngFramePreview(
   nodes: Node<FamilyNodeData>[],
   width = PNG_WIDTH,
+  height = PNG_HEIGHT,
 ): PngFramePreview | null {
   if (!nodes.length) return null;
 
-  const { x, y, zoom } = getPngViewport(nodes, width),
+  const { x, y, zoom } = getPngViewport(nodes, width, height),
     { dash, inset, lineWidth, radius } = PNG_FRAME;
 
   return {
     x: (inset - x) / zoom,
     y: (inset - y) / zoom,
     width: (width - inset * 2) / zoom,
-    height: (PNG_HEIGHT - inset * 2) / zoom,
+    height: (height - inset * 2) / zoom,
     strokeWidth: lineWidth / zoom,
     dash: [dash[0] / zoom, dash[1] / zoom],
     radius: radius / zoom,
@@ -86,12 +88,13 @@ export function getPngFramePreview(
 export function drawPngFrame(
   context: CanvasRenderingContext2D,
   width = PNG_WIDTH,
+  height = PNG_HEIGHT,
 ) {
   const { color, dash, inset, lineWidth, radius } = PNG_FRAME,
     left = inset,
     top = inset,
     right = width - inset,
-    bottom = PNG_HEIGHT - inset;
+    bottom = height - inset;
 
   context.save();
   context.strokeStyle = color;

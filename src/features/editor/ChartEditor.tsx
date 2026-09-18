@@ -45,7 +45,7 @@ import { CohabitationToolOverlay } from "./CohabitationToolOverlay";
 import { NodeForm, QuickAddActions } from "./NodeForm";
 import { FamilyNode } from "./FamilyNode";
 import { ResizeContext } from "./resizeContext";
-import { DEFAULT_FRAME_WIDTH } from "../../frameSettings";
+import { DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH } from "../../frameSettings";
 import { FrameSettings } from "./FrameSettings";
 import { readFrameVisibility, writeFrameVisibility } from "./frameVisibility";
 import { getPngFramePreview } from "./pngExport";
@@ -221,6 +221,7 @@ function ChartEditor() {
       connectionPreview,
       nodeDraft,
       chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH,
+      chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT,
     ),
     {
       exportPng,
@@ -235,6 +236,7 @@ function ChartEditor() {
       display.nodes,
       chart.data?.title,
       chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH,
+      chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT,
     ),
     resizeActions = useNodeResize(nodes, pngFrame, (nodeId, input) =>
       update.mutate({ chartId: id, nodeId, input }),
@@ -307,10 +309,11 @@ function ChartEditor() {
         <FrameSettings
           visible={frameVisible}
           width={chart.data.frameWidth ?? DEFAULT_FRAME_WIDTH}
+          height={chart.data.frameHeight ?? DEFAULT_FRAME_HEIGHT}
           isSaving={frame.isPending}
           error={frame.error ? getErrorMessage(frame.error) : ""}
-          willMove={(width) => {
-            const bounds = getPngFramePreview(nodes, width);
+          willMove={(width, height) => {
+            const bounds = getPngFramePreview(nodes, width, height);
             return nodes.some((node) => {
               const position = clampNodeToFrame(
                 node.position,
@@ -322,17 +325,20 @@ function ChartEditor() {
               );
             });
           }}
-          onApply={async (visible, width) => {
+          onApply={async (visible, width, height) => {
             frame.reset();
-            if (width !== (chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH)) {
+            if (
+              width !== (chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH) ||
+              height !== (chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT)
+            ) {
               flushDebouncedNodeUpdate();
-              const bounds = getPngFramePreview(nodes, width);
+              const bounds = getPngFramePreview(nodes, width, height);
               const layouts = nodes.map((node) => ({
                 id: node.id,
                 scale: node.data.scale,
                 ...clampNodeToFrame(node.position, nodeSize(node), bounds),
               }));
-              await frame.mutateAsync({ width, layouts });
+              await frame.mutateAsync({ width, height, layouts });
             }
             writeFrameVisibility(visible);
             setFrameVisible(visible);

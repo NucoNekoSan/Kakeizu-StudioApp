@@ -10,7 +10,7 @@ import type {
   GenderDefinition,
   RelationshipDefinition,
 } from "../types";
-import { isFrameWidth } from "../frameSettings";
+import { isFrameHeight, isFrameWidth } from "../frameSettings";
 import { createId, isId, nowIso } from "./ids";
 import type { DocumentCodec } from "./versioned";
 
@@ -31,6 +31,7 @@ export interface StoredEdge {
 
 export interface ChartDocumentV1 {
   frameWidth?: number;
+  frameHeight?: number;
   schemaVersion: 1;
   id: string;
   title: string;
@@ -72,6 +73,7 @@ export const chartDocumentCodec: DocumentCodec<ChartDocumentV1> = {
       isId(value.id) &&
       typeof value.title === "string" &&
       (value.frameWidth === undefined || isFrameWidth(value.frameWidth)) &&
+      (value.frameHeight === undefined || isFrameHeight(value.frameHeight)) &&
       Array.isArray(value.nodes) &&
       value.nodes.every(isNodeRecord) &&
       Array.isArray(value.edges) &&
@@ -199,6 +201,7 @@ export function toChartDetail(
     id: document.id,
     title: document.title,
     frameWidth: document.frameWidth,
+    frameHeight: document.frameHeight,
     nodes: document.nodes,
     edges,
     relationships,

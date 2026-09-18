@@ -433,6 +433,36 @@ describe("永続化", () => {
 });
 
 describe("外枠の横幅", () => {
+  it("縦幅とノード座標を保存し、高さ省略時は保持する", async () => {
+    const { api, chartId, genders, kind } = await setup();
+    expect((await api.chart(chartId)).frameHeight).toBeUndefined();
+    const before = await api.createNode(
+      chartId,
+      baseNode(kind("本人"), genders[0].id),
+    );
+    const layouts = [{ id: before.nodes[0].id, x: 0, y: 30, scale: 1 }];
+    await api.updateNodeLayout(chartId, layouts, undefined, 600);
+    const saved = await api.chart(chartId);
+    expect(saved.frameHeight).toBe(600);
+    expect(saved.frameWidth).toBeUndefined();
+    expect(saved.nodes[0]).toMatchObject({ x: 0, y: 30 });
+    await api.updateNodeLayout(chartId, [], 1800);
+    expect((await api.chart(chartId)).frameHeight).toBe(600);
+    await api.updateNodeLayout(chartId, [], 2400, 4800);
+    expect((await api.chart(chartId)).frameHeight).toBe(4800);
+  });
+  it.each([599, 4801, 1200.5, NaN])(
+    "不正な縦幅%sは寸法と座標を変更しない",
+    async (height) => {
+      const { api, chartId } = await setup();
+      await api.updateNodeLayout(chartId, [], 2400, 1200);
+      const before = await api.chart(chartId);
+      await expect(
+        api.updateNodeLayout(chartId, [], 1800, height),
+      ).rejects.toBeInstanceOf(ApiError);
+      expect(await api.chart(chartId)).toEqual(before);
+    },
+  );
   it("図ごとの横幅と座標をまとめて保存し、旧図の設定は省略できる", async () => {
     const { api, chartId, genders, kind } = await setup();
     const other = await api.createChart("別の図");
@@ -485,11 +515,13 @@ describe("外枠保存の失敗", () => {
         chart.id,
         [{ id: first.id, x: 0, y: 0, scale: 1 }],
         1800,
+        1800,
       ),
     ).rejects.toThrow("storage unavailable");
     store.set = set;
     const after = await api.chart(chart.id);
     expect(after.frameWidth).toBeUndefined();
+    expect(after.frameHeight).toBeUndefined();
     expect(after.nodes).toEqual(before.nodes);
   });
 });

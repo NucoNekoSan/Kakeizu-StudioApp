@@ -13,6 +13,7 @@ export function useEditorPreview(
   } | null,
   nodeDraft: NodeDraft | null,
   frameWidth?: number,
+  frameHeight?: number,
 ) {
   const display = useMemo(
     () =>
@@ -45,8 +46,8 @@ export function useEditorPreview(
     [nodes, edges, connectionPreview, nodeDraft],
   );
   const pngFrame = useMemo(
-    () => getPngFramePreview(display.nodes, frameWidth),
-    [display.nodes, frameWidth],
+    () => getPngFramePreview(display.nodes, frameWidth, frameHeight),
+    [display.nodes, frameWidth, frameHeight],
   );
   return { display, pngFrame };
 }

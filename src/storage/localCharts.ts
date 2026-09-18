@@ -1,4 +1,4 @@
-import { isFrameWidth } from "../frameSettings";
+import { isFrameHeight, isFrameWidth } from "../frameSettings";
 import { validationError } from "../api/errors";
 import type {
   ChartDetail,
@@ -292,9 +292,12 @@ export function createChartApi(repository: Repository) {
       chartId: string,
       nodes: ChartNodeLayout[],
       frameWidth?: number,
+      frameHeight?: number,
     ): Promise<ChartDetail> => {
       if (frameWidth !== undefined && !isFrameWidth(frameWidth))
         throw validationError("横幅は1200〜4800pxの整数で指定してください");
+      if (frameHeight !== undefined && !isFrameHeight(frameHeight))
+        throw validationError("縦幅は600〜4800pxの整数で指定してください");
       const document = await repository.chart(chartId);
       if (!Array.isArray(nodes) || nodes.length > check.LAYOUT_NODES_MAX)
         throw validationError("レイアウト情報を確認してください");
@@ -317,6 +320,7 @@ export function createChartApi(repository: Repository) {
       const saved = await repository.saveChart({
         ...document,
         ...(frameWidth === undefined ? {} : { frameWidth }),
+        ...(frameHeight === undefined ? {} : { frameHeight }),
         nodes: document.nodes.map((node) => {
           const update = updates.get(node.id);
           return update

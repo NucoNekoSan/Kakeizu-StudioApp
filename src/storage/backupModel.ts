@@ -1,4 +1,4 @@
-import { isFrameWidth } from "../frameSettings";
+import { isFrameHeight, isFrameWidth } from "../frameSettings";
 import { ApiError } from "../api/errors";
 import {
   isCohabitationDocument,
@@ -24,6 +24,7 @@ export const BACKUP_VERSION = 1;
  */
 export interface BackupChart {
   frameWidth?: number;
+  frameHeight?: number;
   id: string;
   title: string;
   createdAt: string;
@@ -70,6 +71,9 @@ export function buildBackup(
       id: chart.id,
       title: chart.title,
       frameWidth: isFrameWidth(chart.frameWidth) ? chart.frameWidth : undefined,
+      frameHeight: isFrameHeight(chart.frameHeight)
+        ? chart.frameHeight
+        : undefined,
       createdAt: chart.createdAt,
       updatedAt: chart.updatedAt,
       nodes: chart.nodes,
@@ -133,6 +137,9 @@ export function parseBackup(raw: string): BackupFileV1 {
       id: chart.id,
       title: chart.title,
       frameWidth: isFrameWidth(chart.frameWidth) ? chart.frameWidth : undefined,
+      frameHeight: isFrameHeight(chart.frameHeight)
+        ? chart.frameHeight
+        : undefined,
       createdAt:
         typeof chart.createdAt === "string"
           ? chart.createdAt
@@ -170,6 +177,9 @@ export function toChartDocument(
     id,
     title: chart.title,
     frameWidth: isFrameWidth(chart.frameWidth) ? chart.frameWidth : undefined,
+    frameHeight: isFrameHeight(chart.frameHeight)
+      ? chart.frameHeight
+      : undefined,
     createdAt: chart.createdAt,
     updatedAt: chart.updatedAt,
     nodes: chart.nodes as ChartDocumentV1["nodes"],

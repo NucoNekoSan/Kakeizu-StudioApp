@@ -65,6 +65,7 @@ export interface ChartEdgeRecord {
 }
 export interface ChartDetail {
   frameWidth?: number;
+  frameHeight?: number;
   id: string;
   title: string;
   nodes: ChartNodeRecord[];
