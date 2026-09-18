@@ -133,7 +133,7 @@ describe("initial self placement", () => {
     },
   );
 
-  it("keeps later self nodes relative to their anchor", () => {
+  it("places self at the origin even when an anchor already exists", () => {
     const chart = detail();
     chart.relationships.unshift({
       ...relationship("self-relationship", "本人", "child"),
@@ -150,7 +150,7 @@ describe("initial self placement", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "自動配置して追加" }));
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ x: 320, y: 100, anchorNodeId: "person" }),
+      expect.objectContaining({ x: 0, y: 0, anchorNodeId: "person" }),
     );
   });
 });

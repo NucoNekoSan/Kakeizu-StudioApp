@@ -181,7 +181,7 @@ export function NodeForm({
         base = anchor?.position || value?.position || { x: 240, y: 180 },
         placed =
           mode === "add"
-            ? !nodes.length && selectedRelation?.kind === "self"
+            ? selectedRelation?.kind === "self"
               ? { x: 0, y: 0 }
               : findFreePosition(
                   base,
