@@ -23,6 +23,7 @@ import {
   Settings as SettingsIcon,
   Users,
   Type,
+  Trash2,
 } from "lucide-react";
 import { api } from "../../api";
 import type { ChartDetail, ChartNodeRecord, Direction } from "../../types";
@@ -367,7 +368,11 @@ function ChartEditor() {
               setFrameVisible(visible);
             }}
           />
-          <button className="button" onClick={() => nav("/settings")}>
+          <button
+            className="button"
+            onClick={() => nav("/settings")}
+            aria-label="表示設定"
+          >
             <SettingsIcon size={17} />
             <span className="button-label">表示設定</span>
           </button>
@@ -379,6 +384,7 @@ function ChartEditor() {
               setLabelMode(false);
             }}
             aria-pressed={lassoMode}
+            aria-label="同居輪"
           >
             <Lasso size={17} />
             <span className="button-label">同居輪</span>
@@ -390,6 +396,7 @@ function ChartEditor() {
               setLassoMode(false);
             }}
             aria-pressed={labelMode}
+            aria-label="同居文字"
           >
             <Type size={17} aria-hidden="true" />
             <span className="button-label">同居文字</span>
@@ -398,14 +405,17 @@ function ChartEditor() {
             <button
               className="button danger"
               onClick={requestDeleteCohabitation}
+              aria-label="同居輪を削除"
             >
-              同居輪を削除
+              <Trash2 size={17} aria-hidden="true" />
+              <span className="button-label">同居輪を削除</span>
             </button>
           )}
           <button
             className="button"
             onClick={previewPng}
             disabled={isExporting || frame.isPending}
+            aria-label="PNGプレビュー"
           >
             <FileImage size={17} aria-hidden="true" />
             <span className="button-label">
@@ -417,6 +427,7 @@ function ChartEditor() {
             onClick={exportPng}
             disabled={isExporting || frame.isPending}
             title="画像には入力した氏名やメモがそのまま含まれます"
+            aria-label="PNG保存"
           >
             <Download size={17} />
             <span className="button-label">

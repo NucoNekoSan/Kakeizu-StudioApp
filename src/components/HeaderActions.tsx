@@ -18,12 +18,13 @@ export function GuidanceActions({
           type="button"
           className="button header-action"
           onClick={onStartTutorial}
+          aria-label="チュートリアルを開始"
         >
           <BookOpenCheck size={17} aria-hidden="true" />
           <span className="button-label">チュートリアル</span>
         </button>
       )}
-      <Link className="button header-action" to="/help">
+      <Link className="button header-action" to="/help" aria-label="ヘルプ">
         <CircleHelp size={17} aria-hidden="true" />
         <span className="button-label">ヘルプ</span>
       </Link>
@@ -40,6 +41,7 @@ export function ResourceActions() {
         href="https://nuconeko-garden.com/contact/"
         target="_blank"
         rel="noopener noreferrer"
+        aria-label="コンタクト（新しいタブで開く）"
       >
         <MessageCircle size={17} aria-hidden="true" />
         <span className="button-label">コンタクト</span>

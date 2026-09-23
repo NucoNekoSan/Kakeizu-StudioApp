@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Scan } from "lucide-react";
 import { isFrameHeight, isFrameWidth } from "../../frameSettings";
 interface Props {
   visible: boolean;
@@ -31,6 +32,8 @@ export function FrameSettings({
     <>
       <button
         className="button"
+        title="外枠とPNGサイズを設定"
+        aria-label="外枠"
         aria-haspopup="dialog"
         onClick={() => {
           setDraftVisible(visible);
@@ -39,7 +42,8 @@ export function FrameSettings({
           dialog.current?.showModal();
         }}
       >
-        外枠
+        <Scan size={17} aria-hidden="true" />
+        <span className="button-label">外枠</span>
       </button>
       <dialog
         ref={dialog}
