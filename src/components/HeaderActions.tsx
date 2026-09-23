@@ -6,9 +6,11 @@ import BackupImportControl from "../features/backup/BackupImportControl";
 export function GuidanceActions({
   onStartTutorial,
   tutorialButtonRef,
+  showContact = false,
 }: {
   onStartTutorial?: () => void;
   tutorialButtonRef?: RefObject<HTMLButtonElement | null>;
+  showContact?: boolean;
 }) {
   return (
     <div className="header-guidance" data-tutorial-target="resources">
@@ -34,25 +36,36 @@ export function GuidanceActions({
         <CircleHelp size={17} aria-hidden="true" />
         <span className="button-label">ヘルプ</span>
       </Link>
+      {showContact && <ContactAction />}
     </div>
   );
 }
 
-export function ResourceActions() {
+function ContactAction() {
+  return (
+    <a
+      className="button header-action"
+      href="https://nuconeko-garden.com/contact/"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="コンタクト（新しいタブで開く）"
+      data-tooltip="コンタクト"
+    >
+      <Mail size={17} aria-hidden="true" />
+      <span className="button-label">コンタクト</span>
+    </a>
+  );
+}
+
+export function ResourceActions({
+  showContact = true,
+}: {
+  showContact?: boolean;
+}) {
   return (
     <div className="header-resources">
       <BackupImportControl />
-      <a
-        className="button header-action"
-        href="https://nuconeko-garden.com/contact/"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="コンタクト（新しいタブで開く）"
-        data-tooltip="コンタクト"
-      >
-        <Mail size={17} aria-hidden="true" />
-        <span className="button-label">コンタクト</span>
-      </a>
+      {showContact && <ContactAction />}
     </div>
   );
 }

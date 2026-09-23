@@ -327,61 +327,14 @@ function ChartEditor() {
         <GuidanceActions
           onStartTutorial={() => setTutorialOpen(true)}
           tutorialButtonRef={tutorialButtonRef}
+          showContact
         />
         <div className="editor-actions">
           <div
             className="editor-action-group"
             role="group"
-            aria-label="表示と編集"
+            aria-label="同居編集"
           >
-            <button
-              className="button"
-              onClick={() => nav("/settings")}
-              aria-label="設定"
-              data-tooltip="設定"
-            >
-              <SettingsIcon size={17} />
-              <span className="button-label">設定</span>
-            </button>
-            <FrameSettings
-              visible={frameVisible}
-              width={chart.data.frameWidth ?? DEFAULT_FRAME_WIDTH}
-              height={chart.data.frameHeight ?? DEFAULT_FRAME_HEIGHT}
-              isSaving={frame.isPending}
-              error={frame.error ? getErrorMessage(frame.error) : ""}
-              willMove={(width, height) => {
-                const bounds = getPngFramePreview(nodes, width, height);
-                return nodes.some((node) => {
-                  const position = clampNodeToFrame(
-                    node.position,
-                    nodeSize(node),
-                    bounds,
-                  );
-                  return (
-                    position.x !== node.position.x ||
-                    position.y !== node.position.y
-                  );
-                });
-              }}
-              onApply={async (visible, width, height) => {
-                frame.reset();
-                if (
-                  width !== (chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH) ||
-                  height !== (chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT)
-                ) {
-                  flushDebouncedNodeUpdate();
-                  const bounds = getPngFramePreview(nodes, width, height);
-                  const layouts = nodes.map((node) => ({
-                    id: node.id,
-                    scale: node.data.scale,
-                    ...clampNodeToFrame(node.position, nodeSize(node), bounds),
-                  }));
-                  await frame.mutateAsync({ width, height, layouts });
-                }
-                writeFrameVisibility(visible);
-                setFrameVisible(visible);
-              }}
-            />
             <button
               className={`button ${lassoMode ? "active" : ""}`}
               data-tutorial-target="cohabitation"
@@ -424,8 +377,47 @@ function ChartEditor() {
           <div
             className="editor-action-group"
             role="group"
-            aria-label="PNG出力"
+            aria-label="外枠とPNG出力"
           >
+            <FrameSettings
+              visible={frameVisible}
+              width={chart.data.frameWidth ?? DEFAULT_FRAME_WIDTH}
+              height={chart.data.frameHeight ?? DEFAULT_FRAME_HEIGHT}
+              isSaving={frame.isPending}
+              error={frame.error ? getErrorMessage(frame.error) : ""}
+              willMove={(width, height) => {
+                const bounds = getPngFramePreview(nodes, width, height);
+                return nodes.some((node) => {
+                  const position = clampNodeToFrame(
+                    node.position,
+                    nodeSize(node),
+                    bounds,
+                  );
+                  return (
+                    position.x !== node.position.x ||
+                    position.y !== node.position.y
+                  );
+                });
+              }}
+              onApply={async (visible, width, height) => {
+                frame.reset();
+                if (
+                  width !== (chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH) ||
+                  height !== (chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT)
+                ) {
+                  flushDebouncedNodeUpdate();
+                  const bounds = getPngFramePreview(nodes, width, height);
+                  const layouts = nodes.map((node) => ({
+                    id: node.id,
+                    scale: node.data.scale,
+                    ...clampNodeToFrame(node.position, nodeSize(node), bounds),
+                  }));
+                  await frame.mutateAsync({ width, height, layouts });
+                }
+                writeFrameVisibility(visible);
+                setFrameVisible(visible);
+              }}
+            />
             <button
               className="button"
               onClick={previewPng}
@@ -451,7 +443,22 @@ function ChartEditor() {
               </span>
             </button>
           </div>
-          <ResourceActions />
+          <div
+            className="editor-action-group"
+            role="group"
+            aria-label="データと設定"
+          >
+            <ResourceActions showContact={false} />
+            <button
+              className="button"
+              onClick={() => nav("/settings")}
+              aria-label="設定"
+              data-tooltip="設定"
+            >
+              <SettingsIcon size={17} />
+              <span className="button-label">設定</span>
+            </button>
+          </div>
         </div>
       </header>
       <main className="editor-body">

@@ -620,6 +620,10 @@ p {
   padding-inline-end: 8px;
   border-inline-end: 1px solid var(--line);
 }
+.editor-action-group:last-child {
+  padding-inline-end: 0;
+  border-inline-end: 0;
+}
 .editor-actions > *,
 .editor-actions .button {
   flex: 0 0 auto;
