@@ -71,8 +71,8 @@ export default function BackupImportControl() {
         className="button header-action"
         onClick={() => inputRef.current?.click()}
         disabled={busy}
-        title="バックアップファイルを読み込む"
         aria-label="バックアップファイルを読み込む"
+        data-tooltip="ファイル読み込み"
       >
         <Upload size={17} aria-hidden="true" />
         <span className="button-label">ファイル読み込み</span>

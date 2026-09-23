@@ -293,6 +293,7 @@ function ChartEditor() {
             className="icon"
             onClick={() => nav("/charts")}
             aria-label="一覧へ戻る"
+            data-tooltip="相関図一覧へ戻る"
           >
             <ArrowLeft />
           </button>
@@ -328,112 +329,129 @@ function ChartEditor() {
           tutorialButtonRef={tutorialButtonRef}
         />
         <div className="editor-actions">
-          <ResourceActions />
-          <FrameSettings
-            visible={frameVisible}
-            width={chart.data.frameWidth ?? DEFAULT_FRAME_WIDTH}
-            height={chart.data.frameHeight ?? DEFAULT_FRAME_HEIGHT}
-            isSaving={frame.isPending}
-            error={frame.error ? getErrorMessage(frame.error) : ""}
-            willMove={(width, height) => {
-              const bounds = getPngFramePreview(nodes, width, height);
-              return nodes.some((node) => {
-                const position = clampNodeToFrame(
-                  node.position,
-                  nodeSize(node),
-                  bounds,
-                );
-                return (
-                  position.x !== node.position.x ||
-                  position.y !== node.position.y
-                );
-              });
-            }}
-            onApply={async (visible, width, height) => {
-              frame.reset();
-              if (
-                width !== (chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH) ||
-                height !== (chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT)
-              ) {
-                flushDebouncedNodeUpdate();
-                const bounds = getPngFramePreview(nodes, width, height);
-                const layouts = nodes.map((node) => ({
-                  id: node.id,
-                  scale: node.data.scale,
-                  ...clampNodeToFrame(node.position, nodeSize(node), bounds),
-                }));
-                await frame.mutateAsync({ width, height, layouts });
-              }
-              writeFrameVisibility(visible);
-              setFrameVisible(visible);
-            }}
-          />
-          <button
-            className="button"
-            onClick={() => nav("/settings")}
-            aria-label="表示設定"
+          <div
+            className="editor-action-group"
+            role="group"
+            aria-label="表示と編集"
           >
-            <SettingsIcon size={17} />
-            <span className="button-label">表示設定</span>
-          </button>
-          <button
-            className={`button ${lassoMode ? "active" : ""}`}
-            data-tutorial-target="cohabitation"
-            onClick={() => {
-              setLassoMode((active) => !active);
-              setLabelMode(false);
-            }}
-            aria-pressed={lassoMode}
-            aria-label="同居輪"
-          >
-            <Lasso size={17} />
-            <span className="button-label">同居輪</span>
-          </button>
-          <button
-            className={`button ${labelMode ? "active" : ""}`}
-            onClick={() => {
-              setLabelMode((active) => !active);
-              setLassoMode(false);
-            }}
-            aria-pressed={labelMode}
-            aria-label="同居文字"
-          >
-            <Type size={17} aria-hidden="true" />
-            <span className="button-label">同居文字</span>
-          </button>
-          {selectedCohabitation && (
             <button
-              className="button danger"
-              onClick={requestDeleteCohabitation}
-              aria-label="同居輪を削除"
+              className="button"
+              onClick={() => nav("/settings")}
+              aria-label="表示設定"
+              data-tooltip="表示設定"
             >
-              <Trash2 size={17} aria-hidden="true" />
-              <span className="button-label">同居輪を削除</span>
+              <SettingsIcon size={17} />
+              <span className="button-label">表示設定</span>
             </button>
-          )}
-          <button
-            className="button"
-            onClick={previewPng}
-            disabled={isExporting || frame.isPending}
-            aria-label="PNGプレビュー"
+            <FrameSettings
+              visible={frameVisible}
+              width={chart.data.frameWidth ?? DEFAULT_FRAME_WIDTH}
+              height={chart.data.frameHeight ?? DEFAULT_FRAME_HEIGHT}
+              isSaving={frame.isPending}
+              error={frame.error ? getErrorMessage(frame.error) : ""}
+              willMove={(width, height) => {
+                const bounds = getPngFramePreview(nodes, width, height);
+                return nodes.some((node) => {
+                  const position = clampNodeToFrame(
+                    node.position,
+                    nodeSize(node),
+                    bounds,
+                  );
+                  return (
+                    position.x !== node.position.x ||
+                    position.y !== node.position.y
+                  );
+                });
+              }}
+              onApply={async (visible, width, height) => {
+                frame.reset();
+                if (
+                  width !== (chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH) ||
+                  height !== (chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT)
+                ) {
+                  flushDebouncedNodeUpdate();
+                  const bounds = getPngFramePreview(nodes, width, height);
+                  const layouts = nodes.map((node) => ({
+                    id: node.id,
+                    scale: node.data.scale,
+                    ...clampNodeToFrame(node.position, nodeSize(node), bounds),
+                  }));
+                  await frame.mutateAsync({ width, height, layouts });
+                }
+                writeFrameVisibility(visible);
+                setFrameVisible(visible);
+              }}
+            />
+            <button
+              className={`button ${lassoMode ? "active" : ""}`}
+              data-tutorial-target="cohabitation"
+              onClick={() => {
+                setLassoMode((active) => !active);
+                setLabelMode(false);
+              }}
+              aria-pressed={lassoMode}
+              aria-label="同居輪"
+              data-tooltip="同居輪を作成"
+            >
+              <Lasso size={17} />
+              <span className="button-label">同居輪</span>
+            </button>
+            <button
+              className={`button ${labelMode ? "active" : ""}`}
+              onClick={() => {
+                setLabelMode((active) => !active);
+                setLassoMode(false);
+              }}
+              aria-pressed={labelMode}
+              aria-label="同居文字"
+              data-tooltip="同居文字を追加"
+            >
+              <Type size={17} aria-hidden="true" />
+              <span className="button-label">同居文字</span>
+            </button>
+            {selectedCohabitation && (
+              <button
+                className="button danger"
+                onClick={requestDeleteCohabitation}
+                aria-label="同居輪を削除"
+                data-tooltip="選択中の同居輪を削除"
+              >
+                <Trash2 size={17} aria-hidden="true" />
+                <span className="button-label">同居輪を削除</span>
+              </button>
+            )}
+          </div>
+          <div
+            className="editor-action-group"
+            role="group"
+            aria-label="PNG出力"
           >
-            <FileImage size={17} aria-hidden="true" />
-            <span className="button-label">
-              {isExporting ? "PNG作成中…" : "PNGプレビュー"}
-            </span>
-          </button>
-          <button
-            className="button primary"
-            onClick={exportPng}
-            disabled={isExporting || frame.isPending}
-            title="画像には入力した氏名やメモがそのまま含まれます"
-            aria-label="PNG保存"
-          >
-            <Download size={17} />
-            <span className="button-label">
-              {isExporting ? "PNG作成中…" : "PNG保存"}
-            </span>
-          </button>
+            <button
+              className="button"
+              onClick={previewPng}
+              disabled={isExporting || frame.isPending}
+              aria-label="PNGプレビュー"
+              data-tooltip="PNGプレビュー"
+            >
+              <FileImage size={17} aria-hidden="true" />
+              <span className="button-label">
+                {isExporting ? "PNG作成中…" : "PNGプレビュー"}
+              </span>
+            </button>
+            <button
+              className="button primary"
+              onClick={exportPng}
+              disabled={isExporting || frame.isPending}
+              aria-label="PNG保存"
+              data-tooltip="PNGを保存"
+            >
+              <Download size={17} />
+              <span className="button-label">
+                {isExporting ? "PNG作成中…" : "PNG保存"}
+              </span>
+            </button>
+          </div>
+          <ResourceActions />
         </div>
       </header>
       <main className="editor-body">

@@ -32,8 +32,8 @@ export function FrameSettings({
     <>
       <button
         className="button"
-        title="外枠とPNGサイズを設定"
         aria-label="外枠"
+        data-tooltip="外枠とPNGサイズ"
         aria-haspopup="dialog"
         onClick={() => {
           setDraftVisible(visible);

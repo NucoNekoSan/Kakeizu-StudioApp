@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import { BookOpenCheck, CircleHelp, MessageCircle } from "lucide-react";
+import { BookOpenCheck, CircleHelp, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import BackupImportControl from "../features/backup/BackupImportControl";
 
@@ -19,12 +19,18 @@ export function GuidanceActions({
           className="button header-action"
           onClick={onStartTutorial}
           aria-label="チュートリアルを開始"
+          data-tooltip="チュートリアルを開始"
         >
           <BookOpenCheck size={17} aria-hidden="true" />
           <span className="button-label">チュートリアル</span>
         </button>
       )}
-      <Link className="button header-action" to="/help" aria-label="ヘルプ">
+      <Link
+        className="button header-action"
+        to="/help"
+        aria-label="ヘルプ"
+        data-tooltip="ヘルプを開く"
+      >
         <CircleHelp size={17} aria-hidden="true" />
         <span className="button-label">ヘルプ</span>
       </Link>
@@ -42,8 +48,9 @@ export function ResourceActions() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="コンタクト（新しいタブで開く）"
+        data-tooltip="コンタクト"
       >
-        <MessageCircle size={17} aria-hidden="true" />
+        <Mail size={17} aria-hidden="true" />
         <span className="button-label">コンタクト</span>
       </a>
     </div>
