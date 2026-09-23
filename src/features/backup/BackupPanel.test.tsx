@@ -84,27 +84,11 @@ describe("BackupPanel", () => {
     expect(api.markExported).not.toHaveBeenCalled();
   });
 
-  it("置き換えを選ぶと消える旨を警告する", async () => {
+  it("ファイル読み込みは設定パネルに重複して表示しない", async () => {
     renderWith(<BackupPanel />);
     await screen.findByText("未実施");
-    const input = document.querySelector(
-      'input[type="file"]',
-    ) as HTMLInputElement;
-    const file = new File(["{}"], "backup.json", {
-      type: "application/json",
-    });
-    fireEvent.change(input, { target: { files: [file] } });
-
-    expect(await screen.findByText("バックアップを読み込む")).toBeTruthy();
-    expect(api.importBackup).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByLabelText(/置き換える/));
-    expect(screen.getByText(/すべて削除され/)).toBeTruthy();
-
-    fireEvent.click(screen.getByText("読み込む"));
-    await waitFor(() =>
-      expect(api.importBackup).toHaveBeenCalledWith("{}", "replace", undefined),
-    );
+    expect(screen.queryByText("ファイルから読み込む")).toBeNull();
+    expect(document.querySelector('input[type="file"]')).toBeNull();
   });
 });
 

@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { GitBranch, LayoutGrid, Settings, X } from "lucide-react";
 import TemporaryModeBanner from "../features/storage/TemporaryModeBanner";
 import type { Shape } from "../types";
+import { GuidanceActions, ResourceActions } from "./HeaderActions";
 
 export function Logo() {
   return (
@@ -22,6 +23,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
     <div className="shell">
       <header className="topbar">
         <Logo />
+        <div className="topbar-resources">
+          <GuidanceActions />
+          <ResourceActions />
+        </div>
         <nav aria-label="メインナビゲーション">
           <NavLink to="/charts">
             <LayoutGrid size={17} aria-hidden="true" />

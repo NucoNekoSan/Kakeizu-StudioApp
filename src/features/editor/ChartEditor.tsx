@@ -16,17 +16,23 @@ import {
 import {
   ArrowLeft,
   Download,
+  FileImage,
   Lasso,
   Plus,
   Save,
   Settings as SettingsIcon,
   Users,
+  Type,
 } from "lucide-react";
 import { api } from "../../api";
 import type { ChartDetail, ChartNodeRecord, Direction } from "../../types";
 import { type FamilyNodeData } from "../../familyGraph";
 
 import { Logo, Notice, Shell, Spinner } from "../../components/ui";
+import {
+  GuidanceActions,
+  ResourceActions,
+} from "../../components/HeaderActions";
 import { getErrorMessage } from "../../domain";
 import { hydrateChart } from "./hydrateChart";
 import { type AddPreset, type NodeDraft } from "./editorPresets";
@@ -58,6 +64,7 @@ import {
   clampNodeToFrame,
   nodeSize,
 } from "./nodeLayout";
+import EditorTutorial from "./EditorTutorial";
 
 const nodeTypes = { family: FamilyNode },
   edgeTypes = { family: FamilyEdge, familyTree: FamilyTreeEdge };
@@ -79,6 +86,8 @@ function ChartEditor() {
     [frameVisible, setFrameVisible] = useState(readFrameVisibility),
     [lassoMode, setLassoMode] = useState(false),
     [labelMode, setLabelMode] = useState(false),
+    [tutorialOpen, setTutorialOpen] = useState(false),
+    tutorialButtonRef = useRef<HTMLButtonElement>(null),
     {
       cohabitations,
       setCohabitations,
@@ -265,6 +274,11 @@ function ChartEditor() {
   const selectedNode = nodes.find((n) => n.id === selected) || null;
   return (
     <div className="editor-shell">
+      <EditorTutorial
+        open={tutorialOpen}
+        onClose={() => setTutorialOpen(false)}
+        returnFocusRef={tutorialButtonRef}
+      />
       <PngPreviewDialog
         preview={preview}
         onClose={closePreview}
@@ -273,128 +287,149 @@ function ChartEditor() {
         error={exportError}
       />
       <header className="editor-topbar">
-        <button
-          className="icon"
-          onClick={() => nav("/charts")}
-          aria-label="一覧へ戻る"
-        >
-          <ArrowLeft />
-        </button>
-        <Logo />
-        <span className="top-divider" />
-        <input
-          ref={titleInput}
-          className="title-input"
-          aria-label="相関図タイトル"
-          defaultValue={chart.data.title}
-          onBlur={(e) =>
-            e.target.value.trim() &&
-            e.target.value !== chart.data?.title &&
-            titleSave.mutate(e.target.value.trim())
-          }
-        />
-        <div
-          className={`save-state ${saveState}`}
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <Save size={14} />
-          {saveState === "saving"
-            ? "保存中"
-            : saveState === "error"
-              ? "保存失敗"
-              : "保存済み"}
-        </div>
-        <FrameSettings
-          visible={frameVisible}
-          width={chart.data.frameWidth ?? DEFAULT_FRAME_WIDTH}
-          height={chart.data.frameHeight ?? DEFAULT_FRAME_HEIGHT}
-          isSaving={frame.isPending}
-          error={frame.error ? getErrorMessage(frame.error) : ""}
-          willMove={(width, height) => {
-            const bounds = getPngFramePreview(nodes, width, height);
-            return nodes.some((node) => {
-              const position = clampNodeToFrame(
-                node.position,
-                nodeSize(node),
-                bounds,
-              );
-              return (
-                position.x !== node.position.x || position.y !== node.position.y
-              );
-            });
-          }}
-          onApply={async (visible, width, height) => {
-            frame.reset();
-            if (
-              width !== (chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH) ||
-              height !== (chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT)
-            ) {
-              flushDebouncedNodeUpdate();
-              const bounds = getPngFramePreview(nodes, width, height);
-              const layouts = nodes.map((node) => ({
-                id: node.id,
-                scale: node.data.scale,
-                ...clampNodeToFrame(node.position, nodeSize(node), bounds),
-              }));
-              await frame.mutateAsync({ width, height, layouts });
-            }
-            writeFrameVisibility(visible);
-            setFrameVisible(visible);
-          }}
-        />
-        <button className="button" onClick={() => nav("/settings")}>
-          <SettingsIcon size={17} />
-          表示設定
-        </button>
-        <button
-          className={`button ${lassoMode ? "active" : ""}`}
-          onClick={() => {
-            setLassoMode((active) => !active);
-            setLabelMode(false);
-          }}
-          aria-pressed={lassoMode}
-        >
-          <Lasso size={17} />
-          同居輪
-        </button>
-        <button
-          className={`button ${labelMode ? "active" : ""}`}
-          onClick={() => {
-            setLabelMode((active) => !active);
-            setLassoMode(false);
-          }}
-          aria-pressed={labelMode}
-        >
-          同居文字
-        </button>
-        {selectedCohabitation && (
-          <button className="button danger" onClick={requestDeleteCohabitation}>
-            同居輪を削除
+        <div className="editor-heading" data-tutorial-target="editor-basics">
+          <button
+            className="icon"
+            onClick={() => nav("/charts")}
+            aria-label="一覧へ戻る"
+          >
+            <ArrowLeft />
           </button>
-        )}
-        <button
-          className="button"
-          onClick={previewPng}
-          disabled={isExporting || frame.isPending}
-        >
-          {isExporting ? "PNG作成中…" : "PNGプレビュー"}
-        </button>
-        <button
-          className="button primary"
-          onClick={exportPng}
-          disabled={isExporting || frame.isPending}
-          title="画像には入力した氏名やメモがそのまま含まれます"
-        >
-          <Download size={17} />
-          {isExporting ? "PNG作成中…" : "PNG保存"}
-        </button>
+          <Logo />
+          <span className="top-divider" />
+          <input
+            ref={titleInput}
+            className="title-input"
+            aria-label="相関図タイトル"
+            defaultValue={chart.data.title}
+            onBlur={(e) =>
+              e.target.value.trim() &&
+              e.target.value !== chart.data?.title &&
+              titleSave.mutate(e.target.value.trim())
+            }
+          />
+          <div
+            className={`save-state ${saveState}`}
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <Save size={14} />
+            {saveState === "saving"
+              ? "保存中"
+              : saveState === "error"
+                ? "保存失敗"
+                : "保存済み"}
+          </div>
+        </div>
+        <GuidanceActions
+          onStartTutorial={() => setTutorialOpen(true)}
+          tutorialButtonRef={tutorialButtonRef}
+        />
+        <div className="editor-actions">
+          <ResourceActions />
+          <FrameSettings
+            visible={frameVisible}
+            width={chart.data.frameWidth ?? DEFAULT_FRAME_WIDTH}
+            height={chart.data.frameHeight ?? DEFAULT_FRAME_HEIGHT}
+            isSaving={frame.isPending}
+            error={frame.error ? getErrorMessage(frame.error) : ""}
+            willMove={(width, height) => {
+              const bounds = getPngFramePreview(nodes, width, height);
+              return nodes.some((node) => {
+                const position = clampNodeToFrame(
+                  node.position,
+                  nodeSize(node),
+                  bounds,
+                );
+                return (
+                  position.x !== node.position.x ||
+                  position.y !== node.position.y
+                );
+              });
+            }}
+            onApply={async (visible, width, height) => {
+              frame.reset();
+              if (
+                width !== (chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH) ||
+                height !== (chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT)
+              ) {
+                flushDebouncedNodeUpdate();
+                const bounds = getPngFramePreview(nodes, width, height);
+                const layouts = nodes.map((node) => ({
+                  id: node.id,
+                  scale: node.data.scale,
+                  ...clampNodeToFrame(node.position, nodeSize(node), bounds),
+                }));
+                await frame.mutateAsync({ width, height, layouts });
+              }
+              writeFrameVisibility(visible);
+              setFrameVisible(visible);
+            }}
+          />
+          <button className="button" onClick={() => nav("/settings")}>
+            <SettingsIcon size={17} />
+            <span className="button-label">表示設定</span>
+          </button>
+          <button
+            className={`button ${lassoMode ? "active" : ""}`}
+            data-tutorial-target="cohabitation"
+            onClick={() => {
+              setLassoMode((active) => !active);
+              setLabelMode(false);
+            }}
+            aria-pressed={lassoMode}
+          >
+            <Lasso size={17} />
+            <span className="button-label">同居輪</span>
+          </button>
+          <button
+            className={`button ${labelMode ? "active" : ""}`}
+            onClick={() => {
+              setLabelMode((active) => !active);
+              setLassoMode(false);
+            }}
+            aria-pressed={labelMode}
+          >
+            <Type size={17} aria-hidden="true" />
+            <span className="button-label">同居文字</span>
+          </button>
+          {selectedCohabitation && (
+            <button
+              className="button danger"
+              onClick={requestDeleteCohabitation}
+            >
+              同居輪を削除
+            </button>
+          )}
+          <button
+            className="button"
+            onClick={previewPng}
+            disabled={isExporting || frame.isPending}
+          >
+            <FileImage size={17} aria-hidden="true" />
+            <span className="button-label">
+              {isExporting ? "PNG作成中…" : "PNGプレビュー"}
+            </span>
+          </button>
+          <button
+            className="button primary"
+            onClick={exportPng}
+            disabled={isExporting || frame.isPending}
+            title="画像には入力した氏名やメモがそのまま含まれます"
+          >
+            <Download size={17} />
+            <span className="button-label">
+              {isExporting ? "PNG作成中…" : "PNG保存"}
+            </span>
+          </button>
+        </div>
       </header>
       <main className="editor-body">
         <aside className="editor-panel">
-          <div className="panel-tabs">
+          <div className="panel-tabs" data-tutorial-target="add-person">
             <button
+              data-tutorial-target="edit-person"
               className={panel === "add" ? "active" : ""}
               onClick={() => {
                 setPanel("add");
@@ -542,7 +577,11 @@ function ChartEditor() {
             <p>ドラッグして自由に配置</p>
           </footer>
         </aside>
-        <section className="flow-wrap" ref={flowRef}>
+        <section
+          className="flow-wrap"
+          ref={flowRef}
+          data-tutorial-target="canvas"
+        >
           <CohabitationToolOverlay
             lassoMode={lassoMode}
             labelMode={labelMode}
