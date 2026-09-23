@@ -337,11 +337,11 @@ function ChartEditor() {
             <button
               className="button"
               onClick={() => nav("/settings")}
-              aria-label="表示設定"
-              data-tooltip="表示設定"
+              aria-label="設定"
+              data-tooltip="設定"
             >
               <SettingsIcon size={17} />
-              <span className="button-label">表示設定</span>
+              <span className="button-label">設定</span>
             </button>
             <FrameSettings
               visible={frameVisible}
