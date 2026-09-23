@@ -645,7 +645,7 @@ p {
   color: #fff;
   box-shadow: 0 8px 24px rgba(22, 56, 47, 0.2);
   content: attr(data-tooltip);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.25;
   white-space: nowrap;
