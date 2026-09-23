@@ -118,7 +118,6 @@ p {
   margin-top: 5px;
 }
 .topbar nav {
-  margin-left: auto;
   display: flex;
   gap: 6px;
   align-items: center;
@@ -133,10 +132,24 @@ p {
   gap: 8px;
 }
 .topbar-resources {
-  margin-left: auto;
+  justify-self: end;
 }
-.topbar nav {
-  margin-left: 10px;
+.topbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(380px, 1fr);
+  grid-template-areas: "brand nav actions";
+  gap: 12px;
+}
+.topbar > .brand {
+  grid-area: brand;
+  justify-self: start;
+}
+.topbar > nav {
+  grid-area: nav;
+  justify-self: center;
+}
+.topbar > .topbar-resources {
+  grid-area: actions;
 }
 .header-action {
   text-decoration: none;
@@ -1239,6 +1252,20 @@ p {
   .page {
     padding: 36px 20px;
   }
+  .topbar {
+    height: auto;
+    min-height: 72px;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "brand nav"
+      "actions actions";
+    row-gap: 8px;
+    padding-block: 10px;
+  }
+  .topbar-resources {
+    width: 100%;
+    justify-content: flex-end;
+  }
   .editor-body {
     grid-template-columns: 270px 1fr;
   }
@@ -1265,17 +1292,8 @@ p {
     font-size: 0;
     padding: 10px;
   }
-  .topbar {
-    height: auto;
-    min-height: 72px;
-    flex-wrap: wrap;
-    padding-block: 10px;
-  }
   .topbar-resources {
-    order: 3;
-    width: 100%;
     justify-content: center;
-    margin-top: 8px;
   }
   .topbar-resources .button-label {
     display: none;

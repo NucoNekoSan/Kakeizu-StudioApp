@@ -23,20 +23,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
     <div className="shell">
       <header className="topbar">
         <Logo />
-        <div className="topbar-resources">
-          <GuidanceActions />
-          <ResourceActions />
-        </div>
         <nav aria-label="メインナビゲーション">
-          <NavLink to="/charts">
+          <NavLink to="/charts" data-tooltip="相関図">
             <LayoutGrid size={17} aria-hidden="true" />
             相関図
           </NavLink>
-          <NavLink to="/settings">
+          <NavLink to="/settings" data-tooltip="設定">
             <Settings size={17} aria-hidden="true" />
             設定
           </NavLink>
         </nav>
+        <div className="topbar-resources">
+          <ResourceActions showContact={false} />
+          <GuidanceActions showContact />
+        </div>
       </header>
       <TemporaryModeBanner />
       {children}
