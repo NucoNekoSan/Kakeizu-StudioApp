@@ -1643,7 +1643,11 @@ p {
 }
 
 .frame-settings-dialog {
-  width: min(420px, calc(100vw - 32px));
+  width: min(560px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid #c7cdc8;
   border-radius: 16px;
   padding: 24px;
@@ -1656,6 +1660,7 @@ p {
 .frame-settings-dialog form {
   display: grid;
   gap: 16px;
+  min-width: 0;
 }
 .frame-settings-dialog h2,
 .frame-settings-dialog p {
@@ -1664,6 +1669,14 @@ p {
 .frame-settings-dialog label {
   display: grid;
   gap: 8px;
+  min-width: 0;
+}
+.frame-settings-dialog label > input:not([type="checkbox"]) {
+  width: 100%;
+  min-width: 0;
+}
+.frame-settings-dialog p {
+  overflow-wrap: anywhere;
 }
 .frame-settings-dialog .frame-visibility {
   display: flex;
@@ -1673,7 +1686,20 @@ p {
 .frame-width-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
+}
+.frame-dialog-actions {
+  padding-top: 2px;
+}
+
+@media (max-width: 480px) {
+  .frame-settings-dialog {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    padding: 18px;
+  }
 }
 
 .png-preview-dialog {

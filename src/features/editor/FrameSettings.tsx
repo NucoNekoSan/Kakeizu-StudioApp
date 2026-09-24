@@ -160,7 +160,7 @@ export function FrameSettings({
               </p>
             )}
           {error && <p role="alert">{error}</p>}
-          <div className="frame-width-actions">
+          <div className="frame-width-actions frame-dialog-actions">
             <button
               type="button"
               className="button"
