@@ -16,6 +16,8 @@ import { api } from "./api";
 vi.mock("./api", () => ({
   api: {
     charts: vi.fn(async () => []),
+    relationships: vi.fn(async () => []),
+    genders: vi.fn(async () => []),
     backupStatus: vi.fn(async () => ({
       chartCount: 0,
       lastExportedAt: null,
@@ -69,6 +71,26 @@ describe("認証の撤去", () => {
     expect(screen.getByRole("heading", { name: "相関図" })).toBeTruthy();
   });
 
+  it("設定画面は表示設定だけを扱う", async () => {
+    renderApp("/settings");
+    expect(
+      await screen.findByRole("heading", { name: "表示設定" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /続柄/ })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /性別/ })).toBeTruthy();
+    expect(screen.queryByRole("tab", { name: "バックアップ" })).toBeNull();
+  });
+
+  it("ファイル読み込み先にデータ管理機能を表示する", async () => {
+    renderApp("/data-management");
+    expect(
+      await screen.findByRole("heading", { name: "データ管理" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "読み込むJSONファイルを選択" }),
+    ).toBeTruthy();
+  });
+
   it("ナビゲーションにログアウトが無い", () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
@@ -81,7 +103,7 @@ describe("認証の撤去", () => {
     );
     expect(screen.queryByText("ログアウト")).toBeNull();
     expect(screen.getByRole("link", { name: /相関図/ })).toBeTruthy();
-    expect(screen.getByRole("link", { name: /設定/ })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "表示設定" })).toBeTruthy();
   });
 
   it("共通ヘッダーを主要ナビゲーションから補助操作の順に並べる", () => {
@@ -99,8 +121,9 @@ describe("認証の撤去", () => {
     const ordered = [
       headerQueries.getByRole("link", { name: /Kakeizu/ }),
       headerQueries.getByRole("link", { name: "相関図" }),
-      headerQueries.getByRole("link", { name: "設定" }),
-      headerQueries.getByRole("button", {
+      headerQueries.getByRole("link", { name: "表示設定" }),
+      headerQueries.getByRole("button", { name: "全データをバックアップ" }),
+      headerQueries.getByRole("link", {
         name: "バックアップファイルを読み込む",
       }),
       headerQueries.getByRole("link", { name: "ヘルプ" }),

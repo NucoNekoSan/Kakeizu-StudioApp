@@ -68,6 +68,24 @@ describe("エクスポート", () => {
     );
   });
 
+  it("指定した相関図だけを読み込み互換の形式で書き出す", async () => {
+    const { api, chartId } = await setup();
+    await seedChart(api, "家族B");
+    const { backup, json, fileName } = await api.createChartBackup(chartId);
+
+    expect(backup.charts).toHaveLength(1);
+    expect(backup.charts[0].id).toBe(chartId);
+    expect(backup.definitions.relationships.length).toBeGreaterThan(0);
+    expect(fileName).toMatch(/^kakeizu-家族A-\d{8}-\d{4}\.json$/);
+
+    const restored = createLocalApi(createMemoryStore());
+    const result = await restored.importBackup(json, "merge");
+    expect(result.importedCharts).toBe(1);
+    expect((await restored.charts()).map((chart) => chart.title)).toEqual([
+      "家族A",
+    ]);
+  });
+
   it("エクスポート前は未実施として扱う", async () => {
     const { api } = await setup();
     const status = await api.backupStatus();

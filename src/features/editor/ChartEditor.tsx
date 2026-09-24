@@ -16,6 +16,7 @@ import {
 import {
   ArrowLeft,
   Download,
+  FileJson,
   FileImage,
   Lasso,
   Plus,
@@ -66,6 +67,7 @@ import {
   nodeSize,
 } from "./nodeLayout";
 import EditorTutorial from "./EditorTutorial";
+import { saveJsonFile } from "../../storage/fileIo";
 
 const nodeTypes = { family: FamilyNode },
   edgeTypes = { family: FamilyEdge, familyTree: FamilyTreeEdge };
@@ -88,6 +90,7 @@ function ChartEditor() {
     [lassoMode, setLassoMode] = useState(false),
     [labelMode, setLabelMode] = useState(false),
     [tutorialOpen, setTutorialOpen] = useState(false),
+    [isJsonExporting, setIsJsonExporting] = useState(false),
     tutorialButtonRef = useRef<HTMLButtonElement>(null),
     {
       cohabitations,
@@ -215,6 +218,19 @@ function ChartEditor() {
     const title = titleInput.current?.value.trim();
     if (title && title !== chart.data?.title) titleSave.mutate(title);
   }, [chart.data?.title, flushDebouncedNodeUpdate, titleSave]);
+  const exportCurrentChart = useCallback(async () => {
+    setIsJsonExporting(true);
+    try {
+      flushDebouncedNodeUpdate();
+      const { fileName, json } = await api.createChartBackup(id);
+      const saved = await saveJsonFile(fileName, json);
+      if (saved) setAnnouncement(`${fileName} を書き出しました。`);
+    } catch (caught) {
+      setAnnouncement(`JSONを書き出せませんでした。${getErrorMessage(caught)}`);
+    } finally {
+      setIsJsonExporting(false);
+    }
+  }, [flushDebouncedNodeUpdate, id]);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() !== "s" || (!event.ctrlKey && !event.metaKey))
@@ -451,12 +467,24 @@ function ChartEditor() {
             <ResourceActions showContact={false} />
             <button
               className="button"
+              onClick={() => void exportCurrentChart()}
+              disabled={isJsonExporting}
+              aria-label="表示中の相関図をJSONファイルに書き出す"
+              data-tooltip="JSON書き出し"
+            >
+              <FileJson size={17} aria-hidden="true" />
+              <span className="button-label">
+                {isJsonExporting ? "書き出し中…" : "JSON書き出し"}
+              </span>
+            </button>
+            <button
+              className="button"
               onClick={() => nav("/settings")}
-              aria-label="設定"
-              data-tooltip="設定"
+              aria-label="表示設定"
+              data-tooltip="表示設定"
             >
               <SettingsIcon size={17} />
-              <span className="button-label">設定</span>
+              <span className="button-label">表示設定</span>
             </button>
           </div>
         </div>

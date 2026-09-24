@@ -28,9 +28,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <LayoutGrid size={17} aria-hidden="true" />
             相関図
           </NavLink>
-          <NavLink to="/settings" data-tooltip="設定">
+          <NavLink to="/settings" data-tooltip="表示設定">
             <Settings size={17} aria-hidden="true" />
-            設定
+            表示設定
           </NavLink>
         </nav>
         <div className="topbar-resources">

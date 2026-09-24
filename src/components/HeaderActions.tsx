@@ -1,7 +1,7 @@
 import type { RefObject } from "react";
-import { BookOpenCheck, CircleHelp, Mail } from "lucide-react";
+import { BookOpenCheck, CircleHelp, Mail, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
-import BackupImportControl from "../features/backup/BackupImportControl";
+import BackupExportButton from "../features/backup/BackupExportButton";
 
 export function GuidanceActions({
   onStartTutorial,
@@ -64,7 +64,16 @@ export function ResourceActions({
 }) {
   return (
     <div className="header-resources">
-      <BackupImportControl />
+      <BackupExportButton />
+      <Link
+        className="button header-action"
+        to="/data-management"
+        aria-label="バックアップファイルを読み込む"
+        data-tooltip="ファイル読み込み"
+      >
+        <Upload size={17} aria-hidden="true" />
+        <span className="button-label">ファイル読み込み</span>
+      </Link>
       {showContact && <ContactAction />}
     </div>
   );

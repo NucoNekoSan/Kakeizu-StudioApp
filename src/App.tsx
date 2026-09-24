@@ -6,6 +6,7 @@ import LegalPage from "./features/legal/LegalPage";
 import StorageModeGate from "./features/storage/StorageModeGate";
 import ChartsPage from "./features/charts/ChartsPage";
 import SettingsPage from "./features/settings/SettingsPage";
+import DataManagementPage from "./features/backup/DataManagementPage";
 
 const ChartEditor = lazy(() => import("./features/editor/ChartEditor"));
 
@@ -35,6 +36,7 @@ export default function App() {
           }
         />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/data-management" element={<DataManagementPage />} />
         {/* 廃止した /login を含め、未知のパスは一覧へ送る */}
         <Route path="*" element={<Navigate to="/charts" replace />} />
       </Routes>

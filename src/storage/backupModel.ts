@@ -234,3 +234,16 @@ export const backupFileName = (now = new Date()) => {
     now.getDate(),
   )}-${pad(now.getHours())}${pad(now.getMinutes())}.json`;
 };
+
+export const chartBackupFileName = (title: string, now = new Date()) => {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const safeTitle =
+    title
+      .trim()
+      .replace(/[\\/:*?"<>|]/g, "-")
+      .replace(/\s+/g, "-")
+      .slice(0, 60) || "chart";
+  return `kakeizu-${safeTitle}-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(
+    now.getDate(),
+  )}-${pad(now.getHours())}${pad(now.getMinutes())}.json`;
+};

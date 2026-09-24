@@ -102,6 +102,7 @@ export const localApi = {
   clearAllData: lazy((api) => api.clearAllData),
   backupStatus: lazy((api) => api.backupStatus),
   createBackup: lazy((api) => api.createBackup),
+  createChartBackup: lazy((api) => api.createChartBackup),
   markExported: lazy((api) => api.markExported),
   inspectBackup: lazy((api) => api.inspectBackup),
   isEncryptedFile: lazy((api) => api.isEncryptedFile),

@@ -1,6 +1,7 @@
 import {
   backupFileName,
   buildBackup,
+  chartBackupFileName,
   mergeDefinitions,
   parseBackup,
   resolveChartId,
@@ -95,6 +96,20 @@ export function createBackupApi(repository: Repository) {
         json: JSON.stringify(sealed),
         backup,
         encrypted: true,
+      };
+    },
+
+    /** 現在の相関図だけを、通常の読み込み機能と互換性のある形式で書き出す。 */
+    createChartBackup: async (chartId: string) => {
+      const [definitions, chart] = await Promise.all([
+        repository.definitions(),
+        repository.chart(chartId),
+      ]);
+      const backup = buildBackup(definitions, [chart], APP_VERSION);
+      return {
+        fileName: chartBackupFileName(chart.title),
+        json: JSON.stringify(backup, null, 2),
+        backup,
       };
     },
 
