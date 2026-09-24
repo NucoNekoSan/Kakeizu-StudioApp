@@ -616,7 +616,7 @@ p {
   padding: 0 18px;
   gap: 12px;
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) max-content minmax(380px, 1fr);
+  grid-template-columns: minmax(0, 1fr) max-content max-content;
 }
 .editor-heading {
   min-width: 0;
@@ -1229,7 +1229,7 @@ p {
   color: var(--muted) !important;
   margin-top: 6px;
 }
-@media (max-width: 1800px) {
+@media (max-width: 2200px) {
   .editor-actions .button-label {
     display: none;
   }
@@ -1237,12 +1237,33 @@ p {
     padding-inline: 11px;
   }
 }
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .editor-topbar > .header-guidance .button-label {
     display: none;
   }
   .editor-topbar > .header-guidance .button {
     padding-inline: 11px;
+  }
+}
+@media (max-width: 900px) {
+  .editor-topbar {
+    height: auto;
+    min-height: 72px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: center;
+    gap: 6px;
+    padding: 0 10px;
+  }
+  .editor-topbar > .header-guidance {
+    grid-column: 2;
+  }
+  .editor-actions {
+    grid-column: 1 / -1;
+    justify-content: center;
+    padding-bottom: 8px;
+  }
+  .editor-body {
+    height: calc(100vh - 120px);
   }
 }
 @media (max-width: 850px) {
@@ -1274,12 +1295,6 @@ p {
   .save-state {
     display: none;
   }
-  .editor-topbar {
-    padding: 0 10px;
-  }
-  .editor-topbar {
-    grid-template-columns: minmax(120px, 1fr) auto minmax(380px, auto);
-  }
   .usage {
     display: none;
   }
@@ -1297,24 +1312,6 @@ p {
   }
   .topbar-resources .button-label {
     display: none;
-  }
-  .editor-topbar {
-    height: auto;
-    min-height: 72px;
-    grid-template-columns: 1fr auto;
-    align-content: center;
-    gap: 6px;
-  }
-  .editor-topbar > .header-guidance {
-    grid-column: 2;
-  }
-  .editor-actions {
-    grid-column: 1 / -1;
-    justify-content: center;
-    padding-bottom: 8px;
-  }
-  .editor-body {
-    height: calc(100vh - 120px);
   }
   .tutorial-card {
     top: auto;
