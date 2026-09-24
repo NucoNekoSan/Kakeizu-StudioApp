@@ -18,7 +18,12 @@ export function showUpdatePrompt(applyUpdate: () => void): void {
   reload.type = "button";
   reload.className = "button primary";
   reload.textContent = "更新する";
-  reload.addEventListener("click", applyUpdate);
+  reload.addEventListener("click", () => {
+    reload.disabled = true;
+    dismiss.disabled = true;
+    reload.textContent = "更新中…";
+    applyUpdate();
+  });
 
   const dismiss = document.createElement("button");
   dismiss.type = "button";
