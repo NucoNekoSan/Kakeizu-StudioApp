@@ -435,6 +435,36 @@ p {
 .chart-card-actions .icon {
   flex: none;
 }
+.chart-backup-options {
+  display: grid;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.chart-backup-options label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.chart-backup-options label:has(input:checked) {
+  border-color: var(--forest-2);
+  background: var(--mint);
+}
+.chart-backup-options input {
+  flex: none;
+}
+.chart-backup-options span {
+  display: grid;
+  gap: 3px;
+}
+.chart-backup-options small {
+  color: var(--muted);
+}
 .empty {
   min-height: 410px;
   border: 1px dashed #b9c2bd;

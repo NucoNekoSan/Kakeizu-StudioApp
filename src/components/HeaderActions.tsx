@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import { BookOpenCheck, CircleHelp, Mail, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import BackupExportButton from "../features/backup/BackupExportButton";
+import ChartBackupSelectButton from "../features/backup/ChartBackupSelectButton";
 
 export function GuidanceActions({
   onStartTutorial,
@@ -59,12 +60,18 @@ function ContactAction() {
 
 export function ResourceActions({
   showContact = true,
+  backupMode = "all",
 }: {
   showContact?: boolean;
+  backupMode?: "all" | "chart";
 }) {
   return (
     <div className="header-resources">
-      <BackupExportButton />
+      {backupMode === "chart" ? (
+        <ChartBackupSelectButton />
+      ) : (
+        <BackupExportButton />
+      )}
       <Link
         className="button header-action"
         to="/data-management"

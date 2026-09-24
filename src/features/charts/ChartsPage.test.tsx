@@ -82,9 +82,16 @@ describe("相関図一覧の個別JSON書き出し", () => {
     renderPage();
     fireEvent.click(
       await screen.findByRole("button", {
-        name: "家族AをJSONファイルに書き出す",
+        name: "相関図を選択してバックアップ",
       }),
     );
+    const exportButton = screen.getByRole("button", {
+      name: "JSONファイルに書き出す",
+    }) as HTMLButtonElement;
+    expect(exportButton.disabled).toBe(true);
+    fireEvent.click(screen.getByRole("radio", { name: /家族A/ }));
+    expect(exportButton.disabled).toBe(false);
+    fireEvent.click(exportButton);
 
     await waitFor(() =>
       expect(api.createChartBackup).toHaveBeenCalledWith("chart-a"),
@@ -101,27 +108,60 @@ describe("相関図一覧の個別JSON書き出し", () => {
     renderPage();
     fireEvent.click(
       await screen.findByRole("button", {
-        name: "家族AをJSONファイルに書き出す",
+        name: "相関図を選択してバックアップ",
       }),
+    );
+    fireEvent.click(screen.getByRole("radio", { name: /家族A/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "JSONファイルに書き出す" }),
     );
 
     await waitFor(() => expect(saveJsonFile).toHaveBeenCalled());
     expect(screen.queryByText(/書き出しました/)).toBeNull();
+    expect(screen.getByRole("dialog")).toBeTruthy();
   });
 
   it("失敗時にエラーを表示し、操作を再開できる", async () => {
     vi.mocked(api.createChartBackup).mockRejectedValue(new Error("保存失敗"));
     renderPage();
-    const button = await screen.findByRole("button", {
-      name: "家族AをJSONファイルに書き出す",
-    });
-    fireEvent.click(button);
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "相関図を選択してバックアップ",
+      }),
+    );
+    fireEvent.click(screen.getByRole("radio", { name: /家族A/ }));
+    const exportButton = screen.getByRole("button", {
+      name: "JSONファイルに書き出す",
+    }) as HTMLButtonElement;
+    fireEvent.click(exportButton);
 
-    expect((await screen.findByRole("alert")).textContent).toContain(
-      "JSONを書き出せませんでした",
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    await waitFor(() => expect(exportButton.disabled).toBe(false));
+  });
+
+  it("カードのJSONアイコンを表示しない", async () => {
+    renderPage();
+    await screen.findByText("家族A");
+    expect(screen.queryByRole("button", { name: /家族AをJSON/ })).toBeNull();
+  });
+
+  it("相関図が無い場合は書き出しを無効化する", async () => {
+    vi.mocked(api.charts).mockResolvedValue([]);
+    renderPage();
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "相関図を選択してバックアップ",
+      }),
     );
-    await waitFor(() =>
-      expect((button as HTMLButtonElement).disabled).toBe(false),
-    );
+    expect(
+      await screen.findByText("書き出せる相関図がありません。"),
+    ).toBeTruthy();
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "JSONファイルに書き出す",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
   });
 });

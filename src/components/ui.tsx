@@ -18,7 +18,13 @@ export function Logo() {
     </NavLink>
   );
 }
-export function Shell({ children }: { children: React.ReactNode }) {
+export function Shell({
+  children,
+  backupMode = "all",
+}: {
+  children: React.ReactNode;
+  backupMode?: "all" | "chart";
+}) {
   return (
     <div className="shell">
       <header className="topbar">
@@ -34,7 +40,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </NavLink>
         </nav>
         <div className="topbar-resources">
-          <ResourceActions showContact={false} />
+          <ResourceActions showContact={false} backupMode={backupMode} />
           <GuidanceActions showContact />
         </div>
       </header>
