@@ -7,8 +7,8 @@ import { registerSW } from "virtual:pwa-register";
  * PWA 化した v3 では自前の Worker と衝突するため廃止した。
  * 古い Worker は同一スコープで上書き登録されるため、明示的な解除は不要。
  *
- * registerType は "prompt"。編集中に勝手に更新されると入力が失われ得るので、
- * 更新は利用者が明示的に選んだときだけ適用する。
+ * registerType は "autoUpdate"。古いWorkerが更新待ちのまま残って最新版を
+ * 表示できなくなることを防ぐ。onNeedRefresh は移行中のWorker向けの予備導線。
  */
 export type UpdateHandler = (applyUpdate: () => void) => void;
 

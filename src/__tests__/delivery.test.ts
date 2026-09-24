@@ -97,9 +97,9 @@ describe("PWA 設定", () => {
     expect(config).toMatch(/injectRegister:\s*null/);
   });
 
-  it("更新を利用者の操作で適用する", () => {
-    // 編集中に勝手にリロードされると入力が失われる。
-    expect(config).toMatch(/registerType:\s*"prompt"/);
+  it("取得した最新版を即時有効化する", () => {
+    // 古いWorkerが waiting のまま残り、最新版を表示できなくなることを防ぐ。
+    expect(config).toMatch(/registerType:\s*"autoUpdate"/);
   });
 
   it("インストールに必要なアイコンを宣言する", () => {
