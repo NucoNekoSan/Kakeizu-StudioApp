@@ -425,9 +425,15 @@ p {
   color: var(--muted);
   margin: 0;
 }
-.chart-card > .icon {
+.chart-card-actions {
   align-self: center;
+  display: flex;
+  gap: 4px;
   margin-right: 10px;
+  padding: 0;
+}
+.chart-card-actions .icon {
+  flex: none;
 }
 .empty {
   min-height: 410px;

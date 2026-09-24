@@ -1,17 +1,22 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { GitBranch, Plus, Trash2 } from "lucide-react";
+import { FileJson, GitBranch, Plus, Trash2 } from "lucide-react";
 import { api } from "../../api";
 import { Modal, Notice, Shell, Spinner } from "../../components/ui";
 import { formatDate, getErrorMessage } from "../../domain";
 import BackupReminder from "../backup/BackupReminder";
+import { saveJsonFile } from "../../storage/fileIo";
+
+type ExportNotice = { tone: "success" | "error"; message: string } | null;
 
 function ChartsPage() {
   const nav = useNavigate(),
     qc = useQueryClient(),
     [title, setTitle] = useState(""),
     [show, setShow] = useState(false),
+    [exportingId, setExportingId] = useState<string | null>(null),
+    [exportNotice, setExportNotice] = useState<ExportNotice>(null),
     charts = useQuery({ queryKey: ["charts"], queryFn: api.charts });
   const create = useMutation({
     mutationFn: api.createChart,
@@ -24,6 +29,26 @@ function ChartsPage() {
     mutationFn: api.deleteChart,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["charts"] }),
   });
+  const exportChart = async (chartId: string) => {
+    setExportingId(chartId);
+    setExportNotice(null);
+    try {
+      const { fileName, json } = await api.createChartBackup(chartId);
+      const saved = await saveJsonFile(fileName, json);
+      if (saved)
+        setExportNotice({
+          tone: "success",
+          message: `${fileName} を書き出しました。`,
+        });
+    } catch (caught) {
+      setExportNotice({
+        tone: "error",
+        message: `JSONを書き出せませんでした。${getErrorMessage(caught)}`,
+      });
+    } finally {
+      setExportingId(null);
+    }
+  };
   useEffect(() => {
     const context = document.modelContext;
     if (!context?.registerTool) return;
@@ -72,6 +97,9 @@ function ChartsPage() {
           </button>
         </div>
         <BackupReminder />
+        {exportNotice && (
+          <Notice tone={exportNotice.tone}>{exportNotice.message}</Notice>
+        )}
         {charts.isLoading ? (
           <Spinner />
         ) : charts.isError ? (
@@ -96,16 +124,28 @@ function ChartsPage() {
                     {c.nodeCount} ノード · {formatDate(c.updatedAt)}
                   </p>
                 </div>
-                <button
-                  className="icon danger"
-                  aria-label={`${c.title}を削除`}
-                  onClick={() =>
-                    confirm(`「${c.title}」を削除しますか？`) &&
-                    remove.mutate(c.id)
-                  }
-                >
-                  <Trash2 size={17} />
-                </button>
+                <div className="chart-card-actions">
+                  <button
+                    className="icon"
+                    aria-label={`${c.title}をJSONファイルに書き出す`}
+                    data-tooltip="JSON書き出し"
+                    disabled={exportingId === c.id}
+                    onClick={() => void exportChart(c.id)}
+                  >
+                    <FileJson size={17} aria-hidden="true" />
+                  </button>
+                  <button
+                    className="icon danger"
+                    aria-label={`${c.title}を削除`}
+                    data-tooltip="削除"
+                    onClick={() =>
+                      confirm(`「${c.title}」を削除しますか？`) &&
+                      remove.mutate(c.id)
+                    }
+                  >
+                    <Trash2 size={17} aria-hidden="true" />
+                  </button>
+                </div>
               </article>
             ))}
           </div>
