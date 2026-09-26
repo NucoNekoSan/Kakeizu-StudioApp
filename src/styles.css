@@ -1554,6 +1554,9 @@ p {
   font-size: 0.85rem;
   text-align: center;
 }
+.temporary-banner.fallback-warning {
+  background: #b45309;
+}
 .storage-mode,
 .danger-zone {
   display: grid;
