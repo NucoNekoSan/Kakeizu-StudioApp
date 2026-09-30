@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kakeizu-studioapp.nuconeko-garden.com/sitemap.xml
