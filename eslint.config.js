@@ -12,6 +12,8 @@ export default tseslint.config(
       "deploy-release",
       "server/vendor",
       ".claude",
+      ".agents",
+      ".superpowers",
     ],
   },
   js.configs.recommended,

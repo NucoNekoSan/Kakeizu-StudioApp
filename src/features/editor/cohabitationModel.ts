@@ -84,7 +84,7 @@ export function createCohabitationFromNodes(
     const node = nodeById.get(nodeId);
     return node ? [node] : [];
   });
-  if (members.length < 2) return null;
+  if (members.length < 1) return null;
   const bounds = members.reduce(
     (box, node) => {
       const size = nodeSize(node);
@@ -121,7 +121,7 @@ export function isCohabitation(value: unknown): value is Cohabitation {
     text(value.id) &&
     value.id.length > 0 &&
     Array.isArray(value.nodeIds) &&
-    value.nodeIds.length >= 2 &&
+    value.nodeIds.length >= 1 &&
     value.nodeIds.every(text) &&
     new Set(value.nodeIds).size === value.nodeIds.length &&
     text(value.label) &&

@@ -1,7 +1,8 @@
 import { useCallback, useState, type RefObject } from "react";
 import type { Node } from "@xyflow/react";
 import type { FamilyNodeData } from "../../familyGraph";
-import { dataUrlToBlob, saveFile } from "../../storage/fileIo";
+import { prepareFileSave } from "../../storage/fileIo";
+import { exportBlob, exportFormats, type ExportFormat } from "./exportFormats";
 import {
   drawPngFrame,
   getPngViewport,
@@ -11,17 +12,9 @@ import {
 
 export interface PngPreview {
   dataUrl: string;
-  blob: Blob;
-  fileName: string;
   width: number;
   height: number;
 }
-
-const pngFileType = {
-  description: "PNG画像",
-  mimeType: "image/png",
-  extension: ".png",
-};
 
 export function usePngExport(
   flowRef: RefObject<HTMLDivElement | null>,
@@ -29,20 +22,34 @@ export function usePngExport(
   title?: string,
   frameWidth = PNG_WIDTH,
   frameHeight = PNG_HEIGHT,
+  callbacks: { onPreviewCreated?: () => void; onSaved?: () => void } = {},
 ) {
   const [isExporting, setIsExporting] = useState(false),
     [exportError, setExportError] = useState(""),
     [preview, setPreview] = useState<PngPreview | null>(null);
 
   const generatePng = useCallback(
-    async (showPreview: boolean) => {
-      if (!flowRef.current) return;
+    async (showPreview: boolean, format: ExportFormat = "transparent-png") => {
+      if (!flowRef.current) return false;
+      const fileType = exportFormats.find((item) => item.value === format)!;
+      const stamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, "-");
+      const fileName = `${title || "相関図"}-${stamp}${fileType.extension}`;
+      // pickerはユーザー操作直後に開かないとブラウザに拒否される。
+      const targetPromise = showPreview
+        ? null
+        : prepareFileSave(fileName, {
+            description: fileType.label,
+            mimeType: fileType.mimeType,
+            extension: fileType.extension,
+          });
       setIsExporting(true);
       setExportError("");
       const viewport = flowRef.current.querySelector<HTMLElement>(
         ".react-flow__viewport",
       );
       try {
+        const target = showPreview ? null : await targetPromise;
+        if (!showPreview && !target) return false;
         if (!viewport) throw new Error("React Flow viewport was not found");
         const { toCanvas } = await import("html-to-image"),
           exportViewport = getPngViewport(nodes, frameWidth, frameHeight),
@@ -58,57 +65,53 @@ export function usePngExport(
                 !node.classList.contains("react-flow__minimap") &&
                 !node.classList.contains("react-flow__background")),
           }),
-          context = canvas.getContext("2d"),
-          stamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, "-");
+          context = canvas.getContext("2d");
         if (!context) throw new Error("PNG canvas context was not found");
         drawPngFrame(context, frameWidth, frameHeight);
-        const dataUrl = canvas.toDataURL("image/png");
-        const image = {
-          dataUrl,
-          blob: dataUrlToBlob(dataUrl),
-          fileName: `${title || "相関図"}-${stamp}.png`,
-          width: frameWidth,
-          height: frameHeight,
-        };
-        if (showPreview) setPreview(image);
-        else await saveFile(image.fileName, image.blob, pngFileType);
+        if (showPreview) {
+          const dataUrl = canvas.toDataURL("image/png");
+          setPreview({
+            dataUrl,
+            width: frameWidth,
+            height: frameHeight,
+          });
+          callbacks.onPreviewCreated?.();
+          return true;
+        } else {
+          await target!.save(await exportBlob(canvas, format));
+          callbacks.onSaved?.();
+          return true;
+        }
       } catch {
         setExportError(
           showPreview
-            ? "PNGのプレビューを作成できませんでした。再度お試しください。"
-            : "PNGの保存に失敗しました。再度お試しください。",
+            ? "全体プレビューを作成できませんでした。再度お試しください。"
+            : `${format === "transparent-png" ? "PNG" : fileType.label}の保存に失敗しました。再度お試しください。`,
         );
+        return false;
       } finally {
         setIsExporting(false);
       }
     },
-    [flowRef, nodes, title, frameWidth, frameHeight],
+    [callbacks, flowRef, nodes, title, frameWidth, frameHeight],
   );
 
   const exportPng = useCallback(() => generatePng(false), [generatePng]);
+  const exportFile = useCallback(
+    (format: ExportFormat) => generatePng(false, format),
+    [generatePng],
+  );
   const previewPng = useCallback(() => generatePng(true), [generatePng]);
   const closePreview = useCallback(() => {
     setPreview(null);
     setExportError("");
   }, []);
-  const savePreview = useCallback(async () => {
-    if (!preview) return;
-    setIsExporting(true);
-    setExportError("");
-    try {
-      await saveFile(preview.fileName, preview.blob, pngFileType);
-    } catch {
-      setExportError("PNGの保存に失敗しました。再度お試しください。");
-    } finally {
-      setIsExporting(false);
-    }
-  }, [preview]);
   return {
     exportPng,
+    exportFile,
     previewPng,
     preview,
     closePreview,
-    savePreview,
     exportError,
     isExporting,
   };

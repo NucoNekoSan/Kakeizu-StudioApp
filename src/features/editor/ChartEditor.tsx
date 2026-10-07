@@ -46,7 +46,10 @@ import { useChartTitleSave } from "./useChartTitleSave";
 import { useChartNodeMutations } from "./useChartNodeMutations";
 import { useDebouncedNodeUpdate } from "./useDebouncedNodeUpdate";
 import { useCohabitationDocument } from "./useCohabitationDocument";
-import { createCohabitationFromNodes } from "./cohabitationModel";
+import {
+  createCohabitationFromNodes,
+  type Cohabitation,
+} from "./cohabitationModel";
 import { CohabitationPanel } from "./CohabitationPanel";
 import { CohabitationLayer } from "./CohabitationLayer";
 import { CohabitationToolOverlay } from "./CohabitationToolOverlay";
@@ -59,6 +62,7 @@ import { readFrameVisibility, writeFrameVisibility } from "./frameVisibility";
 import { getPngFramePreview } from "./pngExport";
 import { PNG_FRAME } from "./pngExport";
 import { PngPreviewDialog } from "./PngPreviewDialog";
+import { ExportFileDialog } from "./ExportFileDialog";
 import { usePngExport } from "./usePngExport";
 import {
   BASE_NODE_HEIGHT,
@@ -66,14 +70,16 @@ import {
   clampNodeToFrame,
   nodeSize,
 } from "./nodeLayout";
-import EditorTutorial from "./EditorTutorial";
 import { saveJsonFile } from "../../storage/fileIo";
+import { useTutorial } from "../tutorial/tutorialContext";
 
 const nodeTypes = { family: FamilyNode },
   edgeTypes = { family: FamilyEdge, familyTree: FamilyTreeEdge };
 function ChartEditor() {
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const { id = "" } = useParams(),
     nav = useNavigate(),
+    tutorial = useTutorial(),
     qc = useQueryClient(),
     flowRef = useRef<HTMLDivElement>(null),
     flow = useRef<ReactFlowInstance<Node<FamilyNodeData>, Edge> | null>(null),
@@ -89,9 +95,7 @@ function ChartEditor() {
     [frameVisible, setFrameVisible] = useState(readFrameVisibility),
     [lassoMode, setLassoMode] = useState(false),
     [labelMode, setLabelMode] = useState(false),
-    [tutorialOpen, setTutorialOpen] = useState(false),
     [isJsonExporting, setIsJsonExporting] = useState(false),
-    tutorialButtonRef = useRef<HTMLButtonElement>(null),
     {
       cohabitations,
       setCohabitations,
@@ -109,6 +113,48 @@ function ChartEditor() {
       nodeId: string;
       direction: Direction | null;
     } | null>(null);
+  const reportCohabitation = useCallback(
+    (group: Cohabitation) => {
+      if (group.nodeIds.length >= 2) {
+        tutorial.reportAction("multi-cohabitation-created", id);
+        return;
+      }
+      const member =
+        group.nodeIds.length === 1
+          ? nodes.find((node) => node.id === group.nodeIds[0])
+          : null;
+      if (member?.data.relationKind === "self")
+        tutorial.reportAction("single-self-cohabitation-created", id);
+    },
+    [id, nodes, tutorial],
+  );
+  useEffect(() => {
+    if (nodes.some((node) => node.data.relationKind === "self"))
+      tutorial.reportAction("self-created", id);
+    if (
+      nodes.some(
+        (node) =>
+          node.data.relationKind === "partner" ||
+          node.data.relationKind === "divorce",
+      )
+    )
+      tutorial.reportAction("partner-created", id);
+    if (nodes.some((node) => node.data.relationKind === "child"))
+      tutorial.reportAction("child-created", id);
+    if (
+      cohabitations.some(
+        (group) =>
+          group.nodeIds.length === 1 &&
+          nodes.find((node) => node.id === group.nodeIds[0])?.data
+            .relationKind === "self",
+      )
+    )
+      tutorial.reportAction("single-self-cohabitation-created", id);
+    if (cohabitations.some((group) => group.nodeIds.length >= 2))
+      tutorial.reportAction("multi-cohabitation-created", id);
+    if (cohabitationLabels.length)
+      tutorial.reportAction("cohabitation-label-created", id);
+  }, [cohabitationLabels.length, cohabitations, id, nodes, tutorial]);
   useEffect(() => {
     if (chart.data) {
       const h = hydrateChart(chart.data);
@@ -128,7 +174,7 @@ function ChartEditor() {
       const nodeIds = group.nodeIds.filter((nodeId) =>
         validNodeIds.has(nodeId),
       );
-      if (nodeIds.length < 2) return [];
+      if (nodeIds.length < 1) return [];
       return nodeIds.length === group.nodeIds.length
         ? [group]
         : [{ ...group, nodeIds }];
@@ -224,13 +270,18 @@ function ChartEditor() {
       flushDebouncedNodeUpdate();
       const { fileName, json } = await api.createChartBackup(id);
       const saved = await saveJsonFile(fileName, json);
-      if (saved) setAnnouncement(`${fileName} を書き出しました。`);
+      if (saved) {
+        setAnnouncement(`${fileName} を書き出しました。`);
+        tutorial.reportAction("json-exported", id);
+      }
     } catch (caught) {
-      setAnnouncement(`JSONを書き出せませんでした。${getErrorMessage(caught)}`);
+      setAnnouncement(
+        `JSONファイルを書き出せませんでした。${getErrorMessage(caught)}`,
+      );
     } finally {
       setIsJsonExporting(false);
     }
-  }, [flushDebouncedNodeUpdate, id]);
+  }, [flushDebouncedNodeUpdate, id, tutorial]);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() !== "s" || (!event.ctrlKey && !event.metaKey))
@@ -250,11 +301,10 @@ function ChartEditor() {
       chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT,
     ),
     {
-      exportPng,
+      exportFile,
       previewPng,
       preview,
       closePreview,
-      savePreview,
       exportError,
       isExporting,
     } = usePngExport(
@@ -263,6 +313,10 @@ function ChartEditor() {
       chart.data?.title,
       chart.data?.frameWidth ?? DEFAULT_FRAME_WIDTH,
       chart.data?.frameHeight ?? DEFAULT_FRAME_HEIGHT,
+      {
+        onPreviewCreated: () => tutorial.reportAction("overview-previewed", id),
+        onSaved: () => tutorial.reportAction("file-exported", id),
+      },
     ),
     resizeActions = useNodeResize(nodes, pngFrame, (nodeId, input) =>
       update.mutate({ chartId: id, nodeId, input }),
@@ -291,16 +345,18 @@ function ChartEditor() {
   const selectedNode = nodes.find((n) => n.id === selected) || null;
   return (
     <div className="editor-shell">
-      <EditorTutorial
-        open={tutorialOpen}
-        onClose={() => setTutorialOpen(false)}
-        returnFocusRef={tutorialButtonRef}
+      <ExportFileDialog
+        open={exportDialogOpen}
+        isSaving={isExporting}
+        error={exportError}
+        onClose={() => setExportDialogOpen(false)}
+        onSave={async (format) => {
+          if (await exportFile(format)) setExportDialogOpen(false);
+        }}
       />
       <PngPreviewDialog
         preview={preview}
         onClose={closePreview}
-        onSave={savePreview}
-        isSaving={isExporting}
         error={exportError}
       />
       <header className="editor-topbar">
@@ -340,11 +396,7 @@ function ChartEditor() {
                 : "保存済み"}
           </div>
         </div>
-        <GuidanceActions
-          onStartTutorial={() => setTutorialOpen(true)}
-          tutorialButtonRef={tutorialButtonRef}
-          showContact
-        />
+        <GuidanceActions showContact />
         <div className="editor-actions">
           <div
             className="editor-action-group"
@@ -367,6 +419,7 @@ function ChartEditor() {
             </button>
             <button
               className={`button ${labelMode ? "active" : ""}`}
+              data-tutorial-target="cohabitation-label"
               onClick={() => {
                 setLabelMode((active) => !active);
                 setLassoMode(false);
@@ -393,7 +446,8 @@ function ChartEditor() {
           <div
             className="editor-action-group"
             role="group"
-            aria-label="外枠とPNG出力"
+            aria-label="外枠とファイル書き出し"
+            data-tutorial-target="editor-export"
           >
             <FrameSettings
               visible={frameVisible}
@@ -436,26 +490,28 @@ function ChartEditor() {
             />
             <button
               className="button"
+              data-tutorial-target="editor-overview"
               onClick={previewPng}
               disabled={isExporting || frame.isPending}
-              aria-label="PNGプレビュー"
-              data-tooltip="PNGプレビュー"
+              aria-label="全体プレビュー"
+              data-tooltip="全体プレビュー"
             >
               <FileImage size={17} aria-hidden="true" />
               <span className="button-label">
-                {isExporting ? "PNG作成中…" : "PNGプレビュー"}
+                {isExporting ? "作成中…" : "全体プレビュー"}
               </span>
             </button>
             <button
               className="button primary"
-              onClick={exportPng}
+              data-tutorial-target="editor-export"
+              onClick={() => setExportDialogOpen(true)}
               disabled={isExporting || frame.isPending}
-              aria-label="PNG保存"
-              data-tooltip="PNGを保存"
+              aria-label="ファイル書き出し"
+              data-tooltip="画像・PDFを書き出す"
             >
               <Download size={17} />
               <span className="button-label">
-                {isExporting ? "PNG作成中…" : "PNG保存"}
+                {isExporting ? "作成中…" : "ファイル書き出し"}
               </span>
             </button>
           </div>
@@ -464,19 +520,20 @@ function ChartEditor() {
             role="group"
             aria-label="データと設定"
           >
-            <ResourceActions showContact={false} />
             <button
               className="button"
+              data-tutorial-target="editor-json-export"
               onClick={() => void exportCurrentChart()}
               disabled={isJsonExporting}
               aria-label="表示中の相関図をJSONファイルに書き出す"
-              data-tooltip="JSON書き出し"
+              data-tooltip="JSONファイル書き出し"
             >
               <FileJson size={17} aria-hidden="true" />
               <span className="button-label">
-                {isJsonExporting ? "書き出し中…" : "JSON書き出し"}
+                {isJsonExporting ? "書き出し中…" : "JSONファイル書き出し"}
               </span>
             </button>
+            <ResourceActions showContact={false} backupMode="none" />
             <button
               className="button"
               onClick={() => nav("/settings")}
@@ -490,10 +547,9 @@ function ChartEditor() {
         </div>
       </header>
       <main className="editor-body">
-        <aside className="editor-panel">
-          <div className="panel-tabs" data-tutorial-target="add-person">
+        <aside className="editor-panel" data-tutorial-target="add-person">
+          <div className="panel-tabs">
             <button
-              data-tutorial-target="edit-person"
               className={panel === "add" ? "active" : ""}
               onClick={() => {
                 setPanel("add");
@@ -506,6 +562,7 @@ function ChartEditor() {
               追加
             </button>
             <button
+              data-tutorial-target="edit-person"
               className={panel === "edit" ? "active" : ""}
               disabled={!selectedNode}
               onClick={() => setPanel("edit")}
@@ -532,7 +589,22 @@ function ChartEditor() {
                   },
                   pngFrame,
                 );
-                create.mutate({ ...v, ...position });
+                create.mutate(
+                  { ...v, ...position },
+                  {
+                    onSuccess: () => {
+                      const kind = chart.data.relationships.find(
+                        (item) => item.id === v.relationshipId,
+                      )?.kind;
+                      if (kind === "self")
+                        tutorial.reportAction("self-created", id);
+                      if (kind === "partner" || kind === "divorce")
+                        tutorial.reportAction("partner-created", id);
+                      if (kind === "child")
+                        tutorial.reportAction("child-created", id);
+                    },
+                  },
+                );
               }}
             />
           ) : (
@@ -556,11 +628,13 @@ function ChartEditor() {
                   onDraftChange={previewNodeDraft}
                   onChange={scheduleNodeUpdate}
                   onSubmit={(v) =>
-                    update.mutate({
-                      chartId: id,
-                      nodeId: selectedNode.id,
-                      input: v,
-                    })
+                    update.mutate(
+                      { chartId: id, nodeId: selectedNode.id, input: v },
+                      {
+                        onSuccess: () =>
+                          tutorial.reportAction("person-edited", id),
+                      },
+                    )
                   }
                   onDelete={() => {
                     if (!confirm("このノードと接続線を削除しますか？")) return;
@@ -581,7 +655,7 @@ function ChartEditor() {
           )}
           {exportError && <Notice tone="error">{exportError}</Notice>}
           <p className="export-caution">
-            PNGには入力した氏名やメモがそのまま含まれます。保存先と共有範囲にご注意ください。
+            書き出した画像・PDFには入力した氏名やメモがそのまま含まれます。保存先と共有範囲にご注意ください。
           </p>
           {cohabitationStorageError && (
             <Notice tone="error">
@@ -609,6 +683,7 @@ function ChartEditor() {
               setSelectedCohabitation(group.id);
               setSelectedLabel(null);
               setAnnouncement("同居輪を作成しました");
+              reportCohabitation(group);
             }}
             onUpdateGroup={(groupId, input) =>
               setCohabitations((items) =>
@@ -657,6 +732,14 @@ function ChartEditor() {
             onSetLabels={setCohabitationLabels}
             onSelectCohabitation={setSelectedCohabitation}
             onSelectLabel={setSelectedLabel}
+            onCreateCohabitation={(group) => {
+              setAnnouncement("同居輪を作成しました");
+              reportCohabitation(group);
+            }}
+            onCreateLabel={() => {
+              setAnnouncement("同居文字を作成しました");
+              tutorial.reportAction("cohabitation-label-created", id);
+            }}
             onFinishLasso={() => setLassoMode(false)}
             onFinishLabel={() => setLabelMode(false)}
           />
@@ -720,7 +803,12 @@ function ChartEditor() {
                   nodeSize(n),
                   pngFrame,
                 );
-                update.mutate({ chartId: id, nodeId: n.id, input: position });
+                update.mutate(
+                  { chartId: id, nodeId: n.id, input: position },
+                  {
+                    onSuccess: () => tutorial.reportAction("node-arranged", id),
+                  },
+                );
               }}
               minZoom={0.3}
               maxZoom={2}

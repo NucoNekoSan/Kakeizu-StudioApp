@@ -53,6 +53,14 @@ export default function LegalPage({ slug }: { slug?: LegalSlug }) {
                 ))}
               </ul>
             )}
+            {section.links?.map((link) => (
+              <p key={`${link.label}-${link.href}`}>
+                {link.label}:{" "}
+                <a href={link.href} target="_blank" rel="noopener noreferrer">
+                  {link.href}
+                </a>
+              </p>
+            ))}
           </section>
         ))}
 

@@ -33,7 +33,7 @@ export function FrameSettings({
       <button
         className="button"
         aria-label="外枠"
-        data-tooltip="外枠とPNGサイズ"
+        data-tooltip="外枠と書き出しサイズ"
         aria-haspopup="dialog"
         onClick={() => {
           setDraftVisible(visible);
@@ -75,9 +75,9 @@ export function FrameSettings({
             />
             画面に外枠を表示
           </label>
-          <p>非表示にしても配置制限とPNGの点線は残ります。</p>
+          <p>非表示にしても配置制限と書き出し画像の点線は残ります。</p>
           <label>
-            PNGの横幅（px）
+            書き出し画像の横幅（px）
             <input
               type="number"
               min={1200}
@@ -115,7 +115,7 @@ export function FrameSettings({
             <p role="alert">横幅は1200〜4800pxの整数で指定してください。</p>
           )}
           <label>
-            PNGの縦幅（px）
+            書き出し画像の縦幅（px）
             <input
               type="number"
               min={600}

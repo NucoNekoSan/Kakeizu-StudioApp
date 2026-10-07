@@ -15,8 +15,10 @@ vi.mock("./pngExport", () => ({
 
 describe("usePngExport", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.clearAllMocks();
     vi.useRealTimers();
+    Reflect.deleteProperty(window, "showSaveFilePicker");
   });
 
   it("renders the viewport and downloads the framed PNG", async () => {
@@ -71,7 +73,7 @@ describe("usePngExport", () => {
     );
     expect(result.current.isExporting).toBe(false);
   });
-  it("previews a custom-width PNG and saves the same image without rendering again", async () => {
+  it("previews a custom-width chart without saving", async () => {
     const root = document.createElement("div");
     const viewport = document.createElement("div");
     viewport.className = "react-flow__viewport";
@@ -99,10 +101,86 @@ describe("usePngExport", () => {
       expect.objectContaining({ width: 3200, height: 1800 }),
     );
     expect(drawPngFrame).toHaveBeenCalledWith(context, 3200, 1800);
-    await act(() => result.current.savePreview());
     expect(toCanvas).toHaveBeenCalledOnce();
-    expect(click).toHaveBeenCalledOnce();
+    expect(click).not.toHaveBeenCalled();
     act(() => result.current.closePreview());
     expect(result.current.preview).toBeNull();
+  });
+
+  it("白背景PNGでは描画開始より先に保存先を選ぶ", async () => {
+    const root = document.createElement("div");
+    const viewport = document.createElement("div");
+    viewport.className = "react-flow__viewport";
+    root.append(viewport);
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 540;
+    const write = vi.fn(async () => {});
+    const picker = vi.fn(async () => ({
+      createWritable: async () => ({ write, close: async () => {} }),
+    }));
+    Object.defineProperty(window, "showSaveFilePicker", {
+      configurable: true,
+      value: picker,
+    });
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      fillRect: vi.fn(),
+      drawImage: vi.fn(),
+    } as unknown as CanvasRenderingContext2D);
+    vi.spyOn(HTMLCanvasElement.prototype, "toDataURL").mockReturnValue(
+      "data:image/png;base64,cG5n",
+    );
+    vi.mocked(toCanvas).mockResolvedValue(canvas);
+    const onSaved = vi.fn();
+    const { result } = renderHook(() =>
+      usePngExport({ current: root }, [], "家族", 1080, 540, { onSaved }),
+    );
+    await act(() => result.current.exportFile("white-png"));
+    expect(picker).toHaveBeenCalledOnce();
+    expect(picker.mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(toCanvas).mock.invocationCallOrder[0],
+    );
+    expect(write).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "image/png" }),
+    );
+    expect(onSaved).toHaveBeenCalledOnce();
+  });
+
+  it("JPEGの保存成功を通知し、保存先選択のキャンセルは通知しない", async () => {
+    const root = document.createElement("div");
+    const viewport = document.createElement("div");
+    viewport.className = "react-flow__viewport";
+    root.append(viewport);
+    const canvas = document.createElement("canvas");
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      fillRect: vi.fn(),
+      drawImage: vi.fn(),
+    } as unknown as CanvasRenderingContext2D);
+    vi.spyOn(HTMLCanvasElement.prototype, "toDataURL").mockReturnValue(
+      "data:image/jpeg;base64,cG5n",
+    );
+    vi.mocked(toCanvas).mockResolvedValue(canvas);
+    const write = vi.fn(async () => {});
+    const picker = vi.fn(async () => ({
+      createWritable: async () => ({ write, close: async () => {} }),
+    }));
+    Object.defineProperty(window, "showSaveFilePicker", {
+      configurable: true,
+      value: picker,
+    });
+    const onSaved = vi.fn();
+    const { result } = renderHook(() =>
+      usePngExport({ current: root }, [], "家族", 1080, 540, { onSaved }),
+    );
+    await act(() => result.current.exportFile("jpeg"));
+    expect(write).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "image/jpeg" }),
+    );
+    expect(onSaved).toHaveBeenCalledOnce();
+
+    picker.mockRejectedValueOnce(new DOMException("Cancelled", "AbortError"));
+    await act(() => result.current.exportFile("jpeg"));
+    expect(onSaved).toHaveBeenCalledOnce();
+    expect(toCanvas).toHaveBeenCalledOnce();
   });
 });

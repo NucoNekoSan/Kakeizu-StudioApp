@@ -97,7 +97,7 @@ export function CohabitationPanel({
         <button
           type="button"
           className="button wide"
-          disabled={checkedNodeIds.length < 2}
+          disabled={checkedNodeIds.length < 1}
           aria-describedby="cohabitation-create-hint"
           onClick={() => {
             onCreateGroup(checkedNodeIds);
@@ -107,7 +107,7 @@ export function CohabitationPanel({
           選択した人物を同居輪で囲む
         </button>
         <small id="cohabitation-create-hint" className="field-hint">
-          2人以上を選択してください。
+          1人以上を選択してください。
         </small>
       </fieldset>
       {!!groups.length && (

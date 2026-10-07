@@ -1,32 +1,23 @@
 // @vitest-environment jsdom
-import {
-  cleanup,
-  render,
-  screen,
-  waitFor,
-  fireEvent,
-} from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import BackupPanel from "./BackupPanel";
 import BackupReminder from "./BackupReminder";
 import { api } from "../../api";
-import { saveJsonFile } from "../../storage/fileIo";
 
 vi.mock("../../api", () => ({
   api: {
     backupStatus: vi.fn(),
     createBackup: vi.fn(),
     markExported: vi.fn(),
-    importBackup: vi.fn(),
-    isEncryptedFile: vi.fn(async () => false),
   },
   ApiError: class ApiError extends Error {},
 }));
 vi.mock("../../storage/fileIo", () => ({
   saveJsonFile: vi.fn(),
-  readTextFile: vi.fn(async () => "{}"),
+  readTextFile: vi.fn(),
 }));
 
 const renderWith = (ui: React.ReactNode) => {
@@ -47,52 +38,29 @@ describe("BackupPanel", () => {
       lastExportedAt: null,
       daysSinceExport: null,
     });
-    vi.mocked(api.createBackup).mockResolvedValue({
-      fileName: "kakeizu-backup-20260914-0705.json",
-      json: "{}",
-      backup: {} as never,
-      encrypted: false,
-    });
-    vi.mocked(saveJsonFile).mockResolvedValue(true);
+    localStorage.setItem("kakeizu:storage-mode", "persistent");
   });
   afterEach(() => {
     cleanup();
+    localStorage.clear();
     vi.clearAllMocks();
   });
 
-  it("端末内保存であることと未実施であることを伝える", async () => {
+  it("保存方法と端末データの削除だけを表示する", async () => {
     renderWith(<BackupPanel />);
-    expect(await screen.findByText("未実施")).toBeTruthy();
-    expect(screen.getByText(/この端末のブラウザ内にのみ保存/)).toBeTruthy();
-  });
-
-  it("書き出しに成功したら保存済みとして記録する", async () => {
-    renderWith(<BackupPanel />);
-    fireEvent.click(await screen.findByText(/JSONファイルに書き出す/));
-    await waitFor(() => expect(api.markExported).toHaveBeenCalledOnce());
-    expect(saveJsonFile).toHaveBeenCalledWith(
-      "kakeizu-backup-20260914-0705.json",
-      "{}",
-    );
-  });
-
-  it("保存ダイアログを取り消したときは書き出し済みにしない", async () => {
-    vi.mocked(saveJsonFile).mockResolvedValue(false);
-    renderWith(<BackupPanel />);
-    fireEvent.click(await screen.findByText(/JSONファイルに書き出す/));
-    await waitFor(() => expect(saveJsonFile).toHaveBeenCalled());
-    expect(api.markExported).not.toHaveBeenCalled();
-  });
-
-  it("ファイル読み込みは設定パネルに重複して表示しない", async () => {
-    renderWith(<BackupPanel />);
-    await screen.findByText("未実施");
-    expect(screen.queryByText("ファイルから読み込む")).toBeNull();
+    expect(screen.getByRole("heading", { name: "保存方法" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "この端末のデータを削除" }),
+    ).toBeTruthy();
+    expect(screen.queryByText("JSONファイルに書き出す")).toBeNull();
     expect(document.querySelector('input[type="file"]')).toBeNull();
   });
 });
 
 describe("BackupReminder", () => {
+  const renderReminder = () =>
+    renderWith(<BackupReminder onExport={vi.fn()} />);
+
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
@@ -104,7 +72,7 @@ describe("BackupReminder", () => {
       lastExportedAt: null,
       daysSinceExport: null,
     });
-    renderWith(<BackupReminder />);
+    renderReminder();
     expect(
       await screen.findByText(/まだバックアップを書き出していません/),
     ).toBeTruthy();
@@ -116,7 +84,7 @@ describe("BackupReminder", () => {
       lastExportedAt: "2026-09-01T00:00:00.000Z",
       daysSinceExport: 13,
     });
-    renderWith(<BackupReminder />);
+    renderReminder();
     expect(await screen.findByText(/13日が経過/)).toBeTruthy();
   });
 
@@ -126,7 +94,7 @@ describe("BackupReminder", () => {
       lastExportedAt: "2026-09-13T00:00:00.000Z",
       daysSinceExport: 1,
     });
-    const { container } = renderWith(<BackupReminder />);
+    const { container } = renderReminder();
     await waitFor(() => expect(api.backupStatus).toHaveBeenCalled());
     expect(container.querySelector(".backup-reminder")).toBeNull();
   });
@@ -137,7 +105,7 @@ describe("BackupReminder", () => {
       lastExportedAt: null,
       daysSinceExport: null,
     });
-    const { container } = renderWith(<BackupReminder />);
+    const { container } = renderReminder();
     await waitFor(() => expect(api.backupStatus).toHaveBeenCalled());
     expect(container.querySelector(".backup-reminder")).toBeNull();
   });

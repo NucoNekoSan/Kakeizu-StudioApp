@@ -49,11 +49,17 @@ describe("法的文書ページ", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it("設定した連絡先を文書に表示する", () => {
+  it("設定した連絡先を安全な外部リンクとして表示する", () => {
     renderAt("/privacy", <LegalPage slug="privacy" />);
     expect(
-      screen.getByText(/連絡先: kakeizu@nuconeko-garden\.com/),
+      screen.getByText(/提供者: ひでき（ぬこねこの庭 運営）/),
     ).toBeTruthy();
+    const link = screen.getByRole("link", {
+      name: "https://nuconeko-garden.com/",
+    });
+    expect(link.getAttribute("href")).toBe("https://nuconeko-garden.com/");
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
   });
 
   it("使い方に共有端末の案内がある", () => {

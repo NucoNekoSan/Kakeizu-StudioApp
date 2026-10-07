@@ -56,6 +56,22 @@ describe("キャンバスの操作性", () => {
   });
 });
 
+describe("ヘッダーのレスポンシブ表示", () => {
+  const styles = read("src/styles.css");
+
+  it("中央ナビに可変領域を与え、狭い幅で段階的にラベルを隠す", () => {
+    expect(styles).toContain(
+      "grid-template-columns: max-content minmax(0, 1fr) max-content",
+    );
+    expect(styles).toMatch(
+      /@media \(max-width: 1500px\)[\s\S]*?\.topbar-resources \.button-label\s*\{[\s\S]*?display: none/,
+    );
+    expect(styles).toMatch(
+      /@media \(max-width: 1000px\)[\s\S]*?\.topbar nav a\s*\{[\s\S]*?font-size: 0/,
+    );
+  });
+});
+
 describe("_headers", () => {
   const headers = read("public/_headers");
 

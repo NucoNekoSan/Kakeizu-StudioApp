@@ -71,11 +71,11 @@ export default function BackupImportControl() {
         className="button header-action"
         onClick={() => inputRef.current?.click()}
         disabled={busy}
-        aria-label="読み込むJSONファイルを選択"
+        aria-label="JSONファイルを読み込む"
         data-tooltip="ファイル読み込み"
       >
         <Upload size={17} aria-hidden="true" />
-        <span className="button-label">JSONファイルを選択</span>
+        <span className="button-label">JSONファイルを読み込む</span>
       </button>
       <input
         ref={inputRef}

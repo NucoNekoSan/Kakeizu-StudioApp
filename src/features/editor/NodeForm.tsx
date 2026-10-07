@@ -23,7 +23,11 @@ export function QuickAddActions({
   onSelect(kind: QuickRelation): void;
 }) {
   return (
-    <section className="quick-add" aria-labelledby="quick-add-title">
+    <section
+      className="quick-add"
+      aria-labelledby="quick-add-title"
+      data-tutorial-target="quick-add"
+    >
       <h2 id="quick-add-title">この人物の家族を追加</h2>
       <p>{node.data.relationshipName}との関係を選ぶと接続を自動設定します。</p>
       <div className="quick-add-grid">

@@ -41,6 +41,9 @@ export default function StorageModeGate({
         <Logo />
         <h1>この端末での保存方法を選んでください</h1>
         <p className="welcome-lead">
+          続柄を選んで人物と関係線を描き、家族相関図を作成できます。配置を調整し、画像やPDFで書き出せます。
+        </p>
+        <p className="welcome-lead">
           作成した相関図は、この端末のブラウザ内にのみ保存されます。サーバーへ送信されることはありません。
         </p>
 

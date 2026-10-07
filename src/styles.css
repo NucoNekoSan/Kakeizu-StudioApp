@@ -136,7 +136,7 @@ p {
 }
 .topbar {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) auto minmax(380px, 1fr);
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
   grid-template-areas: "brand nav actions";
   gap: 12px;
 }
@@ -364,6 +364,8 @@ p {
   position: relative;
 }
 .chart-preview {
+  display: block;
+  width: 100%;
   grid-column: 1/-1;
   height: 180px;
   border: 0;
@@ -413,7 +415,8 @@ p {
   width: 30%;
   transform: rotate(120deg);
 }
-.chart-card > div {
+.chart-card-copy {
+  display: block;
   padding: 17px 18px;
 }
 .chart-card h2 {
@@ -435,35 +438,76 @@ p {
 .chart-card-actions .icon {
   flex: none;
 }
-.chart-backup-options {
-  display: grid;
-  gap: 8px;
+.chart-selection-grid {
   border: 0;
   padding: 0;
   margin: 0;
+  min-width: 0;
 }
-.chart-backup-options label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+.chart-card-selectable {
   cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease;
 }
-.chart-backup-options label:has(input:checked) {
+.chart-card-selectable:hover {
+  border-color: #83918a;
+  box-shadow: 0 8px 24px rgba(22, 56, 47, 0.1);
+}
+.chart-card-selectable:has(input:focus-visible) {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+.chart-card-selectable:has(input:checked) {
   border-color: var(--forest-2);
   background: var(--mint);
+  box-shadow: 0 0 0 2px var(--forest-2);
 }
-.chart-backup-options input {
-  flex: none;
-}
-.chart-backup-options span {
+.chart-selection-mark {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
   display: grid;
-  gap: 3px;
+  place-items: center;
+  border: 2px solid #83918a;
+  border-radius: 50%;
+  background: var(--paper);
+  color: transparent;
 }
-.chart-backup-options small {
+.chart-card-selectable:has(input:checked) .chart-selection-mark {
+  border-color: var(--forest-2);
+  background: var(--forest-2);
+  color: #fff;
+}
+.backup-selection-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px 24px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--forest-2);
+  border-radius: 12px;
+  background: var(--mint);
+}
+.backup-selection-copy p {
+  margin: 4px 0 0;
   color: var(--muted);
+  font-size: 0.82rem;
+}
+.backup-selection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.backup-selection-bar > .notice {
+  grid-column: 1 / -1;
+  margin: 0;
 }
 .empty {
   min-height: 410px;
@@ -772,6 +816,189 @@ p {
 }
 
 /* ---- 編集チュートリアル ---- */
+.tutorial-page {
+  max-width: 1120px;
+}
+.tutorial-chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.tutorial-chapter-card,
+.tutorial-practice-cleanup {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  padding: 22px;
+}
+.tutorial-chapter-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 230px;
+}
+.tutorial-chapter-card.recommended {
+  border-color: var(--forest-2);
+  box-shadow: 0 0 0 2px rgba(39, 102, 83, 0.14);
+}
+.tutorial-chapter-card h2,
+.tutorial-practice-cleanup h2 {
+  margin: 6px 0 8px;
+}
+.tutorial-chapter-number {
+  color: #8b6a2d;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+.tutorial-chapter-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.tutorial-chapter-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+.tutorial-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.tutorial-status.complete {
+  color: var(--forest);
+}
+.tutorial-practice-cleanup {
+  margin-top: 20px;
+  border-color: var(--gold);
+}
+.tutorial-global-error {
+  position: fixed;
+  z-index: 220;
+  top: 88px;
+  left: 50%;
+  width: min(560px, calc(100vw - 32px));
+  transform: translateX(-50%);
+}
+.tutorial-coach-layer {
+  position: fixed;
+  z-index: 210;
+  inset: 0;
+  pointer-events: none;
+}
+.tutorial-coach-spotlight {
+  position: fixed;
+  top: var(--tutorial-target-top);
+  left: var(--tutorial-target-left);
+  width: var(--tutorial-target-width);
+  height: var(--tutorial-target-height);
+  border: 3px solid #f0a43c;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(8, 25, 20, 0.58);
+  pointer-events: none;
+}
+.tutorial-coach-card {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: min(440px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid var(--forest);
+  border-radius: 16px;
+  outline: none;
+  background: var(--paper);
+  box-shadow: 0 18px 60px rgba(8, 25, 20, 0.26);
+  pointer-events: auto;
+}
+.tutorial-coach-card.left {
+  right: auto;
+  left: 24px;
+}
+.tutorial-coach-card.top {
+  top: 24px;
+  bottom: auto;
+}
+.tutorial-step-kind {
+  display: inline-flex;
+  margin: 0 0 10px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #edf2ee;
+  color: var(--forest);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+.tutorial-simulation {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px dashed var(--gold);
+  border-radius: 10px;
+  background: #fffaf0;
+}
+.tutorial-simulation label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.tutorial-simulation select,
+.tutorial-simulation input[type="color"] {
+  min-height: 36px;
+}
+.tutorial-coach-card:focus-visible {
+  outline: 3px solid #f0a43c;
+  outline-offset: 3px;
+}
+.tutorial-coach-card h2 {
+  margin: 8px 38px 8px 0;
+  font-size: 1.25rem;
+}
+.tutorial-coach-meta {
+  color: #8b6a2d;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+.tutorial-coach-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+.tutorial-coach-task,
+.tutorial-coach-warning {
+  margin: 14px 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 0.88rem;
+}
+.tutorial-coach-task {
+  background: var(--mint);
+  color: var(--forest);
+}
+.tutorial-coach-warning {
+  background: #fff1ed;
+  color: var(--danger);
+}
+.tutorial-coach-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.tutorial-prompt-actions {
+  flex-wrap: wrap;
+}
 .tutorial-layer {
   position: fixed;
   inset: 0;
@@ -1281,6 +1508,20 @@ p {
     padding-inline: 11px;
   }
 }
+@media (max-width: 1500px) {
+  .topbar-resources .button-label {
+    display: none;
+  }
+  .topbar-resources .button {
+    padding-inline: 11px;
+  }
+}
+@media (max-width: 1000px) {
+  .topbar nav a {
+    font-size: 0;
+    padding: 10px;
+  }
+}
 @media (max-width: 900px) {
   .editor-topbar {
     height: auto;
@@ -1336,6 +1577,21 @@ p {
   }
 }
 @media (max-width: 600px) {
+  .tutorial-chapter-grid {
+    grid-template-columns: 1fr;
+  }
+  .tutorial-coach-card {
+    top: auto !important;
+    left: 12px !important;
+    right: 12px;
+    bottom: 12px;
+    width: calc(100vw - 24px);
+    max-height: min(52vh, 430px);
+    padding: 18px;
+  }
+  .tutorial-coach-actions .button {
+    min-height: 44px;
+  }
   .topbar {
     padding: 0 14px;
   }
@@ -1365,6 +1621,15 @@ p {
   }
   .chart-grid {
     grid-template-columns: 1fr;
+  }
+  .backup-selection-bar {
+    grid-template-columns: 1fr;
+  }
+  .backup-selection-actions {
+    justify-content: stretch;
+  }
+  .backup-selection-actions .button {
+    flex: 1 1 auto;
   }
   .editor-body {
     grid-template-columns: 1fr;
@@ -1750,6 +2015,19 @@ p {
 }
 .png-preview-dialog::backdrop {
   background: rgb(0 0 0 / 35%);
+}
+.export-file-dialog label {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+}
+.export-file-dialog select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #c7cdc8;
+  border-radius: 8px;
+  background: white;
+  color: inherit;
 }
 .png-preview-image {
   margin: 16px 0;

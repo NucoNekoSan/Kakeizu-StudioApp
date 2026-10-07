@@ -21,7 +21,7 @@ function SettingsPage() {
   return (
     <Shell>
       <main className="page settings-page">
-        <div className="page-head">
+        <div className="page-head" data-tutorial-target="settings-heading">
           <div>
             <span className="eyebrow">CUSTOM DEFINITIONS</span>
             <h1>表示設定</h1>

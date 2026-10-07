@@ -51,7 +51,7 @@ describe("外枠設定", () => {
   it("幅の変更と移動の案内を表示して適用する", async () => {
     const apply = setup();
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.change(screen.getByLabelText("PNGの横幅（px）"), {
+    fireEvent.change(screen.getByLabelText("書き出し画像の横幅（px）"), {
       target: { value: "1800" },
     });
     expect(screen.getByRole("status").textContent).toContain(
@@ -63,7 +63,7 @@ describe("外枠設定", () => {
   });
   it("不正な幅は適用できず、キャンセルで保存しない", () => {
     const apply = setup();
-    fireEvent.change(screen.getByLabelText("PNGの横幅（px）"), {
+    fireEvent.change(screen.getByLabelText("書き出し画像の横幅（px）"), {
       target: { value: "1100" },
     });
     expect(
@@ -83,7 +83,7 @@ describe("外枠設定", () => {
     "縦幅%dpxを横幅と独立して適用する",
     async (height) => {
       const apply = setup();
-      fireEvent.change(screen.getByLabelText("PNGの縦幅（px）"), {
+      fireEvent.change(screen.getByLabelText("書き出し画像の縦幅（px）"), {
         target: { value: String(height) },
       });
       fireEvent.click(screen.getByRole("button", { name: "適用" }));
@@ -96,7 +96,7 @@ describe("外枠設定", () => {
     "不正な縦幅%sは適用できない",
     (height) => {
       setup();
-      fireEvent.change(screen.getByLabelText("PNGの縦幅（px）"), {
+      fireEvent.change(screen.getByLabelText("書き出し画像の縦幅（px）"), {
         target: { value: height },
       });
       expect(screen.getByRole("alert").textContent).toContain("縦幅");
@@ -105,7 +105,9 @@ describe("外枠設定", () => {
   );
   it("縦幅ボタンは100px刻みで境界を超えない", () => {
     setup();
-    const input = screen.getByLabelText("PNGの縦幅（px）") as HTMLInputElement;
+    const input = screen.getByLabelText(
+      "書き出し画像の縦幅（px）",
+    ) as HTMLInputElement;
     fireEvent.click(screen.getByRole("button", { name: "縦幅を100px増やす" }));
     expect(input.value).toBe("1300");
     fireEvent.change(input, { target: { value: "650" } });
@@ -123,19 +125,21 @@ describe("外枠設定", () => {
   });
   it("縦横を変更後キャンセルして開き直すと保存値に戻る", () => {
     const apply = setup();
-    fireEvent.change(screen.getByLabelText("PNGの横幅（px）"), {
+    fireEvent.change(screen.getByLabelText("書き出し画像の横幅（px）"), {
       target: { value: "1800" },
     });
-    fireEvent.change(screen.getByLabelText("PNGの縦幅（px）"), {
+    fireEvent.change(screen.getByLabelText("書き出し画像の縦幅（px）"), {
       target: { value: "600" },
     });
     fireEvent.click(screen.getByRole("button", { name: "キャンセル" }));
     fireEvent.click(screen.getByRole("button", { name: "外枠" }));
     expect(
-      (screen.getByLabelText("PNGの横幅（px）") as HTMLInputElement).value,
+      (screen.getByLabelText("書き出し画像の横幅（px）") as HTMLInputElement)
+        .value,
     ).toBe("2400");
     expect(
-      (screen.getByLabelText("PNGの縦幅（px）") as HTMLInputElement).value,
+      (screen.getByLabelText("書き出し画像の縦幅（px）") as HTMLInputElement)
+        .value,
     ).toBe("1200");
     expect(apply).not.toHaveBeenCalled();
   });

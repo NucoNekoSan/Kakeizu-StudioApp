@@ -11,6 +11,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { Shell } from "./components/ui";
+import { ResourceActions } from "./components/HeaderActions";
 import { api } from "./api";
 
 vi.mock("./api", () => ({
@@ -81,14 +82,38 @@ describe("認証の撤去", () => {
     expect(screen.queryByRole("tab", { name: "バックアップ" })).toBeNull();
   });
 
-  it("ファイル読み込み先にデータ管理機能を表示する", async () => {
+  it("データ管理に保存方法と削除機能を表示する", async () => {
     renderApp("/data-management");
     expect(
       await screen.findByRole("heading", { name: "データ管理" }),
     ).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "保存方法" })).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: "読み込むJSONファイルを選択" }),
+      screen.getByRole("button", {
+        name: "この端末のデータをすべて削除",
+      }),
     ).toBeTruthy();
+    expect(screen.queryByText("JSONファイルに書き出す")).toBeNull();
+  });
+
+  it("ファイル読み込みを専用ページに表示する", async () => {
+    renderApp("/file-import");
+    expect(
+      await screen.findByRole("heading", { name: "ファイル読み込み" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "JSONファイルを読み込む" }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "保存方法" })).toBeNull();
+  });
+
+  it("全体チュートリアルの章一覧を表示する", async () => {
+    renderApp("/tutorial");
+    expect(
+      await screen.findByRole("heading", { name: "チュートリアル" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "はじめに" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "データを守る" })).toBeTruthy();
   });
 
   it("ナビゲーションにログアウトが無い", () => {
@@ -104,6 +129,8 @@ describe("認証の撤去", () => {
     expect(screen.queryByText("ログアウト")).toBeNull();
     expect(screen.getByRole("link", { name: /相関図/ })).toBeTruthy();
     expect(screen.getByRole("link", { name: "表示設定" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "データ管理" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "チュートリアル" })).toBeTruthy();
   });
 
   it("共通ヘッダーを主要ナビゲーションから補助操作の順に並べる", () => {
@@ -122,6 +149,7 @@ describe("認証の撤去", () => {
       headerQueries.getByRole("link", { name: /Kakeizu/ }),
       headerQueries.getByRole("link", { name: "相関図" }),
       headerQueries.getByRole("link", { name: "表示設定" }),
+      headerQueries.getByRole("link", { name: "データ管理" }),
       headerQueries.getByRole("button", { name: "全データをバックアップ" }),
       headerQueries.getByRole("link", {
         name: "バックアップファイルを読み込む",
@@ -140,6 +168,31 @@ describe("認証の撤去", () => {
         .getByRole("link", { name: "相関図" })
         .classList.contains("active"),
     ).toBe(true);
+    expect(
+      headerQueries
+        .getByRole("link", { name: /コンタクト/ })
+        .getAttribute("href"),
+    ).toBe("https://nuconeko-garden.com/contact/?work=kakeizu-studio");
+  });
+
+  it("バックアップ非表示モードではファイル読み込みだけを表示する", () => {
+    render(
+      <MemoryRouter>
+        <ResourceActions showContact={false} backupMode="none" />
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "全データをバックアップ" }),
+    ).toBeNull();
+    expect(
+      screen.getByRole("link", { name: "バックアップファイルを読み込む" }),
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("link", { name: "バックアップファイルを読み込む" })
+        .getAttribute("href"),
+    ).toBe("/file-import");
   });
 });
 

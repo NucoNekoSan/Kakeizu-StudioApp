@@ -1,11 +1,10 @@
-import { Link } from "react-router-dom";
 import { BACKUP_WARNING_DAYS, useBackupStatus } from "./useBackup";
 
 /**
  * 端末内保存では端末故障やサイトデータ削除で全消失するため、
  * バックアップから時間が経っていることに気づける導線を一覧に出す。
  */
-export default function BackupReminder() {
+export default function BackupReminder({ onExport }: { onExport: () => void }) {
   const status = useBackupStatus();
   const data = status.data;
   if (!data || data.chartCount === 0) return null;
@@ -22,9 +21,9 @@ export default function BackupReminder() {
           ? "まだバックアップを書き出していません。端末の故障やブラウザのデータ削除で相関図が失われます。"
           : `前回のバックアップから${data.daysSinceExport}日が経過しています。`}
       </span>
-      <Link className="button" to="/settings">
+      <button type="button" className="button" onClick={onExport}>
         バックアップを書き出す
-      </Link>
+      </button>
     </div>
   );
 }

@@ -3,18 +3,10 @@ import type { PngPreview } from "./usePngExport";
 
 interface Props {
   preview: PngPreview | null;
-  isSaving: boolean;
   error: string;
   onClose(): void;
-  onSave(): Promise<void>;
 }
-export function PngPreviewDialog({
-  preview,
-  isSaving,
-  error,
-  onClose,
-  onSave,
-}: Props) {
+export function PngPreviewDialog({ preview, error, onClose }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     if (preview && !dialog.current?.open) dialog.current?.showModal();
@@ -27,36 +19,31 @@ export function PngPreviewDialog({
       aria-labelledby="png-preview-title"
       onCancel={(event) => {
         event.preventDefault();
-        if (!isSaving) onClose();
+        onClose();
       }}
     >
-      <h2 id="png-preview-title">PNGプレビュー</h2>
+      <h2 id="png-preview-title">全体プレビュー</h2>
       {preview && (
         <>
           <p>
             {preview.width} × {preview.height}px ·
-            保存する画像を縮小表示しています。
+            相関図全体を縮小表示しています。
           </p>
           <div className="png-preview-image">
             <img
               src={preview.dataUrl}
-              alt="保存する相関図のPNGプレビュー"
+              alt="相関図の全体プレビュー"
               width={preview.width}
               height={preview.height}
             />
           </div>
-          <p>PNGには入力した氏名やメモが含まれます。</p>
+          <p>
+            書き出す場合は、編集画面の「ファイル書き出し」から形式を選んでください。
+          </p>
           {error && <p role="alert">{error}</p>}
           <div className="frame-width-actions">
-            <button className="button" disabled={isSaving} onClick={onClose}>
+            <button className="button" onClick={onClose}>
               編集に戻る
-            </button>
-            <button
-              className="button primary"
-              disabled={isSaving}
-              onClick={onSave}
-            >
-              {isSaving ? "保存中…" : "このPNGを保存"}
             </button>
           </div>
         </>

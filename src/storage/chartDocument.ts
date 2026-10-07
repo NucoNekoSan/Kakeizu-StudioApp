@@ -167,7 +167,7 @@ export function removeNode(
           ...group,
           nodeIds: group.nodeIds.filter((id) => id !== nodeId),
         }))
-        .filter((group) => group.nodeIds.length >= 2),
+        .filter((group) => group.nodeIds.length >= 1),
     },
   };
 }

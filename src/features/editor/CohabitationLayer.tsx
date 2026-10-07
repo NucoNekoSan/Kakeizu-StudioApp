@@ -211,7 +211,7 @@ export function CohabitationLayer({
           const members = group.nodeIds.flatMap((id) =>
             nodesById.has(id) ? [id] : [],
           );
-          if (members.length < 2) return null;
+          if (members.length < 1) return null;
           const { cx, cy, rx, ry } = group;
           const d = `M ${cx - rx} ${cy} A ${rx} ${ry} 0 1 0 ${cx + rx} ${cy} A ${rx} ${ry} 0 1 0 ${cx - rx} ${cy} Z`;
           return (

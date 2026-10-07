@@ -36,10 +36,9 @@ describe("CohabitationPanel", () => {
     }) as HTMLButtonElement;
     expect(create.disabled).toBe(true);
     fireEvent.click(screen.getByRole("checkbox", { name: "本人" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "配偶者" }));
     expect(create.disabled).toBe(false);
     fireEvent.click(create);
-    expect(onCreateGroup).toHaveBeenCalledWith(["a", "b"]);
+    expect(onCreateGroup).toHaveBeenCalledWith(["a"]);
   });
 
   it("uses Shift+Arrow for ten-point font size adjustments", () => {

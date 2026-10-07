@@ -1,6 +1,6 @@
 /**
  * ブラウザでのファイル保存・読み込み。
- * JSON バックアップと PNG 書き出しの両方から使う。
+ * JSON バックアップと画像・PDF書き出しの両方から使う。
  *
  * File System Access API は Firefox / Safari が非対応のため単独では使えない。
  * 機能があれば「保存先を選ぶ」体験にし、無ければ `<a download>` にフォールバックする。
@@ -17,8 +17,9 @@ type SaveFilePicker = (options: {
 
 const picker = (): SaveFilePicker | null =>
   typeof window !== "undefined" && "showSaveFilePicker" in window
-    ? (window as unknown as { showSaveFilePicker: SaveFilePicker })
-        .showSaveFilePicker
+    ? (
+        window as unknown as { showSaveFilePicker: SaveFilePicker }
+      ).showSaveFilePicker.bind(window)
     : null;
 
 /**
@@ -66,15 +67,15 @@ export interface SaveFileOptions {
   extension?: string;
 }
 
-/**
- * ファイルを保存する。利用者がダイアログで取り消した場合は false を返す
- * (呼び出し側がエラー表示をしないようにするため)。
- */
-export async function saveFile(
+export interface FileSaveTarget {
+  save(blob: Blob): Promise<void>;
+}
+
+/** 呼び出し元のクリック処理中に実行し、描画前に保存先を選ぶ。 */
+export async function prepareFileSave(
   fileName: string,
-  blob: Blob,
-  options: SaveFileOptions = {},
-): Promise<boolean> {
+  options: SaveFileOptions,
+): Promise<FileSaveTarget | null> {
   const showSaveFilePicker = picker();
   if (showSaveFilePicker) {
     try {
@@ -84,24 +85,49 @@ export async function saveFile(
           {
             description: options.description ?? "ファイル",
             accept: {
-              [options.mimeType ?? blob.type ?? "application/octet-stream"]: [
+              [options.mimeType ?? "application/octet-stream"]: [
                 options.extension ?? `.${fileName.split(".").pop()}`,
               ],
             },
           },
         ],
       });
-      const writable = await handle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      return true;
+      return {
+        async save(blob) {
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+        },
+      };
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError")
-        return false;
-      // 権限エラーなどで picker が使えない環境ではフォールバックする。
+        return null;
+      if (
+        !(error instanceof DOMException) ||
+        !["NotSupportedError", "SecurityError"].includes(error.name)
+      )
+        throw error;
+      // 対応ブラウザでも利用できない環境では通常ダウンロードへ切り替える。
     }
   }
-  await downloadViaAnchor(fileName, blob);
+  return { save: (blob) => downloadViaAnchor(fileName, blob) };
+}
+
+/**
+ * ファイルを保存する。利用者がダイアログで取り消した場合は false を返す
+ * (呼び出し側がエラー表示をしないようにするため)。
+ */
+export async function saveFile(
+  fileName: string,
+  blob: Blob,
+  options: SaveFileOptions = {},
+): Promise<boolean> {
+  const target = await prepareFileSave(fileName, {
+    ...options,
+    mimeType: options.mimeType ?? blob.type,
+  });
+  if (!target) return false;
+  await target.save(blob);
   return true;
 }
 

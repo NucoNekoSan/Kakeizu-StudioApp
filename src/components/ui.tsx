@@ -1,9 +1,13 @@
 import { useEffect, useId, useRef } from "react";
 import { NavLink } from "react-router-dom";
-import { GitBranch, LayoutGrid, Settings, X } from "lucide-react";
+import { Database, GitBranch, LayoutGrid, Settings, X } from "lucide-react";
 import TemporaryModeBanner from "../features/storage/TemporaryModeBanner";
 import type { Shape } from "../types";
-import { GuidanceActions, ResourceActions } from "./HeaderActions";
+import {
+  GuidanceActions,
+  ResourceActions,
+  type ChartBackupAction,
+} from "./HeaderActions";
 
 export function Logo() {
   return (
@@ -21,9 +25,11 @@ export function Logo() {
 export function Shell({
   children,
   backupMode = "all",
+  chartBackupAction,
 }: {
   children: React.ReactNode;
-  backupMode?: "all" | "chart";
+  backupMode?: "all" | "chart" | "none";
+  chartBackupAction?: ChartBackupAction;
 }) {
   return (
     <div className="shell">
@@ -38,9 +44,17 @@ export function Shell({
             <Settings size={17} aria-hidden="true" />
             表示設定
           </NavLink>
+          <NavLink to="/data-management" data-tooltip="データ管理">
+            <Database size={17} aria-hidden="true" />
+            データ管理
+          </NavLink>
         </nav>
         <div className="topbar-resources">
-          <ResourceActions showContact={false} backupMode={backupMode} />
+          <ResourceActions
+            showContact={false}
+            backupMode={backupMode}
+            chartBackupAction={chartBackupAction}
+          />
           <GuidanceActions showContact />
         </div>
       </header>

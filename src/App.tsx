@@ -7,6 +7,10 @@ import StorageModeGate from "./features/storage/StorageModeGate";
 import ChartsPage from "./features/charts/ChartsPage";
 import SettingsPage from "./features/settings/SettingsPage";
 import DataManagementPage from "./features/backup/DataManagementPage";
+import FileImportPage from "./features/backup/FileImportPage";
+import TutorialPage from "./features/tutorial/TutorialPage";
+import TutorialProvider from "./features/tutorial/TutorialProvider";
+import SeoMetadata from "./SeoMetadata";
 
 const ChartEditor = lazy(() => import("./features/editor/ChartEditor"));
 
@@ -17,29 +21,36 @@ const ChartEditor = lazy(() => import("./features/editor/ChartEditor"));
  */
 export default function App() {
   return (
-    <StorageModeGate>
-      <Routes>
-        {/* 規約・ポリシー・ヘルプは利用開始の判断材料なので、
+    <>
+      <SeoMetadata />
+      <StorageModeGate>
+        <TutorialProvider>
+          <Routes>
+            {/* 規約・ポリシー・ヘルプは利用開始の判断材料なので、
             保存モードを選ぶ前でも読める必要がある (StorageModeGate が素通しする) */}
-        <Route path="/terms" element={<LegalPage slug="terms" />} />
-        <Route path="/privacy" element={<LegalPage slug="privacy" />} />
-        <Route path="/help" element={<HelpPage />} />
-        <Route path="/charts" element={<ChartsPage />} />
-        <Route
-          path="/charts/:id"
-          element={
-            <Suspense
-              fallback={<Spinner label="エディターを読み込んでいます" />}
-            >
-              <ChartEditor />
-            </Suspense>
-          }
-        />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/data-management" element={<DataManagementPage />} />
-        {/* 廃止した /login を含め、未知のパスは一覧へ送る */}
-        <Route path="*" element={<Navigate to="/charts" replace />} />
-      </Routes>
-    </StorageModeGate>
+            <Route path="/terms" element={<LegalPage slug="terms" />} />
+            <Route path="/privacy" element={<LegalPage slug="privacy" />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/charts" element={<ChartsPage />} />
+            <Route
+              path="/charts/:id"
+              element={
+                <Suspense
+                  fallback={<Spinner label="エディターを読み込んでいます" />}
+                >
+                  <ChartEditor />
+                </Suspense>
+              }
+            />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/data-management" element={<DataManagementPage />} />
+            <Route path="/file-import" element={<FileImportPage />} />
+            <Route path="/tutorial" element={<TutorialPage />} />
+            {/* 廃止した /login を含め、未知のパスは一覧へ送る */}
+            <Route path="*" element={<Navigate to="/charts" replace />} />
+          </Routes>
+        </TutorialProvider>
+      </StorageModeGate>
+    </>
   );
 }

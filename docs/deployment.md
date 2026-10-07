@@ -1,4 +1,4 @@
-# 配信手順（Cloudflare Pages）
+# 配信手順（Cloudflare Workers）
 
 取得済み独自ドメインのサブドメインで公開する手順。利用者のデータは端末内にのみ保存されるため、サーバー側に永続化の設定は不要。
 
@@ -30,15 +30,15 @@ GitHub 連携で作る場合のビルド設定:
 
 `VITE_BASE_PATH` はサブドメイン運用では未設定でよい。
 
-手元から直接上げる場合は Wrangler を使う。
+現在の `kakeizu-studioapp` Worker に手元から直接上げる場合は Wrangler を使う。
 
 ```powershell
-npx wrangler pages deploy dist --project-name kakeizu-studio
+npx wrangler deploy
 ```
 
 ## 3. サブドメインの割り当て
 
-プロジェクト → Custom domains → Set up a custom domain で `kakeizu.nuconeko-garden.com` を追加する。メインドメイン `nuconeko-garden.com` を同一アカウントで管理しているため、CNAME は自動で作成される。
+プロジェクト → Custom domains で `kakeizu-studioapp.nuconeko-garden.com` が割り当てられていることを確認する。
 
 ## 4. HTTPS の強制
 
@@ -53,12 +53,12 @@ v2 系で `.htaccess` が行っていた HTTP→HTTPS の 308 転送は、この
 ## 5. 配信後の確認
 
 ```powershell
-curl.exe -I https://kakeizu.nuconeko-garden.com/
+curl.exe -I https://kakeizu-studioapp.nuconeko-garden.com/
 ```
 
 - `Content-Security-Policy` が返ること
 - `X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY` が返ること
-- `curl.exe -I https://kakeizu.nuconeko-garden.com/sw.js` が `Cache-Control: no-cache` を返すこと
+- `curl.exe -I https://kakeizu-studioapp.nuconeko-garden.com/sw.js` が `Cache-Control: no-cache` を返すこと
 - HTTP でアクセスすると HTTPS へ転送されること
 
 ブラウザでの確認:
@@ -77,23 +77,25 @@ curl.exe -I https://kakeizu.nuconeko-garden.com/
 
 ## 7. 更新の反映
 
-`registerType: "prompt"` のため、新しいバージョンを配信しても自動では切り替わらない。利用者の画面に「新しいバージョンがあります」のバーが出て、「更新する」を押したときに適用される。編集途中の入力を失わせないための挙動。
+`registerType: "autoUpdate"` により、新しい Service Worker は取得後に有効化される。アプリの起動時、画面へ戻った時、オンライン復帰時にも更新を確認する。古い Worker が更新待ちになる場合は「新しいバージョンがあります」のバーから「更新する」を押す。開いたままの画面が古い場合は、編集内容を保存してから再読み込みする。
 
-## 8. メール窓口の設定（Cloudflare Email Routing）
+## 8. お問い合わせ窓口の確認
 
-利用規約とプライバシーポリシーの問い合わせ先 `kakeizu@nuconeko-garden.com` は、Cloudflare Email Routing で受けて普段のメールへ転送する構成。**公開前にこの設定が必要**（規約に載っている窓口が届かない状態を避けるため）。
+利用規約とプライバシーポリシーの問い合わせ先は、ぬこねこの庭の公式サイト `https://nuconeko-garden.com/` とする。
 
-1. ダッシュボードで `nuconeko-garden.com` を選択し、Email → Email Routing を開く
-2. 初回は有効化を求められる。必要な DNS レコード（MX と SPF）をまとめて追加する操作が案内されるので、それに従う
-3. 転送先（Destination addresses）に普段使うメールアドレスを登録する。**確認メールのリンクを開いて承認するまで転送は行われない**
-4. ルーティング規則で、カスタムアドレス `kakeizu` を作成し、宛先に承認済みの転送先を指定する
-5. 外部（スマートフォンのメール等）から `kakeizu@nuconeko-garden.com` へテスト送信し、転送先に届くことを確認する
+1. 利用規約とプライバシーポリシーに、指定した URL が表示されることを確認する
+2. リンクが新しいタブで開き、公式サイトへ到達できることを確認する
+3. 公式サイトから実際のお問い合わせ窓口へ進めることを確認する
 
-### 注意
+連絡先を変更する場合は、`src/features/legal/publisher.ts` の `contactUrl` を書き換える。
 
-- **有効化するとドメインの MX レコードが Cloudflare のものに置き換わる。** `nuconeko-garden.com` を他のメールサービスで受信している場合、そちらの受信が止まる
-- **このアドレスから送信することはできない。** Email Routing は受信と転送のみを行う。問い合わせに返信すると、相手には転送先アドレスがそのまま見える。独自ドメインのアドレスで送信もしたい場合は、別途メールサービス（独自ドメインに対応した無料プランのあるサービス等）が必要になる
-- 連絡先を変更する場合は、ここの設定とあわせて `src/features/legal/publisher.ts` の 1 行を書き換える
+## 9. Google Search Console への登録
+
+1. 配信後、`https://kakeizu-studioapp.nuconeko-garden.com/robots.txt` と `/sitemap.xml` が表示できることを確認する。
+2. [Google Search Console](https://search.google.com/search-console/) で `nuconeko-garden.com` のドメインプロパティを選ぶ。無い場合は追加し、Google が提示する TXT レコードを Cloudflare DNS に登録して所有権を確認する。既に確認済みなら DNS は変更しない。
+3. 「サイトマップ」で `https://kakeizu-studioapp.nuconeko-garden.com/sitemap.xml` を送信する。
+4. 「URL 検査」で `https://kakeizu-studioapp.nuconeko-garden.com/charts` を検査し、公開 URL のテストが成功したらインデックス登録をリクエストする。`/help`、`/terms`、`/privacy` も検査する。
+5. 後日、サイトマップの読み取り状態とページの登録状況を Search Console で確認する。送信や登録リクエストは検索結果への掲載を保証しない。
 
 ## 注意
 

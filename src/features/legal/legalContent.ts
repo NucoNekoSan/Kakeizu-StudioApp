@@ -6,12 +6,13 @@ import { publisher } from "./publisher";
  * 外部サービスに置かず自オリジン内に持つことで、オフラインでも読め、
  * 「自オリジン以外への通信ゼロ」という前提 (ADR-001) とも整合する。
  *
- * 本文に URL を書かないこと。外部参照の混入は legalContent.test.ts が検知する。
+ * 本文中の外部参照は、問い合わせ先として設定した公式 URL だけを許可する。
  */
 export interface LegalSection {
   heading: string;
   paragraphs?: string[];
   list?: string[];
+  links?: Array<{ label: string; href: string }>;
 }
 
 export interface LegalDocument {
@@ -79,7 +80,8 @@ const terms: LegalDocument = {
     },
     {
       heading: "お問い合わせ",
-      paragraphs: [`提供者: ${publisher.name}`, `連絡先: ${publisher.email}`],
+      paragraphs: [`提供者: ${publisher.name}`],
+      links: [{ label: "連絡先", href: publisher.contactUrl }],
     },
   ],
 };
@@ -129,7 +131,7 @@ const privacy: LegalDocument = {
       paragraphs: [
         "本アプリは静的ファイルとして配信されます。配信基盤である Cloudflare Pages（Cloudflare, Inc.）において、通信の成立に必要な範囲でアクセスログ（IP アドレス、日時、取得ファイル等）が記録されることがあります。これは提供者が閲覧・利用する目的で収集しているものではなく、取り扱いは同社の定めるところによります。",
         "なお、本アプリを端末にインストールして利用する場合、起動後の操作で配信基盤への通信は発生しません。",
-        "お問い合わせのために送信いただいたメールは、Cloudflare Email Routing を経由して提供者へ転送されます。メールに含まれる送信者のアドレスおよび本文は、お問い合わせへの回答のためにのみ利用し、第三者へ提供しません。",
+        "お問い合わせは、公式サイトのお問い合わせ窓口をご利用ください。移動先で送信する情報は、同サイトに掲示された方針に従って取り扱われます。",
       ],
     },
     {
@@ -140,7 +142,8 @@ const privacy: LegalDocument = {
     },
     {
       heading: "お問い合わせ",
-      paragraphs: [`提供者: ${publisher.name}`, `連絡先: ${publisher.email}`],
+      paragraphs: [`提供者: ${publisher.name}`],
+      links: [{ label: "連絡先", href: publisher.contactUrl }],
     },
   ],
 };

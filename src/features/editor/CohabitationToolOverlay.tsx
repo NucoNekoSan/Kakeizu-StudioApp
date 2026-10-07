@@ -22,6 +22,8 @@ interface CohabitationToolOverlayProps {
   ) => void;
   onSelectCohabitation: (id: string | null) => void;
   onSelectLabel: (id: string | null) => void;
+  onCreateCohabitation?: (group: Cohabitation) => void;
+  onCreateLabel?: () => void;
   onFinishLasso: () => void;
   onFinishLabel: () => void;
 }
@@ -35,6 +37,8 @@ export function CohabitationToolOverlay({
   onSetLabels,
   onSelectCohabitation,
   onSelectLabel,
+  onCreateCohabitation,
+  onCreateLabel,
   onFinishLasso,
   onFinishLabel,
 }: CohabitationToolOverlayProps) {
@@ -49,6 +53,7 @@ export function CohabitationToolOverlay({
       onSetCohabitations((items) => [...items, group]);
       onSelectCohabitation(group.id);
       onSelectLabel(null);
+      onCreateCohabitation?.(group);
     }
     lassoPoints.current = [];
     onFinishLasso();
@@ -70,6 +75,7 @@ export function CohabitationToolOverlay({
           onSetLabels((items) => [...items, next]);
           onSelectLabel(next.id);
           onSelectCohabitation(null);
+          onCreateLabel?.();
           onFinishLabel();
           return;
         }

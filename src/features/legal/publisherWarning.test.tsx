@@ -13,7 +13,7 @@ vi.mock("./publisher", () => ({
   PUBLISHER_PLACEHOLDER: "__未設定__",
   publisher: {
     name: "__未設定__",
-    email: "__未設定__",
+    contactUrl: "__未設定__",
     revisedOn: "2026-09-16",
   },
   isPlaceholder: (value: string) => value.includes("__未設定__"),

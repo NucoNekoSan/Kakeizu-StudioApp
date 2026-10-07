@@ -17,14 +17,15 @@ const allText = documents
       section.heading,
       ...(section.paragraphs ?? []),
       ...(section.list ?? []),
+      ...(section.links?.flatMap((link) => [link.label, link.href]) ?? []),
     ]),
   ])
   .join("\n");
 
 describe("法的文書", () => {
-  it("外部サイトのURLを含まない", () => {
-    // 外部リンクを置くと「自オリジン以外への通信ゼロ」の説明が崩れる
-    expect(allText).not.toMatch(/https?:\/\//);
+  it("問い合わせ先以外の外部URLを含まない", () => {
+    const urls = allText.match(/https?:\/\/[^\s]+/g) ?? [];
+    expect(new Set(urls)).toEqual(new Set([publisher.contactUrl]));
   });
 
   it("利用規約に必要な条項が揃っている", () => {
@@ -95,10 +96,10 @@ describe("提供者情報", () => {
     expect(allText).not.toContain(PUBLISHER_PLACEHOLDER);
   });
 
-  it("連絡先がメールアドレスの体裁になっている", () => {
-    // 打ち間違いの検知。規約の窓口が届かないアドレスになるのを防ぐ
-    expect(publisher.email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-    expect(isPlaceholder(publisher.email)).toBe(false);
+  it("連絡先がHTTPS URLの体裁になっている", () => {
+    expect(() => new URL(publisher.contactUrl)).not.toThrow();
+    expect(new URL(publisher.contactUrl).protocol).toBe("https:");
+    expect(isPlaceholder(publisher.contactUrl)).toBe(false);
   });
 
   it("提供者名と連絡先が両方の文書に出る", () => {
@@ -107,7 +108,10 @@ describe("提供者情報", () => {
         section.heading.includes("お問い合わせ"),
       );
       expect(contact?.paragraphs?.join("\n")).toContain(publisher.name);
-      expect(contact?.paragraphs?.join("\n")).toContain(publisher.email);
+      expect(contact?.links).toContainEqual({
+        label: "連絡先",
+        href: publisher.contactUrl,
+      });
     }
   });
 });

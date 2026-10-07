@@ -53,13 +53,13 @@ export const resetStoreCache = () => {
  */
 export async function clearBrowserData(): Promise<void> {
   resolved = null;
-  for (const key of appStorageKeys())
-    if (key !== STORAGE_MODE_KEY) {
-      try {
-        localStorage.removeItem(key);
-      } catch {
-        // 消せないキーがあっても続行する
-      }
+  for (const getStorage of [() => localStorage, () => sessionStorage])
+    try {
+      const storage = getStorage();
+      for (const key of appStorageKeys(storage))
+        if (key !== STORAGE_MODE_KEY) storage.removeItem(key);
+    } catch {
+      // 消せないキーがあっても続行する
     }
   await deleteDatabase();
 }

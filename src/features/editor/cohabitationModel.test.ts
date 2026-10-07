@@ -55,9 +55,22 @@ describe("cohabitation document model", () => {
     expect(group?.ry).toBeGreaterThanOrEqual(30);
   });
 
-  it("refuses to create a group with fewer than two existing nodes", () => {
+  it("creates and validates a group containing one existing node", () => {
+    const group = createCohabitationFromNodes(
+      [graphNode("one", 0, 0)],
+      ["one"],
+    );
+    if (!group) throw new Error("単独ノードの同居輪を作成できません");
+    expect(group?.nodeIds).toEqual(["one"]);
+    expect(group?.rx).toBeGreaterThanOrEqual(30);
+    expect(group?.ry).toBeGreaterThanOrEqual(30);
     expect(
-      createCohabitationFromNodes([graphNode("one", 0, 0)], ["one"]),
-    ).toBeNull();
+      isCohabitationDocument({
+        version: 1,
+        cohabitations: [group],
+        labels: [],
+      }),
+    ).toBe(true);
+    expect(createCohabitationFromNodes([], [])).toBeNull();
   });
 });
