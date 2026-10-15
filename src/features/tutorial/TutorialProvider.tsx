@@ -6,13 +6,16 @@ import { Modal, Notice } from "../../components/ui";
 import {
   chapterById,
   emptyTutorialProgress,
-  requiredStepIds,
   routeForStep,
   TUTORIAL_LATER_KEY,
   type TutorialAction,
   type TutorialChapterId,
   type TutorialProgress,
 } from "./tutorialModel";
+import {
+  startTutorialProgress,
+  transitionTutorialProgress,
+} from "./tutorialProgress";
 import { readTutorialProgress, writeTutorialProgress } from "./tutorialStorage";
 import TutorialCoach from "./TutorialCoach";
 import { TutorialContext, type TutorialContextValue } from "./tutorialContext";
@@ -107,31 +110,11 @@ export default function TutorialProvider({
         const isResuming = progress?.activeChapterId === id;
         const stepIndex = isResuming ? progress.activeStepIndex : 0;
         updateProgress((current) => {
-          const isReplay =
-            current.completedChapters.includes(id) && !isResuming;
-          const stepIds = new Set(chapter.steps.map((step) => step.id));
-          return {
-            ...current,
-            completedChapters: isReplay
-              ? current.completedChapters.filter(
-                  (chapterId) => chapterId !== id,
-                )
-              : current.completedChapters,
-            completedStepIds: isReplay
-              ? current.completedStepIds.filter(
-                  (stepId) => !stepIds.has(stepId),
-                )
-              : current.completedStepIds,
-            skippedRequiredStepIds: isReplay
-              ? current.skippedRequiredStepIds.filter(
-                  (stepId) => !stepIds.has(stepId),
-                )
-              : current.skippedRequiredStepIds,
-            activeChapterId: id,
-            activeStepIndex: stepIndex,
-            paused: false,
-            practiceChartId: practiceChartId ?? current.practiceChartId,
-          };
+          return startTutorialProgress(current, id, {
+            isResuming,
+            stepIndex,
+            practiceChartId,
+          });
         });
         navigate(routeForStep(chapter.steps[stepIndex], practiceChartId));
       } catch (caught) {
@@ -158,44 +141,13 @@ export default function TutorialProvider({
   const moveToStep = useCallback(
     (stepIndex: number, outcome?: "completed" | "skipped") => {
       if (!progress?.activeChapterId || progress.paused) return;
-      const chapter = chapterById(progress.activeChapterId);
-      const currentStep = chapter.steps[progress.activeStepIndex];
-      const completedStepIds = new Set(progress.completedStepIds);
-      const skippedStepIds = new Set(progress.skippedRequiredStepIds);
-      if (outcome === "completed") {
-        completedStepIds.add(currentStep.id);
-        skippedStepIds.delete(currentStep.id);
-      } else if (outcome === "skipped" && currentStep.required) {
-        completedStepIds.delete(currentStep.id);
-        skippedStepIds.add(currentStep.id);
-      }
-      if (stepIndex >= chapter.steps.length) {
-        const mastered = requiredStepIds(chapter).every((id) =>
-          completedStepIds.has(id),
-        );
-        const completed = mastered
-          ? Array.from(new Set([...progress.completedChapters, chapter.id]))
-          : progress.completedChapters.filter((id) => id !== chapter.id);
-        updateProgress((current) => ({
-          ...current,
-          completedChapters: completed,
-          completedStepIds: [...completedStepIds],
-          skippedRequiredStepIds: [...skippedStepIds],
-          activeChapterId: null,
-          activeStepIndex: 0,
-          paused: false,
-        }));
-        navigate("/tutorial");
-        return;
-      }
-      const index = Math.max(0, stepIndex);
-      updateProgress((current) => ({
-        ...current,
-        activeStepIndex: index,
-        completedStepIds: [...completedStepIds],
-        skippedRequiredStepIds: [...skippedStepIds],
-      }));
-      navigate(routeForStep(chapter.steps[index], progress.practiceChartId));
+      const result = transitionTutorialProgress(progress, {
+        kind: "move",
+        stepIndex,
+        outcome,
+      });
+      updateProgress((current) => ({ ...current, ...result.changes }));
+      navigate(result.route);
     },
     [navigate, progress, updateProgress],
   );
@@ -223,11 +175,14 @@ export default function TutorialProvider({
         const nextIndex = progress.activeStepIndex + 1;
         updateProgress((current) => ({
           ...current,
-          activeStepIndex: nextIndex,
-          practiceChartId: chartId,
-          skippedRequiredStepIds: Array.from(
-            new Set([...current.skippedRequiredStepIds, step.id]),
-          ),
+          ...transitionTutorialProgress(current, {
+            kind: "practice-created",
+            chapterId: chapter.id,
+            stepIndex: nextIndex,
+            step,
+            chartId,
+            outcome: "skipped",
+          }).changes,
         }));
         navigate(routeForStep(chapter.steps[nextIndex], chartId));
       })
@@ -264,15 +219,14 @@ export default function TutorialProvider({
         const nextIndex = progress.activeStepIndex + 1;
         updateProgress((current) => ({
           ...current,
-          practiceChartId: chartId,
-          practiceChartKept: false,
-          activeStepIndex: nextIndex,
-          completedStepIds: Array.from(
-            new Set([...current.completedStepIds, step.id]),
-          ),
-          skippedRequiredStepIds: current.skippedRequiredStepIds.filter(
-            (id) => id !== step.id,
-          ),
+          ...transitionTutorialProgress(current, {
+            kind: "practice-created",
+            chapterId: chapter.id,
+            stepIndex: nextIndex,
+            step,
+            chartId,
+            outcome: "completed",
+          }).changes,
         }));
         scheduleStep(() =>
           navigate(routeForStep(chapter.steps[nextIndex], chartId)),
