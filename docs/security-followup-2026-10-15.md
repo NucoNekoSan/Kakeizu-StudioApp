@@ -1,7 +1,7 @@
 # 残タスクの改善と追加検証
 
 実施日: 2026-10-15 / 作業元: main `af32ff7`  
-状態: ローカルの修正・検証を完了。GitHubへのコミット・pushと本番反映は未実施。
+状態: ローカルの修正・検証、GitHubへのコミット・push、本番反映とHTTP配信確認を完了。
 
 ## 更新時の一時データ保全
 
@@ -33,7 +33,7 @@ JSONはapplication/json・11,402バイトのBlobとダウンロード操作の�
 - 存在しない画面URLのGET・HEADだけはルートHTMLへ渡す。既存のReact Routerによる画面遷移を維持する。Service Worker側もassetsをnavigation fallbackから除外した。
 - セキュリティヘッダを維持し、HTMLのETag・Content-Encoding等をエラー応答へコピーしない。Cloudflareローカル実行で8ケースを確認し、Wranglerのdeploy dry-runも成功した。実在資材優先の挙動は [Cloudflare公式資料](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) を参照した。
 
-ローカル結果: 画面の深いURL・ヘルプはHTML 200、正規JSはJavaScript 200・immutable、欠落JSは通常取得・navigationとも404・no-store、欠落CSSのHEADも404・no-store、資材へのPOSTは405・no-store、sw.jsは200・no-cache。記録は [配信試験](security-evidence/followup-2026-10-15/worker-routing.json)。本番への適用と本番での再確認はまだ行っていない。
+ローカル結果: 画面の深いURL・ヘルプはHTML 200、正規JSはJavaScript 200・immutable、欠落JSは通常取得・navigationとも404・no-store、欠落CSSのHEADも404・no-store、資材へのPOSTは405・no-store、sw.jsは200・no-cache。記録は [配信試験](security-evidence/followup-2026-10-15/worker-routing.json)。本番への適用とHTTP配信の再確認も完了した。
 
 ## 履歴復帰と検証環境
 
@@ -54,7 +54,7 @@ JSONはapplication/json・11,402バイトのBlobとダウンロード操作の�
 
 | 作業                 | 完了条件                                                                | 現在の状態             |
 | -------------------- | ----------------------------------------------------------------------- | ---------------------- |
-| GitHub・本番反映     | ソースと設定をまとめて反映し、正規資材・欠落資材・画面URLを本番で再確認 | 未実施                 |
+| GitHub・本番反映     | ソースと設定をまとめて反映し、正規資材・欠落資材・画面URLを本番で再確認 | 完了（下記参照）       |
 | Firefox／Safari      | 下記の同じ手順を実エンジンで確認し、版と証跡を記録                      | 接続環境がなく未確認   |
 | OS保存ダイアログ     | 保存・取消・上書き・権限拒否を確認し、出力ファイルを読み戻す            | 実機操作面がなく未確認 |
 | 凍結・休止からの復帰 | 実際にタブを凍結または端末を休止し、他タブ削除後の復帰を確認            | 操作APIがなく未確認    |
@@ -65,3 +65,12 @@ JSONはapplication/json・11,402バイトのBlobとダウンロード操作の�
 以前の自動更新版タブは新しい保護に対応していない。初回の切り替え時はJSONを退避して全アプリタブを閉じ、開き直す。今回の変更を、旧版が混在するすべての条件での一時データ保全の保証とはしていない。
 
 作業開始時から存在した改善記録先頭の「ざ」の未コミット差分は保持した。
+
+## GitHub・本番への反映結果
+
+- 実装コミット: `9ab113d`（mainへpush済み）。
+- Cloudflare Workerのソース・ASSETS binding・静的資材をまとめてデプロイした。手動デプロイ版: `b75dc8a6-1552-4990-bf17-5342848e8987`。その後のGit連携による版 `0cfec960-855e-4108-8be7-88fa0bdec51d` も確認した。
+- 本番 `https://kakeizu-studioapp.nuconeko-garden.com` に11件のHTTPリクエストを送信し、主要JS3件とService WorkerのSHA-256がローカルbuildと一致した。
+- 正規JSは200・JavaScript・immutable、欠落JS/CSSのGET/HEADは404・text/plain・no-store、資材へのPOSTは405・no-store。画面URLはHTML 200、CSP・HSTS・nosniff・DENYを維持し、sw.jsはno-cache。HTTPはパス・クエリを保ってHTTPSへ308転送した。
+- 証跡: [本番配信確認](security-evidence/followup-2026-10-15/production-routing.json)。本番の既存利用データを操作するUI試験は行っていない。
+- Firefox/Safari、OSへの保存完了と再取り込み、凍結・休止復帰、独立プロファイルでの本番UI試験は上記の環境制約により未確認として残す。

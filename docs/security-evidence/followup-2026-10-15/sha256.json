@@ -19,5 +19,6 @@
   "update-waiting.png": "6841a9a049c99b9ee713173ba54074b02d40524be0239e54d65fa2db5e9ea057",
   "update-waiting.txt": "9988b4d88ffe54971ae875ca8b6417692117da48626ce52d32c8a8823cb9d12f",
   "worker-check.py.txt": "6167894b2934081ec0906f63ac658b5bd21466f9215aaa63804626af168321cf",
-  "worker-routing.json": "b5c99a3e17e78af2ca46cf6e835c07c1f216881bc0c40b31180f644cfa68c559"
+  "worker-routing.json": "b5c99a3e17e78af2ca46cf6e835c07c1f216881bc0c40b31180f644cfa68c559",
+  "production-routing.json": "ffdc5fe030505fb6bb44e29330c1555c7f1f23b72d2ee296afe377253cde30d0"
 }
