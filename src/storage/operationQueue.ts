@@ -19,7 +19,12 @@ export function orderedApi<T extends object>(store: DocumentStore, api: T): T {
   return Object.fromEntries(
     Object.entries(api).map(([name, operation]) => [
       name,
-      (...args: unknown[]) => enqueue(store, () => operation(...args)),
+      (...args: unknown[]) =>
+        enqueue(store, () =>
+          store.runExclusive
+            ? store.runExclusive(() => operation(...args))
+            : operation(...args),
+        ),
     ]),
   ) as T;
 }

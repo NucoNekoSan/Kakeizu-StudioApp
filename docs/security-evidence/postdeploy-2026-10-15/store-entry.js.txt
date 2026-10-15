@@ -1,0 +1,34 @@
+import {createIndexedDbStore,createMemoryStore} from "PROJECT_ROOT/src/storage/kv.ts";
+import {createLocalApi,localApi,clearBrowserData,resetStoreCache} from "PROJECT_ROOT/src/storage/localApi.ts";
+import {writeStorageMode} from "PROJECT_ROOT/src/storage/storageMode.ts";
+import {subscribeStorageReset} from "PROJECT_ROOT/src/storage/storageReset.ts";
+const results=[];const output=document.querySelector('pre');
+async function check(name,fn){try{results.push({name,result:await fn()});}catch(e){results.push({name,error:e.code||e.name,message:e.message});}output.textContent=JSON.stringify(results,null,2);}
+document.querySelector('button').onclick=async()=>{
+ await check('R5-real-idb-concurrent-merge-and-rollback',async()=>{
+ const a=createLocalApi(await createIndexedDbStore()),b=createLocalApi(await createIndexedDbStore());await a.createChart('Original');
+ const incoming=createLocalApi(createMemoryStore());const last=await incoming.createChart('Incoming');const payload=await incoming.createBackup();
+ await Promise.all([a.importBackup(payload.json),b.importBackup(payload.json)]);const count=(await a.charts()).length;
+ const failureSource=createLocalApi(createMemoryStore());await failureSource.createChart('First merge write');const failureLast=await failureSource.createChart('Last merge write');const failurePayload=await failureSource.createBackup();const before=JSON.stringify((await a.createBackup()).backup);const native=IDBObjectStore.prototype.put;
+ IDBObjectStore.prototype.put=function(v,k){if(k==='chart:'+failureLast.id)throw new DOMException('Synthetic quota','QuotaExceededError');return native.call(this,v,k);};
+ // Fail the last incoming merge write after earlier writes in the transaction.
+ let error;try{await a.importBackup(failurePayload.json,'merge');}catch(e){error=e.name;}finally{IDBObjectStore.prototype.put=native;}
+ return {countAfterTwoImports:count,error,unchanged:before===JSON.stringify({...((await a.createBackup()).backup),exportedAt:JSON.parse(before).exportedAt})};
+ });
+ await check('concurrent-tab-node-additions',async()=>{
+ const a=createLocalApi(await createIndexedDbStore()),b=createLocalApi(await createIndexedDbStore());const chart=await a.createChart('Concurrent edits');const rel=(await a.relationships())[0],gen=(await a.genders())[0];
+ const node=memo=>({relationshipId:rel.id,genderId:gen.id,anchorNodeId:null,parentNodeId1:null,parentNodeId2:null,placementDirection:null,connectionDirection:null,divorced:false,memo,fontSize:16,relationshipFontSize:17,scale:1,x:0,y:0});
+ const done=await Promise.allSettled([a.createNode(chart.id,node('Tab A')),b.createNode(chart.id,node('Tab B'))]);const final=await a.chart(chart.id);
+ return {operations:done.map(x=>x.status),nodeCount:final.nodes.length,memos:final.nodes.map(n=>n.memo)};
+ });
+ await check('delete-during-encrypted-import',async()=>{
+ writeStorageMode('persistent');resetStoreCache();const chart=await localApi.createChart('Sensitive synthetic deleted fixture');const backup=await localApi.createBackup('synthetic-audit-passphrase');
+ let resets=0;const stop=subscribeStorageReset(()=>{resets++;resetStoreCache();});
+ const pending=localApi.importBackup(backup.json,'merge','synthetic-audit-passphrase');
+ // Let the API queue begin PBKDF2, then delete while crypto is in flight. No storage delay or mock.
+ await new Promise(resolve=>setTimeout(resolve,10));await clearBrowserData();const atDeletion=await indexedDB.databases();
+ let imported,error;try{imported=await pending;}catch(e){error=e.code||e.name;}stop();
+ const fresh=createLocalApi(await createIndexedDbStore());const charts=await fresh.charts();
+ return {resets,dbImmediatelyAfterDelete:atDeletion.map(d=>d.name),imported,error,chartsAfterPendingImport:charts.map(c=>c.title),originalId:chart.id};
+ });
+};

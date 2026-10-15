@@ -16,6 +16,7 @@ import type { FamilyNodeData } from "../../familyGraph";
 import { api } from "../../api";
 import { saveJsonFile } from "../../storage/fileIo";
 import ChartEditor from "./ChartEditor";
+import TemporaryDataProtection from "../storage/TemporaryDataProtection";
 import * as storageMode from "../../storage/storageMode";
 import * as localStorageApi from "../../storage/localApi";
 
@@ -100,6 +101,7 @@ function openEditor(otherId?: string) {
   return render(
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={[`/charts/${chartId}`]}>
+        <TemporaryDataProtection />
         {otherId && <SwitchChart id={otherId} />}
         <Routes>
           <Route path="/charts/:id" element={<ChartEditor />} />

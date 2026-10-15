@@ -82,7 +82,13 @@ describe("全データ削除", () => {
 });
 
 describe("IndexedDB 接続", () => {
-  it("versionchange で接続を閉じ、次の操作で開き直す", async () => {
+  it("versionchange で古い参照を失効させ、新しいストアだけが開き直せる", async () => {
+    vi.stubGlobal("navigator", {
+      locks: {
+        request: (_name: string, _options: unknown, run: () => unknown) =>
+          run(),
+      },
+    });
     const connections: {
       close: ReturnType<typeof vi.fn>;
       onversionchange?: () => void;
@@ -123,7 +129,22 @@ describe("IndexedDB 接続", () => {
     connections[0].onversionchange?.();
     expect(connections[0].close).toHaveBeenCalled();
 
-    expect(await store.get("k")).toBe("値");
+    await expect(store.get("k")).rejects.toMatchObject({
+      code: "STORAGE_RESET",
+    });
+    expect(open).toHaveBeenCalledTimes(1);
+    const next = await createIndexedDbStore();
+    expect(await next.get("k")).toBe("値");
     expect(open).toHaveBeenCalledTimes(2);
+  });
+
+  it("タブ間の排他制御が使えない場合は永続ストアを開かない", async () => {
+    const open = vi.fn();
+    vi.stubGlobal("navigator", {});
+    vi.stubGlobal("indexedDB", { open });
+    await expect(createIndexedDbStore()).rejects.toMatchObject({
+      code: "STORAGE_LOCK_UNAVAILABLE",
+    });
+    expect(open).not.toHaveBeenCalled();
   });
 });

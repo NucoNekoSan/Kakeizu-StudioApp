@@ -1,0 +1,339 @@
+{
+  "at": "2026-10-15T19:41:51+0900",
+  "httpRequestCount": 19,
+  "concurrency": 1,
+  "minIntervalSeconds": 1.05,
+  "results": [
+    {
+      "method": "GET",
+      "path": "/?audit=retest2",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1419,
+      "sha256": "fbe7b1c7ac4d3c832b08675621912237ae4edae28dd5613b44ff2247ec70384c",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "HEAD",
+      "path": "/charts",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1194,
+      "sha256": "e7b8f087d8123e3717e2ec7c2952a304b88bf84edacff0ae30812d6ef12d4967",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/help",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1419,
+      "sha256": "fbe7b1c7ac4d3c832b08675621912237ae4edae28dd5613b44ff2247ec70384c",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/sw.js",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1963,
+      "sha256": "522becb32fdfe596888f5b914f4e8bd8d112487aea439ab853d59e12a8ac6b71",
+      "headers": {
+        "content-type": "text/javascript",
+        "cache-control": "no-cache",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "localHashMatch": true
+    },
+    {
+      "method": "GET",
+      "path": "/manifest.webmanifest",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 640,
+      "sha256": "a6ce4efc9ed5d15aa4cbe3a01781a26428745e2167395d99e3e120beaab42804",
+      "headers": {
+        "content-type": "application/manifest+json",
+        "cache-control": "no-cache",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/assets/index-DwH8AD78.js",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 401089,
+      "sha256": "8669dcb90e07bb40817224ffee7366102f81e809378d1c252c17933f5a8ca857",
+      "headers": {
+        "content-type": "text/javascript",
+        "cache-control": "public, max-age=31536000, immutable",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      },
+      "localHashMatch": true
+    },
+    {
+      "method": "GET",
+      "path": "/.env",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1419,
+      "sha256": "fbe7b1c7ac4d3c832b08675621912237ae4edae28dd5613b44ff2247ec70384c",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/.git/config",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1419,
+      "sha256": "fbe7b1c7ac4d3c832b08675621912237ae4edae28dd5613b44ff2247ec70384c",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/src/main.tsx",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1419,
+      "sha256": "fbe7b1c7ac4d3c832b08675621912237ae4edae28dd5613b44ff2247ec70384c",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/wrangler.jsonc",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1419,
+      "sha256": "fbe7b1c7ac4d3c832b08675621912237ae4edae28dd5613b44ff2247ec70384c",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/assets/index-DwH8AD78.js.map",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1419,
+      "sha256": "fbe7b1c7ac4d3c832b08675621912237ae4edae28dd5613b44ff2247ec70384c",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=31536000, immutable",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/audit-nonexistent-r2",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1419,
+      "sha256": "fbe7b1c7ac4d3c832b08675621912237ae4edae28dd5613b44ff2247ec70384c",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/charts/%3Csvg%20onload%3Dalert(1)%3E",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1419,
+      "sha256": "fbe7b1c7ac4d3c832b08675621912237ae4edae28dd5613b44ff2247ec70384c",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/?q=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1419,
+      "sha256": "fbe7b1c7ac4d3c832b08675621912237ae4edae28dd5613b44ff2247ec70384c",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/%2e%2e/%2e%2e/.env",
+      "status": 400,
+      "curlExit": 0,
+      "bytes": 155,
+      "sha256": "efca0895b4d88b27a94249f8e7ac0083eff0a4ff3ac37c2841b3f6d7e11c1905",
+      "headers": {
+        "content-type": "text/html"
+      }
+    },
+    {
+      "method": "OPTIONS",
+      "path": "/",
+      "status": 405,
+      "curlExit": 0,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headers": {
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/",
+      "status": 405,
+      "curlExit": 0,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headers": {
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    },
+    {
+      "method": "HEAD",
+      "path": "/assets/audit-nonexistent-r2.js",
+      "status": 200,
+      "curlExit": 0,
+      "bytes": 1185,
+      "sha256": "be84dadf85aa149a06f7c56bba80dc7e0ea4674a0f3abfa9da362b76f1dbc109",
+      "headers": {
+        "content-type": "text/html",
+        "cache-control": "public, max-age=31536000, immutable",
+        "strict-transport-security": "max-age=15552000",
+        "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+        "cross-origin-opener-policy": "same-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY"
+      }
+    }
+  ],
+  "redirect": "HTTP/1.1 308 Permanent Redirect\nDate: Thu, 15 Oct 2026 10:41:51 GMT\nContent-Type: text/html; charset=UTF-8\nConnection: keep-alive\nLocation: https://kakeizu-studioapp.nuconeko-garden.com/help?audit=retest2\nReport-To: {\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=t8MJykd70Hy%2BDYaACy9q3tvZp3sd3N%2FBCx59qjulA%2F7M7l8SvRvd99b8ousjpd8KGKomnPL0omPkqu4c1vBsXA3LuG3CONh5dshEbyNqShND3SDDnW8axPvNpW3LNEgEuGsc8ZMl%2B9D3lAs7QSixOarlDC%2BGpwD%2BVo7dS8tY9cyac%2F6A\"}]}\nNel: {\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}\nServer: cloudflare\nCF-RAY: a4ae36b6be6bebfb-NRT\n\n",
+  "tls": [
+    {
+      "protocol": "tls1",
+      "exit": 1,
+      "output": "Connecting to 2606:4700:3032::6815:69c\n100000000A000000:error:0A00042E:SSL routines:ssl3_read_bytes:tlsv1 alert protocol version:ssl/record/rec_layer_s3.c:865:SSL alert number 70\n"
+    },
+    {
+      "protocol": "tls1_1",
+      "exit": 1,
+      "output": "Connecting to 2606:4700:3032::6815:69c\n100000000A000000:error:0A00042E:SSL routines:ssl3_read_bytes:tlsv1 alert protocol version:ssl/record/rec_layer_s3.c:865:SSL alert number 70\n"
+    },
+    {
+      "protocol": "tls1_2",
+      "exit": 0,
+      "output": "Connecting to 2606:4700:3032::6815:69c\nCONNECTION ESTABLISHED\nProtocol version: TLSv1.2\nCiphersuite: ECDHE-ECDSA-CHACHA20-POLY1305\nPeer certificate: CN=nuconeko-garden.com\nHash used: SHA256\nSignature type: ECDSA\nVerification: OK\nVerified peername: kakeizu-studioapp.nuconeko-garden.com\nSupported Elliptic Curve Point Formats: uncompressed\nServer Temp Key: X25519, 253 bits\nDONE\n"
+    },
+    {
+      "protocol": "tls1_3",
+      "exit": 0,
+      "output": "Connecting to 2606:4700:3032::6815:69c\nCONNECTION ESTABLISHED\nProtocol version: TLSv1.3\nCiphersuite: TLS_AES_256_GCM_SHA384\nPeer certificate: CN=nuconeko-garden.com\nHash used: SHA256\nSignature type: ECDSA\nVerification: OK\nVerified peername: kakeizu-studioapp.nuconeko-garden.com\nServer Temp Key: X25519, 253 bits\nDONE\n"
+    }
+  ],
+  "spaFallbackSameIndex": {
+    "/.env": true,
+    "/.git/config": true,
+    "/src/main.tsx": true,
+    "/wrangler.jsonc": true,
+    "/assets/index-DwH8AD78.js.map": true,
+    "/audit-nonexistent-r2": true,
+    "/charts/%3Csvg%20onload%3Dalert(1)%3E": true,
+    "/?q=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E": true
+  }
+}

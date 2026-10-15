@@ -1,0 +1,4 @@
+- heading "使い捨てデータ・別タブでの編集と削除" [level=1]
+- button "ARM receiver"
+- button "RUN sender" [active]
+- generic: "{ \"editReply\": { \"reply\": \"edit\" }, \"edits\": [ \"Receiver tab\", \"Sender tab\" ], \"deleteReply\": { \"reply\": \"delete\" }, \"importResult\": { \"error\": \"STORAGE_RESET\" }, \"afterDeletion\": [], \"staleError\": \"STORAGE_RESET\", \"newUseTitle\": \"Explicit new use\" }"

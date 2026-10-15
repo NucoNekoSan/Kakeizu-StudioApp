@@ -8,9 +8,15 @@
  *
  * 同居情報も含むすべての相関図データを、このストア経由で保存する。
  */
+import { get, set, del, keys, clear, promisifyRequest } from "idb-keyval";
+import { createStoreLifetime } from "./storeLifetime";
+import { ApiError } from "../api/errors";
+
 export type StoreEntries = readonly (readonly [string, unknown])[];
 
 export interface DocumentStore {
+  /** Serialize a complete async API operation across persistent-store clients. */
+  runExclusive?<T>(operation: () => Promise<T>): Promise<T>;
   get<T>(key: string): Promise<T | undefined>;
   set(key: string, value: unknown): Promise<void>;
   del(key: string): Promise<void>;
@@ -27,6 +33,7 @@ export const STORE_NAME = "documents";
 export function createMemoryStore(
   seed?: Iterable<readonly [string, unknown]>,
 ): DocumentStore {
+  const lifetime = createStoreLifetime();
   const map = new Map<string, string>();
   for (const [key, value] of seed ?? [])
     map.set(key, JSON.stringify(value ?? null));
@@ -34,19 +41,24 @@ export function createMemoryStore(
   // 呼び出し側が受け取った値を書き換えても保存内容が変わらないようにするため。
   return {
     async get<T>(key: string) {
+      lifetime.assertActive();
       const raw = map.get(key);
       return raw === undefined ? undefined : (JSON.parse(raw) as T);
     },
     async set(key, value) {
+      lifetime.assertActive();
       map.set(key, JSON.stringify(value ?? null));
     },
     async del(key) {
+      lifetime.assertActive();
       map.delete(key);
     },
     async keys() {
+      lifetime.assertActive();
       return [...map.keys()];
     },
     async replaceAll(entries) {
+      lifetime.assertActive();
       const next = entries.map(
         ([key, value]) => [key, JSON.stringify(value ?? null)] as const,
       );
@@ -54,6 +66,7 @@ export function createMemoryStore(
       for (const [key, value] of next) map.set(key, value);
     },
     async updateAll(update) {
+      lifetime.assertActive();
       const entries = [...map].map(
         ([key, raw]) => [key, JSON.parse(raw)] as const,
       );
@@ -64,6 +77,7 @@ export function createMemoryStore(
       for (const [key, value] of next) map.set(key, value);
     },
     async clear() {
+      lifetime.assertActive();
       map.clear();
     },
   };
@@ -75,13 +89,19 @@ export function createMemoryStore(
  * 違いは `versionchange` で接続を閉じること。idb-keyval 既定の接続は
  * 閉じないため、別タブや同じタブの接続が残っていると
  * `indexedDB.deleteDatabase` が待たされ、「全データ削除」が完了しない。
- * 閉じたあとの操作は次回アクセス時に開き直す。
+ * 削除前の参照を失効させ、古い処理によるデータの再作成を防ぐ。
  */
 function createClosableStore(
   promisifyRequest: <T>(request: IDBRequest<T>) => Promise<T>,
-): UseStoreFn {
+): {
+  store: UseStoreFn;
+  ready: Promise<IDBDatabase>;
+  assertActive: () => void;
+} {
+  const lifetime = createStoreLifetime();
   let dbp: Promise<IDBDatabase> | undefined;
   const getDB = () => {
+    lifetime.assertActive();
     if (dbp) return dbp;
     const request = indexedDB.open(DATABASE_NAME);
     request.onupgradeneeded = () =>
@@ -91,10 +111,12 @@ function createClosableStore(
     opened.then(
       (db) => {
         db.onversionchange = () => {
+          lifetime.revoke();
           db.close();
           if (dbp === opened) dbp = undefined;
         };
         db.onclose = () => {
+          lifetime.revoke();
           if (dbp === opened) dbp = undefined;
         };
       },
@@ -104,10 +126,18 @@ function createClosableStore(
     );
     return opened;
   };
-  return (mode, callback) =>
-    getDB().then((db) =>
-      callback(db.transaction(STORE_NAME, mode).objectStore(STORE_NAME)),
-    );
+  // Open before the first await: even a store whose caller is decrypting must
+  // receive versionchange if another tab deletes the database.
+  const ready = getDB();
+  return {
+    ready,
+    assertActive: lifetime.assertActive,
+    store: async (mode, callback) => {
+      const db = await getDB();
+      lifetime.assertActive();
+      return callback(db.transaction(STORE_NAME, mode).objectStore(STORE_NAME));
+    },
+  };
 }
 
 type UseStoreFn = <T>(
@@ -116,10 +146,21 @@ type UseStoreFn = <T>(
 ) => Promise<T>;
 
 export async function createIndexedDbStore(): Promise<DocumentStore> {
-  const { get, set, del, keys, clear, promisifyRequest } =
-    await import("idb-keyval");
-  const store = createClosableStore(promisifyRequest);
+  const locks = globalThis.navigator?.locks;
+  if (!locks?.request)
+    throw new ApiError(
+      503,
+      "STORAGE_LOCK_UNAVAILABLE",
+      "この環境では安全な端末保存を利用できません。",
+    );
+  const { store, ready, assertActive } = createClosableStore(promisifyRequest);
+  await ready;
   return {
+    runExclusive: (operation) =>
+      locks.request("kakeizu-studio:documents", { mode: "exclusive" }, () => {
+        assertActive();
+        return operation();
+      }),
     get: <T>(key: string) => get<T>(key, store),
     set: (key, value) => set(key, value, store),
     del: (key) => del(key, store),

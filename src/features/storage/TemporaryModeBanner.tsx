@@ -1,27 +1,16 @@
-import { useEffect } from "react";
 import { useBackupStatus } from "../backup/useBackup";
-import { readStorageMode } from "../../storage/storageMode";
-import { isStorageFallback } from "../../storage/localApi";
+import { useStorageState } from "./useStorageState";
 
 /**
  * 「今回だけ使う」で利用中であることを常時示し、
  * 書き出さないまま閉じようとしたときに引き止める。
  */
 export default function TemporaryModeBanner() {
-  const status = useBackupStatus();
-  const temporary = readStorageMode() === "session";
+  const { mode, fallback: isFallback } = useStorageState();
+  useBackupStatus(mode !== null);
+  const temporary = mode === "session";
   // backupStatus の解決時にストアも確定し、クエリの再描画で退避状態を拾う。
-  const fallback = !temporary && isStorageFallback();
-  // 一時モードではメモリ上にしか無いため、書き出し済みでも「その後の編集」は失われる。
-  // 相関図が1件でもあれば引き止める (beforeunload は再読み込みでも発火する)。
-  const unsaved = (temporary || fallback) && (status.data?.chartCount ?? 0) > 0;
-
-  useEffect(() => {
-    if (!unsaved) return;
-    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [unsaved]);
+  const fallback = !temporary && isFallback;
 
   if (fallback)
     return (

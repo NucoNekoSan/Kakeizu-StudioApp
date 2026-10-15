@@ -1,0 +1,63 @@
+import { pathToFileURL } from 'node:url';
+import { writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+const root=process.cwd();
+const {createServer}=await import(pathToFileURL(resolve(root,'node_modules/vite/dist/node/index.js')));
+const server=await createServer({root,configFile:false,server:{middlewareMode:true},appType:'custom'});
+const load=p=>server.ssrLoadModule('/src/'+p);
+const {createLocalApi}=await load('storage/localApi.ts');
+const {createMemoryStore}=await load('storage/kv.ts');
+const {parseBackup}=await load('storage/backupModel.ts');
+const {encryptBackup,decryptBackup}=await load('storage/crypto.ts');
+const {writeStorageMode,readStorageMode}=await load('storage/storageMode.ts');
+const results=[];
+async function check(name,fn){const t=performance.now();try{results.push({name,result:await fn(),ms:Math.round(performance.now()-t)});}catch(e){results.push({name,error:e.code||e.name,message:e.message,ms:Math.round(performance.now()-t)});}}
+const store=createMemoryStore(),api=createLocalApi(store);
+const c=await api.createChart('Synthetic retest');
+const r=(await api.relationships())[0],g=(await api.genders())[0];
+await api.createNode(c.id,{relationshipId:r.id,genderId:g.id,anchorNodeId:null,parentNodeId1:null,parentNodeId2:null,placementDirection:null,connectionDirection:null,divorced:false,memo:'Synthetic',fontSize:16,relationshipFontSize:17,scale:1,x:0,y:0});
+const raw=(await api.createBackup()).json,base=JSON.parse(raw);
+await check('roundtrip',async()=>{await api.importBackup(raw,'replace');return {charts:(await api.charts()).length,nodes:(await api.chart(c.id)).nodes.length};});
+for(const [name,modify] of [
+ ['title160',b=>b.charts[0].title='x'.repeat(160)],['title161',b=>b.charts[0].title='x'.repeat(161)],
+ ['memo4000',b=>b.charts[0].nodes[0].memo='x'.repeat(4000)],['memo4001',b=>b.charts[0].nodes[0].memo='x'.repeat(4001)],
+ ['coord-limit',b=>b.charts[0].nodes[0].x=1e6],['coord-over',b=>b.charts[0].nodes[0].x=1000001],
+ ['nodes-over',b=>b.charts[0].nodes=Array(5001).fill(b.charts[0].nodes[0])],
+ ['charts-over',b=>b.charts=Array(1001).fill(b.charts[0])],
+ ['definitions-over',b=>b.definitions.relationships=Array(501).fill(b.definitions.relationships[0])],
+ ['bad-reference',b=>b.charts[0].nodes[0].anchorNodeId='0'.repeat(32)],
+ ['bad-color',b=>b.definitions.genders[0].fillColor='url(https://invalid.example/)'],
+ ['future-version',b=>b.version=2],
+ ['prototype-key',b=>Object.assign(b.charts[0].nodes[0],JSON.parse('{"__proto__":{"polluted":true}}'))],
+ ['two-node-cycle',b=>{const n=b.charts[0].nodes[0];b.charts[0].nodes.push({...n,id:'1'.repeat(32),anchorNodeId:n.id});n.anchorNodeId='1'.repeat(32);}],
+]) await check(name,async()=>{const b=structuredClone(base);modify(b);const parsed=parseBackup(JSON.stringify(b));return {accepted:true,nodes:parsed.charts[0]?.nodes.length,polluted:({}).polluted===true};});
+await check('invalid-replace-preserves-original',async()=>{const b=structuredClone(base);b.charts[0].nodes[0].memo='x'.repeat(4001);try{await api.importBackup(JSON.stringify(b),'replace');}catch(e){return {error:e.code,originalTitle:(await api.chart(c.id)).title};}});
+await check('raw-over50MiB',async()=>await api.inspectBackup(' '.repeat(50*1024*1024+1)));
+const sealed=await encryptBackup(raw,'synthetic-passphrase');
+for(const [name,modify] of [
+ ['encrypted-roundtrip',()=>{}],['ciphertext-tamper',b=>b.ciphertext='AAAA'+b.ciphertext.slice(4)],
+ ['aad-format-tamper',b=>b.format='other'],['aad-version-tamper',b=>b.version=2],
+ ['cipher-version-stripped',b=>delete b.cipherVersion],['cipher-version1',b=>b.cipherVersion=1],
+ ['kdf-name-tamper',b=>b.kdf.name='scrypt'],['kdf-hash-tamper',b=>b.kdf.hash='SHA-1'],
+ ['iterations-over',b=>b.kdf.iterations=2000001],['iterations-fraction',b=>b.kdf.iterations=1.5],
+ ['salt-short',b=>b.kdf.salt='AA=='],['iv-short',b=>b.iv='AA=='],
+]) await check(name,async()=>{const b=structuredClone(sealed);modify(b);return {decryptedMatches:(await decryptBackup(b,'synthetic-passphrase'))===raw};});
+await check('R7-1000-1001-own-export',async()=>{
+ const a=createLocalApi(createMemoryStore());for(let i=0;i<1000;i++)await a.createChart('Synthetic '+i);
+ const valid=await a.createBackup();const info=await a.inspectBackup(valid.json);const extra=await a.createChart('Extra');let error;
+ try{await a.createBackup();}catch(e){error=e.code;}
+ const single=await a.createChartBackup(extra.id);return {validCount:info.chartCount,bulk1001Error:error,singleCount:(await a.inspectBackup(single.json)).chartCount,originalsRemain:(await a.charts()).length};
+});
+for(const [name,modify] of [
+ ['missing-kdf',b=>delete b.kdf],['null-kdf',b=>b.kdf=null],['salt-null',b=>b.kdf.salt=null],['cipher-version-string',b=>b.cipherVersion='2'],['iterations-zero',b=>b.kdf.iterations=0],['ciphertext-empty',b=>b.ciphertext=''],['wrong-password',()=>{}]
+])await check(name,async()=>{const b=structuredClone(sealed);modify(b);return {decrypted:await decryptBackup(b,name==='wrong-password'?'wrong':'synthetic-passphrase')};});
+await check('invalid-merge-preserves-original',async()=>{const before=JSON.stringify((await api.createBackup()).backup.charts);let error;try{await api.importBackup('{broken','merge');}catch(e){error=e.code;}return {error,unchanged:before===JSON.stringify((await api.createBackup()).backup.charts)};});
+await check('html-and-prototype-payload-preserved-as-data',async()=>{const b=structuredClone(base);b.charts[0].title='<svg onload="document.title=123">';b.charts[0].nodes[0].memo='<img src=x onerror="document.title=123">';const hostile=JSON.stringify(b).replace(/^{/,'{"__proto__":{"polluted":true},');const a=createLocalApi(createMemoryStore());await a.importBackup(hostile);return {title:(await a.charts())[0].title,memo:(await a.chart(b.charts[0].id)).nodes[0].memo,polluted:({}).polluted===true};});
+class Storage {constructor(){this.map=new Map()}getItem(k){return this.map.get(k)??null}setItem(k,v){this.map.set(k,String(v))}removeItem(k){this.map.delete(k)}}
+globalThis.localStorage=new Storage();globalThis.sessionStorage=new Storage();
+Object.defineProperty(globalThis,'navigator',{value:{},configurable:true});
+await check('persistent-to-session',async()=>{writeStorageMode('persistent');writeStorageMode('session');return {mode:readStorageMode(),persistentMarker:localStorage.getItem('kakeizu:storage-mode')};});
+await check('other-tab-persistent-marker',async()=>{writeStorageMode('session');localStorage.setItem('kakeizu:storage-mode','persistent');return {sessionMarker:sessionStorage.getItem('kakeizu:storage-mode'),effectiveMode:readStorageMode()};});
+await writeFile(resolve('TEMP_AUDIT_DIR/probe-results.json'),JSON.stringify(results,null,2));
+console.log(JSON.stringify(results,null,2));
+await server.close();

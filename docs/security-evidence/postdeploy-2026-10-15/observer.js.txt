@@ -1,0 +1,28 @@
+if(location.search.includes('no-sw=1'))navigator.serviceWorker.register=()=>Promise.reject(new Error('Diagnostic no-SW cold load'));
+if(location.search.includes('no-bc=1'))window.BroadcastChannel=undefined;
+// Local diagnostic instrumentation only; not part of the application.
+const evidence={csp:[],opens:0,unloadCanceled:0,controllerChanges:0,downloads:[]};
+const open=indexedDB.open.bind(indexedDB);
+indexedDB.open=(...args)=>{evidence.opens++;if(location.search.includes('block-idb=1'))throw new DOMException('Synthetic blocked IDB','SecurityError');return open(...args);};
+addEventListener('securitypolicyviolation',e=>evidence.csp.push(e.violatedDirective+':'+e.blockedURI));
+addEventListener('beforeunload',e=>{queueMicrotask(()=>{evidence.unloadCanceled+=Number(e.defaultPrevented);});});
+navigator.serviceWorker.addEventListener('controllerchange',()=>evidence.controllerChanges++);
+// Use the application's supported fallback without operating an OS save dialog.
+delete window.showSaveFilePicker;
+const blobs=new Map();const objectURL=URL.createObjectURL.bind(URL);URL.createObjectURL=b=>{const u=objectURL(b);blobs.set(u,b);return u;};
+document.addEventListener('click',async e=>{const a=e.target.closest('a[download]');if(!a)return;const b=blobs.get(a.href);if(!b)return;const bytes=new Uint8Array(await b.slice(0,8).arrayBuffer());evidence.downloads.push({name:a.download,type:b.type,bytes:b.size,signature:[...bytes]});},true);
+let held;
+addEventListener('DOMContentLoaded',()=>{
+ const panel=document.createElement('details');panel.open=true;panel.style.cssText='position:fixed;right:0;bottom:0;z-index:99999;background:white;color:black;border:2px solid black;font:12px monospace;max-width:600px;max-height:300px;overflow:auto;padding:5px';
+ const summary=document.createElement('summary');summary.textContent='RETEST diagnostics';panel.append(summary);
+ const pre=document.createElement('pre');panel.append(pre);document.body.append(panel);
+ const refresh=async()=>{const dbs=await indexedDB.databases();const reg=await navigator.serviceWorker.getRegistration();pre.textContent=JSON.stringify({...evidence,databases:dbs.map(d=>d.name),active:reg?.active?.state,waiting:reg?.waiting?.state,controller:!!navigator.serviceWorker.controller,held:!!held},null,2);};
+ for(const [name,run] of [
+  ['RETEST inspect',refresh],
+  ['RETEST unload guard',()=>{const e=new Event('beforeunload',{cancelable:true});dispatchEvent(e);evidence.lastUnloadPrevented=e.defaultPrevented;}],
+  ['RETEST hold DB',()=>new Promise((resolve,reject)=>{const r=indexedDB.open('kakeizu-studio');r.onsuccess=()=>{held=r.result;held.onversionchange=()=>{};resolve();};r.onerror=()=>reject(r.error);})],
+  ['RETEST release DB',()=>{held?.close();held=undefined;}],
+  ['RETEST check update',async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg?.update();}],
+ ]){const b=document.createElement('button');b.textContent=name;b.onclick=async()=>{await run();await refresh();};panel.append(b);}
+ setInterval(refresh,1500);refresh();
+});

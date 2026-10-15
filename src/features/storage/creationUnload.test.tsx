@@ -11,6 +11,7 @@ import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import ChartsPage from "../charts/ChartsPage";
 import TemporaryModeBanner from "./TemporaryModeBanner";
+import TemporaryDataProtection from "./TemporaryDataProtection";
 import { backupStatusKey } from "../backup/useBackup";
 import { writeStorageMode } from "../../storage/storageMode";
 import { resetStoreCache } from "../../storage/localApi";
@@ -51,6 +52,7 @@ it.each(["session", "persistent"] as const)(
     render(
       <QueryClientProvider client={client}>
         <MemoryRouter initialEntries={["/charts"]}>
+          <TemporaryDataProtection />
           <Routes>
             <Route path="/charts" element={<ChartsPage />} />
             <Route

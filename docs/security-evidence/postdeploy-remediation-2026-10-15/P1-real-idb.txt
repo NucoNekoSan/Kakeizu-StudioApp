@@ -1,0 +1,3 @@
+- heading "使い捨て架空データ・実IndexedDB検証" [level=1]
+- button "RUN storage scenarios" [active]
+- generic: "[ { \"name\": \"R5-real-idb-concurrent-merge-and-rollback\", \"result\": { \"countAfterTwoImports\": 3, \"error\": \"QuotaExceededError\", \"unchanged\": true } }, { \"name\": \"concurrent-tab-node-additions\", \"result\": { \"operations\": [ \"fulfilled\", \"fulfilled\" ], \"nodeCount\": 1, \"memos\": [ \"Tab B\" ] } }, { \"name\": \"delete-during-encrypted-import\", \"result\": { \"resets\": 1, \"dbImmediatelyAfterDelete\": [], \"error\": \"STORAGE_RESET\", \"chartsAfterPendingImport\": [], \"originalId\": \"5d4a25b12492e74b0c2bfeef1dd957ae\" } } ]"

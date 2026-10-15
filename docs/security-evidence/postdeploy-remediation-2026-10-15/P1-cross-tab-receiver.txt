@@ -1,0 +1,4 @@
+- heading "使い捨てデータ・別タブでの編集と削除" [level=1]
+- button "ARM receiver" [active]
+- button "RUN sender"
+- generic: "{ \"receiver\": \"deletion complete\" }"

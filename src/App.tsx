@@ -4,6 +4,7 @@ import { Spinner } from "./components/ui";
 import HelpPage from "./features/help/HelpPage";
 import LegalPage from "./features/legal/LegalPage";
 import StorageModeGate from "./features/storage/StorageModeGate";
+import TemporaryDataProtection from "./features/storage/TemporaryDataProtection";
 import ChartsPage from "./features/charts/ChartsPage";
 import SettingsPage from "./features/settings/SettingsPage";
 import DataManagementPage from "./features/backup/DataManagementPage";
@@ -24,6 +25,7 @@ export default function App() {
     <>
       <SeoMetadata />
       <StorageModeGate>
+        <TemporaryDataProtection />
         <TutorialProvider>
           <Routes>
             {/* 規約・ポリシー・ヘルプは利用開始の判断材料なので、

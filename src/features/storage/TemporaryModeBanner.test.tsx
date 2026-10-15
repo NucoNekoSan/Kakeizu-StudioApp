@@ -11,6 +11,7 @@ import {
 import { writeStorageMode } from "../../storage/storageMode";
 import { STORAGE_MODE_KEY } from "../../storage/storageMode";
 import TemporaryModeBanner from "./TemporaryModeBanner";
+import TemporaryDataProtection from "./TemporaryDataProtection";
 
 vi.mock("../../storage/kv", async (original) => ({
   ...(await original<typeof import("../../storage/kv")>()),
@@ -37,6 +38,7 @@ function renderBanner() {
   });
   return render(
     <QueryClientProvider client={client}>
+      <TemporaryDataProtection />
       <TemporaryModeBanner />
     </QueryClientProvider>,
   );

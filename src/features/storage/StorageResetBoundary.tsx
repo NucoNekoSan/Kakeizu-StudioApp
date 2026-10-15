@@ -16,7 +16,7 @@ export default function StorageResetBoundary({
     () =>
       subscribeStorageReset(() => {
         clearStorageMode();
-        resetStoreCache();
+        resetStoreCache({ invalidate: true });
         client.clear();
         setGeneration((current) => current + 1);
       }),

@@ -1,0 +1,19 @@
+import {createIndexedDbStore} from 'PROJECT_ROOT/src/storage/kv.ts';
+import {createLocalApi,clearBrowserData} from 'PROJECT_ROOT/src/storage/localApi.ts';
+const channel=new BroadcastChannel('diagnostic-cross-tab');const pre=document.querySelector('pre');
+const write=value=>pre.textContent=JSON.stringify(value,null,2);
+let replies=new Map();channel.onmessage=async({data})=>{if(data.reply){replies.get(data.reply)?.(data);return;}if(!armed)return;
+ try{if(data.type==='edit'){const api=createLocalApi(await createIndexedDbStore());await api.createNode(data.id,data.node);channel.postMessage({reply:'edit'});}
+ if(data.type==='delete'){await clearBrowserData();write({receiver:'deletion complete'});channel.postMessage({reply:'delete'});}}catch(e){write({receiverError:e.code||e.name});channel.postMessage({reply:data.type,error:e.code||e.name});}};
+let armed=false;document.querySelector('#arm').onclick=()=>{armed=true;write({receiver:'armed'});};
+const reply=type=>new Promise(resolve=>replies.set(type,resolve));
+document.querySelector('#run').onclick=async()=>{try{
+ const api=createLocalApi(await createIndexedDbStore());const chart=await api.createChart('Cross-tab synthetic');const rel=(await api.relationships())[0],gen=(await api.genders())[0];
+ const node=memo=>({relationshipId:rel.id,genderId:gen.id,anchorNodeId:null,parentNodeId1:null,parentNodeId2:null,placementDirection:null,connectionDirection:null,divorced:false,memo,fontSize:16,relationshipFontSize:17,scale:1,x:0,y:0});
+ const edited=reply('edit');channel.postMessage({type:'edit',id:chart.id,node:node('Receiver tab')});await api.createNode(chart.id,node('Sender tab'));const editReply=await edited;
+ const edits=(await api.chart(chart.id)).nodes.map(n=>n.memo).sort();
+ const backup=await api.createBackup('synthetic-passphrase');const importing=api.importBackup(backup.json,'merge','synthetic-passphrase').then(value=>({value}),e=>({error:e.code||e.name}));
+ const deleted=reply('delete');setTimeout(()=>channel.postMessage({type:'delete'}),10);const deleteReply=await deleted;const result=await importing;
+ const fresh=createLocalApi(await createIndexedDbStore());const after=await fresh.charts();let staleError;try{await api.createChart('Must not write');}catch(e){staleError=e.code||e.name;}
+ const next=await fresh.createChart('Explicit new use');write({editReply,edits,deleteReply,importResult:result,afterDeletion:after,staleError,newUseTitle:next.title});
+ }catch(e){write({error:e.code||e.name,message:e.message});}};

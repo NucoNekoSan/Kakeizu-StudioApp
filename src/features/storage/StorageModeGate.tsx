@@ -31,7 +31,7 @@ export default function StorageModeGate({
 
   const choose = (selected: StorageMode) => {
     writeStorageMode(selected);
-    resetStoreCache();
+    resetStoreCache({ invalidate: true });
     setMode(selected);
   };
 

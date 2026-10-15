@@ -1,0 +1,9 @@
+- status:
+  - paragraph: エディターを読み込んでいます
+- generic "RETEST diagnostics"
+- generic: "{ \"csp\": [], \"opens\": 0, \"unloadCanceled\": 0, \"controllerChanges\": 0, \"downloads\": [], \"lastUnloadPrevented\": false, \"databases\": [], \"controller\": false, \"held\": false }"
+- button "RETEST inspect"
+- button "RETEST unload guard" [active]
+- button "RETEST hold DB"
+- button "RETEST release DB"
+- button "RETEST check update"

@@ -1,0 +1,36 @@
+import json, pathlib, subprocess, time, hashlib
+root=pathlib.Path(__file__).parent
+base='https://kakeizu-studioapp.nuconeko-garden.com'
+cases=[('GET','/?audit=retest2'),('HEAD','/charts'),('GET','/help'),('GET','/sw.js'),('GET','/manifest.webmanifest'),('GET','/assets/index-DwH8AD78.js'),('GET','/.env'),('GET','/.git/config'),('GET','/src/main.tsx'),('GET','/wrangler.jsonc'),('GET','/assets/index-DwH8AD78.js.map'),('GET','/audit-nonexistent-r2'),('GET','/charts/%3Csvg%20onload%3Dalert(1)%3E'),('GET','/?q=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E'),('GET','/%2e%2e/%2e%2e/.env'),('OPTIONS','/'),('POST','/'),('HEAD','/assets/audit-nonexistent-r2.js')]
+out=[]
+for i,(method,path) in enumerate(cases):
+ h=root/f'http-{i}.headers';b=root/f'http-{i}.body'
+ cmd=['curl.exe','-sS','--max-time','20','--path-as-is','-D',str(h),'-o',str(b),'-w','%{http_code}','-X',method,base+path]
+ if method=='HEAD':cmd=['curl.exe','-sS','--max-time','20','-I','-D',str(h),'-o',str(b),'-w','%{http_code}',base+path]
+ if method=='POST':cmd[1:1]=['--data','']
+ t=time.monotonic();p=subprocess.run(cmd,capture_output=True,text=True)
+ headers=h.read_text(errors='replace') if h.exists() else ''
+ body=b.read_bytes() if b.exists() else b''
+ selected={}
+ for line in headers.splitlines():
+  if ':' in line:
+   k,v=line.split(':',1)
+   if k.lower() in ['content-type','content-security-policy','strict-transport-security','cache-control','access-control-allow-origin','x-frame-options','x-content-type-options','location','allow','cross-origin-opener-policy']:selected[k.lower()]=v.strip()
+ code=int(p.stdout[-3:]) if p.stdout[-3:].isdigit() else 0
+ row={'method':method,'path':path,'status':code,'curlExit':p.returncode,'bytes':len(body),'sha256':hashlib.sha256(body).hexdigest(),'headers':selected}
+ if path=='/assets/index-DwH8AD78.js':row['localHashMatch']=hashlib.sha256(pathlib.Path('dist'+path).read_bytes()).hexdigest()==row['sha256']
+ if path=='/sw.js':row['localHashMatch']=hashlib.sha256(pathlib.Path('dist'+path).read_bytes()).hexdigest()==row['sha256']
+ out.append(row)
+ if code==429 or code>=500 or p.returncode:break
+ time.sleep(max(0,1.05-(time.monotonic()-t)))
+# Redirect check counts toward same HTTP budget.
+p=subprocess.run(['curl.exe','-sS','--max-time','20','-I','http://kakeizu-studioapp.nuconeko-garden.com/help?audit=retest2'],capture_output=True,text=True)
+redirect=p.stdout
+# Four and only four TLS handshakes.
+tls=[]
+for version in ['tls1','tls1_1','tls1_2','tls1_3']:
+ p=subprocess.run([r'C:\Program Files\Git\usr\bin\openssl.exe','s_client','-connect','kakeizu-studioapp.nuconeko-garden.com:443','-servername','kakeizu-studioapp.nuconeko-garden.com','-'+version,'-cipher','ALL:@SECLEVEL=0','-verify_return_error','-verify_hostname','kakeizu-studioapp.nuconeko-garden.com','-brief'],input='',text=True,capture_output=True,timeout=20)
+ tls.append({'protocol':version,'exit':p.returncode,'output':p.stdout+p.stderr})
+result={'at':time.strftime('%Y-%m-%dT%H:%M:%S%z'),'httpRequestCount':len(out)+1,'concurrency':1,'minIntervalSeconds':1.05,'results':out,'redirect':redirect,'tls':tls}
+(root/'production-results.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps({'http':[(x['method'],x['path'],x['status'],x.get('localHashMatch')) for x in out],'tls':[(x['protocol'],x['exit']) for x in tls]},ensure_ascii=False))

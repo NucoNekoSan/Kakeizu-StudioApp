@@ -1,0 +1,281 @@
+[
+  {
+    "name": "roundtrip",
+    "result": {
+      "charts": 1,
+      "nodes": 1
+    },
+    "ms": 2
+  },
+  {
+    "name": "title160",
+    "result": {
+      "accepted": true,
+      "nodes": 1,
+      "polluted": false
+    },
+    "ms": 1
+  },
+  {
+    "name": "title161",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 1
+  },
+  {
+    "name": "memo4000",
+    "result": {
+      "accepted": true,
+      "nodes": 1,
+      "polluted": false
+    },
+    "ms": 1
+  },
+  {
+    "name": "memo4001",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 0
+  },
+  {
+    "name": "coord-limit",
+    "result": {
+      "accepted": true,
+      "nodes": 1,
+      "polluted": false
+    },
+    "ms": 1
+  },
+  {
+    "name": "coord-over",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 0
+  },
+  {
+    "name": "nodes-over",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 16
+  },
+  {
+    "name": "charts-over",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 6
+  },
+  {
+    "name": "definitions-over",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 1
+  },
+  {
+    "name": "bad-reference",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 1
+  },
+  {
+    "name": "bad-color",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "future-version",
+    "error": "BACKUP_TOO_NEW",
+    "message": "このファイルは新しいバージョンで作成されています。アプリを更新してから読み込んでください。",
+    "ms": 0
+  },
+  {
+    "name": "prototype-key",
+    "result": {
+      "accepted": true,
+      "nodes": 1,
+      "polluted": false
+    },
+    "ms": 0
+  },
+  {
+    "name": "two-node-cycle",
+    "result": {
+      "accepted": true,
+      "nodes": 2,
+      "polluted": false
+    },
+    "ms": 0
+  },
+  {
+    "name": "invalid-replace-preserves-original",
+    "result": {
+      "error": "BACKUP_TOO_LARGE",
+      "originalTitle": "Synthetic retest"
+    },
+    "ms": 1
+  },
+  {
+    "name": "raw-over50MiB",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルが大きすぎます。",
+    "ms": 0
+  },
+  {
+    "name": "encrypted-roundtrip",
+    "result": {
+      "decryptedMatches": true
+    },
+    "ms": 217
+  },
+  {
+    "name": "ciphertext-tamper",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 131
+  },
+  {
+    "name": "aad-format-tamper",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 192
+  },
+  {
+    "name": "aad-version-tamper",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 172
+  },
+  {
+    "name": "cipher-version-stripped",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 149
+  },
+  {
+    "name": "cipher-version1",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 114
+  },
+  {
+    "name": "kdf-name-tamper",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "kdf-hash-tamper",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "iterations-over",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "iterations-fraction",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "salt-short",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "iv-short",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "R7-1000-1001-own-export",
+    "result": {
+      "validCount": 1000,
+      "bulk1001Error": "BACKUP_EXPORT_LIMIT",
+      "singleCount": 1,
+      "originalsRemain": 1001
+    },
+    "ms": 78
+  },
+  {
+    "name": "missing-kdf",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "null-kdf",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "salt-null",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "cipher-version-string",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "iterations-zero",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "ciphertext-empty",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 244
+  },
+  {
+    "name": "wrong-password",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 127
+  },
+  {
+    "name": "invalid-merge-preserves-original",
+    "result": {
+      "error": "BACKUP_INVALID",
+      "unchanged": true
+    },
+    "ms": 1
+  },
+  {
+    "name": "html-and-prototype-payload-preserved-as-data",
+    "result": {
+      "title": "<svg onload=\"document.title=123\">",
+      "memo": "<img src=x onerror=\"document.title=123\">",
+      "polluted": false
+    },
+    "ms": 2
+  },
+  {
+    "name": "persistent-to-session",
+    "result": {
+      "mode": "session",
+      "persistentMarker": null
+    },
+    "ms": 0
+  },
+  {
+    "name": "other-tab-persistent-marker",
+    "result": {
+      "sessionMarker": "session",
+      "effectiveMode": "session"
+    },
+    "ms": 0
+  }
+]

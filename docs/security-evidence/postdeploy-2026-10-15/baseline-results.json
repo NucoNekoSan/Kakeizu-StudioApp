@@ -1,0 +1,23 @@
+{
+  "commit": "25d7fc34260d1c33966f5319f793ceffa0d470f3",
+  "tests": {
+    "files": 52,
+    "passed": 406
+  },
+  "lint": "passed",
+  "typecheck": "passed",
+  "formatCheck": "passed",
+  "build": "passed",
+  "mainAsset": "/assets/index-DwH8AD78.js",
+  "npmAudit": {
+    "total": 0,
+    "scope": "all dependencies incl development"
+  },
+  "npmAuditSignatures": {
+    "verifiedPackages": 557,
+    "verifiedAttestations": 158
+  },
+  "node": "24.15.0",
+  "npm": "11.12.1",
+  "note": "Observed command results from this diagnostic run; not a full test-runner log."
+}

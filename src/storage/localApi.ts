@@ -12,6 +12,7 @@ import { Repository } from "./repository";
 import { orderedApi } from "./operationQueue";
 import type { LegacyStorage } from "./migrateCohabitation";
 import { publishStorageReset } from "./storageReset";
+import { invalidateStores, storageResetError } from "./storeLifetime";
 import {
   appStorageKeys,
   readStorageMode,
@@ -44,7 +45,19 @@ export type LocalApi = ReturnType<typeof createLocalApi>;
  */
 let resolved: Promise<LocalApi> | null = null;
 let didFallback = false;
+const stateListeners = new Set<() => void>();
+const notifyStorageState = () => {
+  for (const listener of stateListeners) listener();
+};
+export const subscribeStorageState = (listener: () => void) => {
+  stateListeners.add(listener);
+  return () => {
+    stateListeners.delete(listener);
+  };
+};
+export const storageStateSnapshot = () => `${readStorageMode()}:${didFallback}`;
 const defaultApi = () => {
+  if (pendingClear) return Promise.reject(storageResetError());
   if (resolved) return resolved;
   resolved = (async () => {
     if (readStorageMode() === "session")
@@ -52,10 +65,13 @@ const defaultApi = () => {
     let store: DocumentStore;
     try {
       store = await createIndexedDbStore();
-      // Opening a store is lazy: probe availability without decoding any chart.
+      // Probe availability without decoding or migrating any stored chart.
       await store.keys();
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "STORAGE_RESET")
+        throw error;
       didFallback = true;
+      notifyStorageState();
       return createLocalApi(createMemoryStore());
     }
     let storage: LegacyStorage | undefined;
@@ -72,10 +88,15 @@ const defaultApi = () => {
   return resolved;
 };
 
-/** 保存モードを切り替えたときに、次の呼び出しでストアを取り直す。 */
-export const resetStoreCache = () => {
+/**
+ * 次の呼び出しでストアを取り直す。モード変更・全削除では invalidate を必ず指定し、
+ * 取得済み参照も失効させる。省略時は接続解決キャッシュだけを破棄する。
+ */
+export const resetStoreCache = (options: { invalidate?: boolean } = {}) => {
+  if (options.invalidate) invalidateStores();
   resolved = null;
   didFallback = false;
+  notifyStorageState();
 };
 
 /** 永続保存を選んだが IndexedDB が利用できずメモリへ退避したか。 */
@@ -98,7 +119,7 @@ export function clearBrowserData(
     if (deletionBlocked) queueMicrotask(options.onBlocked);
   }
   if (pendingClear) return pendingClear;
-  resetStoreCache();
+  resetStoreCache({ invalidate: true });
   pendingClear = finishBrowserDataDeletion().finally(() => {
     pendingClear = null;
     deletionBlocked = false;
@@ -122,7 +143,7 @@ async function finishBrowserDataDeletion(): Promise<void> {
       // 消せないキーがあっても続行する
     }
   clearStorageMode();
-  resetStoreCache();
+  resetStoreCache({ invalidate: true });
   publishStorageReset();
 }
 

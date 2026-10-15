@@ -1,0 +1,11 @@
+import http.server,os,pathlib,sys,time
+os.chdir(pathlib.Path(__file__).parent/'site')
+class Handler(http.server.SimpleHTTPRequestHandler):
+ def end_headers(self):
+  self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'")
+  super().end_headers()
+ def do_GET(self):
+  if len(sys.argv)>2 and 'ChartEditor-' in self.path:time.sleep(8)
+  if not os.path.isfile(self.translate_path(self.path)) and not self.path.endswith('/'):self.path='/index.html'
+  super().do_GET()
+http.server.ThreadingHTTPServer(('127.0.0.1',int(sys.argv[1]) if len(sys.argv)>1 else 4201),Handler).serve_forever()

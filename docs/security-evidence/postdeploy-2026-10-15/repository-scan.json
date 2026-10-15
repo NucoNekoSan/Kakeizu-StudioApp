@@ -1,0 +1,6 @@
+{
+  "trackedFiles": 230,
+  "highConfidencePatternHits": [],
+  "trackedEnvFiles": [".env.example"],
+  "scope": "current tracked files only; not full history; three high-confidence pattern families"
+}

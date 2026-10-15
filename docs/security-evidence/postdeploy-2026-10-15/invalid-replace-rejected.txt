@@ -1,0 +1,61 @@
+- banner:
+  - link "Kakeizu STUDIO":
+    - /url: /charts
+    - generic: Kakeizu
+    - generic: STUDIO
+  - navigation "メインナビゲーション":
+    - link "相関図":
+      - /url: /charts
+      - text: 相関図
+    - link "表示設定":
+      - /url: /settings
+      - text: 表示設定
+    - link "データ管理":
+      - /url: /data-management
+      - text: データ管理
+  - button "全データをバックアップ":
+  - link "バックアップファイルを読み込む":
+    - /url: /file-import
+  - link "チュートリアル":
+    - /url: /tutorial
+  - link "ヘルプ":
+    - /url: /help
+  - link "コンタクト（新しいタブで開く）":
+    - /url: https://nuconeko-garden.com/contact/?work=kakeizu-studio
+- status: 一時利用モードです。このタブを閉じるか再読み込みすると、作成した内容は消えます。
+- main:
+  - generic: FILE IMPORT
+  - heading "ファイル読み込み" [level=1]
+  - paragraph: バックアップ用のJSONファイルから相関図と表示設定を読み込みます。
+  - button "JSONファイルを読み込む":
+    - generic: JSONファイルを読み込む
+  - button "Choose File"
+  - dialog "バックアップを読み込む":
+    - heading "バックアップを読み込む" [level=2]
+    - button "閉じる":
+    - paragraph: invalid-fixture.json
+    - radio "追加する（今あるデータは残ります）"
+    - text: 追加する（今あるデータは残ります）
+    - radio "置き換える（今あるデータはすべて消えます）" [checked]
+    - text: 置き換える（今あるデータはすべて消えます）
+    - alert: この端末に保存されている相関図と表示設定はすべて削除され、ファイルの内容に置き換わります。
+    - alert: バックアップファイルの内容が大きすぎるか、値が範囲外です。
+    - button "キャンセル"
+    - button "読み込む" [active]
+  - status: 読み込むファイルを選択した後、現在のデータに追加するか、ファイルの内容で置き換えるかを選択できます。
+- contentinfo:
+  - navigation "このアプリについて":
+    - link "使い方":
+      - /url: /help
+    - link "利用規約":
+      - /url: /terms
+    - link "プライバシーポリシー":
+      - /url: /privacy
+  - paragraph: データはこの端末内にのみ保存されます。
+- generic "RETEST diagnostics"
+- generic: "{ \"csp\": [], \"opens\": 1, \"unloadCanceled\": 2, \"controllerChanges\": 1, \"downloads\": [], \"lastUnloadPrevented\": true, \"databases\": [], \"active\": \"activated\", \"controller\": true, \"held\": false }"
+- button "RETEST inspect"
+- button "RETEST unload guard"
+- button "RETEST hold DB"
+- button "RETEST release DB"
+- button "RETEST check update"

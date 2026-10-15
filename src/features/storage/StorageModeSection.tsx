@@ -27,7 +27,7 @@ export default function StorageModeSection() {
   const change = (next: StorageMode) => {
     if (next === mode) return;
     writeStorageMode(next);
-    resetStoreCache();
+    resetStoreCache({ invalidate: true });
     setMode(next);
     setSwitched(true);
   };

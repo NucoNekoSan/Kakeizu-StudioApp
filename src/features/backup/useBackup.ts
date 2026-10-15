@@ -7,8 +7,12 @@ import type { ImportMode } from "../../storage/backupModel";
 
 export const backupStatusKey = ["backup-status"];
 
-export function useBackupStatus() {
-  return useQuery({ queryKey: backupStatusKey, queryFn: api.backupStatus });
+export function useBackupStatus(enabled = true) {
+  return useQuery({
+    queryKey: backupStatusKey,
+    queryFn: api.backupStatus,
+    enabled,
+  });
 }
 
 /** 未バックアップの警告を出すしきい値。 */
