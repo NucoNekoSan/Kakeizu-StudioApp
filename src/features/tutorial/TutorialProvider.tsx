@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
-import { api } from "../../api";
+import { api, ApiError } from "../../api";
 import { Modal, Notice } from "../../components/ui";
 import {
   chapterById,
@@ -81,8 +81,10 @@ export default function TutorialProvider({
       try {
         await api.chart(progress.practiceChartId);
         return progress.practiceChartId;
-      } catch {
-        // 削除済みなら作り直す。
+      } catch (error) {
+        // Only a missing chart may be recreated; read failures must keep its ID.
+        if (!(error instanceof ApiError) || error.code !== "NOT_FOUND")
+          throw error;
       }
     }
     const chart = await api.createChart("練習用相関図");

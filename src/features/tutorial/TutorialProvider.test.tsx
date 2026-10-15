@@ -10,13 +10,17 @@ import {
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { writeStorageMode } from "../../storage/storageMode";
-import { api } from "../../api";
-import { TUTORIAL_LATER_KEY, TUTORIAL_STORAGE_KEY } from "./tutorialModel";
+import { api, ApiError } from "../../api";
+import {
+  emptyTutorialProgress,
+  TUTORIAL_LATER_KEY,
+  TUTORIAL_STORAGE_KEY,
+} from "./tutorialModel";
 import TutorialPage from "./TutorialPage";
 import { useTutorial } from "./tutorialContext";
 import TutorialProvider from "./TutorialProvider";
 
-vi.mock("../../api", () => ({
+vi.mock("../../api", async () => ({
   api: {
     chart: vi.fn(),
     createChart: vi.fn(),
@@ -29,7 +33,7 @@ vi.mock("../../api", () => ({
       daysSinceExport: null,
     })),
   },
-  ApiError: class ApiError extends Error {},
+  ApiError: (await import("../../api/errors")).ApiError,
 }));
 
 function PracticeRoute() {
@@ -343,5 +347,110 @@ describe("全体チュートリアル", () => {
         name: "複数の人物も同居輪で囲めます",
       }),
     ).toBeTruthy();
+  });
+});
+
+describe("練習用相関図の読み込みエラー", () => {
+  const replacement = {
+    id: "replacement",
+    title: "練習用相関図",
+    nodeCount: 0,
+    updatedAt: "2026-10-15T00:00:00Z",
+  };
+  function openPausedChapter() {
+    writeStorageMode("persistent");
+    const saved = {
+      ...emptyTutorialProgress(),
+      activeChapterId: "layout",
+      activeStepIndex: 1,
+      paused: true,
+      practiceChartId: "practice-id",
+      practiceChartKept: true,
+      completedStepIds: ["arrange-node"],
+    };
+    localStorage.setItem(TUTORIAL_STORAGE_KEY, JSON.stringify(saved));
+    renderTutorial();
+    const chapter = screen
+      .getByRole("heading", { name: "配置と表現" })
+      .closest("article")!;
+    fireEvent.click(within(chapter).getByRole("button", { name: "再開" }));
+    return saved;
+  }
+  afterEach(() => {
+    cleanup();
+    localStorage.clear();
+    sessionStorage.clear();
+    vi.resetAllMocks();
+  });
+
+  it.each([
+    new ApiError(500, "DOCUMENT_CORRUPTED", "保存データが壊れています"),
+    new ApiError(409, "DOCUMENT_TOO_NEW", "新しいバージョンのデータです"),
+    new DOMException("読み込みが拒否されました", "SecurityError"),
+    new Error("ストレージを読み込めません"),
+  ])("%s の場合は再作成せず進捗を保持する", async (error) => {
+    vi.mocked(api.chart).mockRejectedValue(error);
+    vi.mocked(api.createChart).mockResolvedValue(replacement);
+    const saved = openPausedChapter();
+    expect(
+      await screen.findByText(/^チュートリアルを開始できませんでした。/),
+    ).toBeTruthy();
+    expect(api.createChart).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem(TUTORIAL_STORAGE_KEY)!)).toEqual(
+      saved,
+    );
+    expect(api.chart).toHaveBeenCalledWith("practice-id");
+  });
+
+  it("NOT_FOUND の場合だけ相関図を作り直して元のステップを再開する", async () => {
+    vi.mocked(api.chart).mockRejectedValue(
+      new ApiError(404, "NOT_FOUND", "削除済みです"),
+    );
+    vi.mocked(api.createChart).mockResolvedValue(replacement);
+    openPausedChapter();
+    await vi.waitFor(() =>
+      expect(screen.getByTestId("location").textContent).toBe(
+        "/charts/replacement",
+      ),
+    );
+    expect(api.createChart).toHaveBeenCalledExactlyOnceWith("練習用相関図");
+    expect(
+      JSON.parse(localStorage.getItem(TUTORIAL_STORAGE_KEY)!),
+    ).toMatchObject({
+      practiceChartId: "replacement",
+      practiceChartKept: false,
+      activeChapterId: "layout",
+      activeStepIndex: 1,
+      paused: false,
+      completedStepIds: ["arrange-node"],
+    });
+  });
+
+  it("読み込める相関図は再作成せずに再利用する", async () => {
+    vi.mocked(api.chart).mockResolvedValue({
+      id: "practice-id",
+      title: "練習用相関図",
+      nodes: [],
+      edges: [],
+      relationships: [],
+      genders: [],
+      updatedAt: replacement.updatedAt,
+      cohabitation: { version: 1, cohabitations: [], labels: [] },
+    });
+    openPausedChapter();
+    await vi.waitFor(() =>
+      expect(screen.getByTestId("location").textContent).toBe(
+        "/charts/practice-id",
+      ),
+    );
+    expect(api.createChart).not.toHaveBeenCalled();
+    expect(
+      JSON.parse(localStorage.getItem(TUTORIAL_STORAGE_KEY)!),
+    ).toMatchObject({
+      practiceChartId: "practice-id",
+      practiceChartKept: true,
+      activeStepIndex: 1,
+      paused: false,
+    });
   });
 });
