@@ -1,0 +1,20 @@
+{
+  "sourceBase": "af32ff7",
+  "status": "local only; not committed or deployed",
+  "tests": {
+    "files": 59,
+    "passed": 428
+  },
+  "lint": "passed",
+  "typecheck": "passed",
+  "formatCheck": "passed",
+  "build": "passed",
+  "wranglerDeployDryRun": "passed",
+  "entryAsset": "/assets/index-B8rk3Xz8.js",
+  "browser": "Brave / Chromium",
+  "availableOtherEngines": false,
+  "nativeAppControlAvailable": false,
+  "dedicatedProductionBrowserAvailable": false,
+  "browserDownloadEvent": "timed out; OS save completion unverified",
+  "historyPageshowPersisted": false
+}

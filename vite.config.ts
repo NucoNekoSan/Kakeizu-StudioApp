@@ -27,9 +27,8 @@ export default defineConfig(({ mode }) => {
         // 登録スクリプトは main.tsx から明示的に呼ぶ。
         // 自動注入はインラインスクリプトになり得るため、CSP の script-src 'self' と衝突する。
         injectRegister: null,
-        // 旧Service Workerが waiting のまま残ると更新通知自体も古いコードに
-        // 阻まれるため、新版は取得後すぐに有効化する。
-        registerType: "autoUpdate",
+        // 作業中のメモリデータを自動再読み込みで失わないよう明示的に更新する。
+        registerType: "prompt",
         includeAssets: ["icons/apple-touch-icon.png"],
         manifest: {
           name: "Kakeizu Studio",
@@ -71,8 +70,10 @@ export default defineConfig(({ mode }) => {
           // 外部通信が無いので runtime caching は設定しない。
           globPatterns: ["**/*.{js,css,html,png,svg,webmanifest}"],
           navigateFallback: `${base.replace(/\/$/, "")}/index.html`,
+          navigateFallbackDenylist: [/\/assets\//],
           cleanupOutdatedCaches: true,
-          clientsClaim: true,
+          skipWaiting: false,
+          clientsClaim: false,
         },
         devOptions: { enabled: false },
       }),

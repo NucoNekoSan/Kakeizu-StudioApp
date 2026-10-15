@@ -121,9 +121,10 @@ describe("PWA 設定", () => {
     expect(config).toMatch(/injectRegister:\s*null/);
   });
 
-  it("取得した最新版を即時有効化する", () => {
-    // 古いWorkerが waiting のまま残り、最新版を表示できなくなることを防ぐ。
-    expect(config).toMatch(/registerType:\s*"autoUpdate"/);
+  it("更新を明示的に選び、作業中の画面を自動で切り替えない", () => {
+    expect(config).toMatch(/registerType:\s*"prompt"/);
+    expect(config).toMatch(/skipWaiting:\s*false/);
+    expect(config).toMatch(/clientsClaim:\s*false/);
   });
 
   it("インストールに必要なアイコンを宣言する", () => {

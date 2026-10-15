@@ -7,6 +7,7 @@ import { useChartNodeMutations } from "./useChartNodeMutations";
 import { useChartTitleSave } from "./useChartTitleSave";
 import { useDebouncedNodeUpdate } from "./useDebouncedNodeUpdate";
 import { useCohabitationDocument } from "./useCohabitationDocument";
+import { registerUpdatePreparation } from "../../updatePreparation";
 
 export function useEditorPersistence(
   chartId: string,
@@ -50,6 +51,7 @@ export function useEditorPersistence(
     ]);
     await tracker.wait();
   }, [cohabitation, debounce, title, tracker]);
+  useEffect(() => registerUpdatePreparation(flushAndWait), [flushAndWait]);
   const saveChanges = useCallback(() => {
     void flushAndWait().catch(() => undefined);
   }, [flushAndWait]);

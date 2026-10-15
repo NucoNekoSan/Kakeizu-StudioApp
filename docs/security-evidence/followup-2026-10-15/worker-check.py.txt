@@ -1,0 +1,22 @@
+from pathlib import Path
+import subprocess,json,re
+r=Path(__file__).parent
+entry=re.search(r'<script[^>]+src="([^"]+)"',Path('dist/index.html').read_text(encoding='utf-8')).group(1)
+cases=[('GET','/charts/fixture',True),('GET','/help',True),('GET',entry,False),('GET','/assets/missing-followup.js',False),('GET','/assets/missing-followup.js',True),('HEAD','/assets/missing-followup.css',False),('POST','/assets/missing-followup.js',False),('GET','/sw.js',False)]
+rows=[]
+for i,(method,path,navigate) in enumerate(cases):
+ h=r/f'worker-{i}.headers';b=r/f'worker-{i}.body'
+ args=['curl.exe','-sS','--max-time','20','-D',str(h),'-o',str(b),'-w','%{http_code}']
+ args+=['-I'] if method=='HEAD' else ['-X',method]
+ if navigate:args+=['-H','Sec-Fetch-Mode: navigate']
+ args+=['http://127.0.0.1:4220'+path]
+ p=subprocess.run(args,capture_output=True,text=True);headers={}
+ for line in h.read_text().splitlines():
+  if ':' in line:
+   k,v=line.split(':',1);headers[k.lower()]=v.strip()
+ row={'method':method,'path':path,'navigation':navigate,'status':int(p.stdout[-3:]),'contentType':headers.get('content-type'),'cacheControl':headers.get('cache-control'),'csp':headers.get('content-security-policy'),'nosniff':headers.get('x-content-type-options')}
+ rows.append(row)
+ if '/assets/missing' in path and method!='POST':assert row['status']==404 and row['cacheControl']=='no-store' and 'text/plain' in row['contentType'],row
+ if path==entry:assert row['status']==200 and 'javascript' in row['contentType'] and 'immutable' in row['cacheControl'],row
+ if navigate and not path.startswith('/assets/'):assert row['status']==200 and 'text/html' in row['contentType'],row
+(r/'worker-routing.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps(rows,ensure_ascii=False))

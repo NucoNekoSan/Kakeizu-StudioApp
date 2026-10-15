@@ -1,0 +1,23 @@
+{
+  "backup-before-update.txt": "3348b642e80de6d6924caf5458a65144ab50601a0c3b44b42b0bff7d79d8bfd9",
+  "baseline-results.json": "182a75e3f2a51a791bfc8a071c0019143dc7220000af4d6283730b842bafffd9",
+  "history-return-after-delete.png": "caf59a12efb1b703b6853b9338ad38a0a1250485c3321ad2dd8ef456d46284f8",
+  "history-return-after-delete.txt": "a7fe71b856d6dbed595d7535bfa233df8b0f3d92f1b49626fa7057b17f3481b0",
+  "missing-editor-data-retained.txt": "8c2ce6889ab35faba646eb4c87378cb08f687dac1bd1c05802bfcf4ee7fb2b78",
+  "missing-editor-export.txt": "5260895727963a49d1c0696f987ab1f3b5fe61fbe9454f3aefef729016ed1820",
+  "missing-editor-recovery.png": "0312e98e7483c551c4dc6eacd299a7059d92cd1e0a65f0ef968ff7883b442016",
+  "missing-editor-recovery.txt": "4375f63cee1b822f19220d02f9237807b992e5b4a15b2250176906b1e28ae4c9",
+  "persistent-after-update.txt": "1e716e7ff583b8291506e261caf276cf7e4953985c5174fcad76c361bbfc4839",
+  "prepare-sw.mjs.txt": "9c9aa7db88efb12713e92178b33ff5d67306b960a9caa00615555a6f411d302d",
+  "README.md": "2621107a7b45a69653c735c8702f8453e170c381ff4ce6014ea3dac42e4a5c6a",
+  "release-b.mjs.txt": "d193660a5c58232b67e6375817731f355937bfeaa55da9ee28d949e3fd8641fd",
+  "serve-error.py.txt": "58d5ecde687751ccbc10e72c8628aa810b971f10bf5bb857ddf35970cf47aa50",
+  "temporary-after-other-tab-update.png": "e993cc0cdbf4ce290c995c18973789f9f9d40e6869f15894e47265846d63405f",
+  "temporary-after-other-tab-update.txt": "d8b025b93f55e491c8ee3fdf483a5deee8c76d6e93823f9695dd2ce5354a5906",
+  "temporary-before-update.txt": "1eb3f28bce0a8516b07ee9f178b100ba1b0e2184b81fa5d48e06b0120808593a",
+  "temporary-update-deferred.txt": "610a33959445db07308dc9d9213ed7fb4f9527faa2827fa07f9322a5dbed9286",
+  "update-waiting.png": "6841a9a049c99b9ee713173ba54074b02d40524be0239e54d65fa2db5e9ea057",
+  "update-waiting.txt": "9988b4d88ffe54971ae875ca8b6417692117da48626ce52d32c8a8823cb9d12f",
+  "worker-check.py.txt": "6167894b2934081ec0906f63ac658b5bd21466f9215aaa63804626af168321cf",
+  "worker-routing.json": "b5c99a3e17e78af2ca46cf6e835c07c1f216881bc0c40b31180f644cfa68c559"
+}

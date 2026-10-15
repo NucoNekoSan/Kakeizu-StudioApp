@@ -17,6 +17,7 @@ import { api } from "../../api";
 import { saveJsonFile } from "../../storage/fileIo";
 import ChartEditor from "./ChartEditor";
 import TemporaryDataProtection from "../storage/TemporaryDataProtection";
+import { prepareForUpdate } from "../../updatePreparation";
 import * as storageMode from "../../storage/storageMode";
 import * as localStorageApi from "../../storage/localApi";
 
@@ -116,6 +117,23 @@ const exportButton = () =>
   });
 
 describe("ChartEditor persistence integration", () => {
+  it("更新前の準備で未保存のタイトルとメモを確定する", async () => {
+    openEditor();
+    fireEvent.click(await screen.findByRole("button", { name: "人物を選択" }));
+    fireEvent.change(screen.getByRole("textbox", { name: /^メモ/ }), {
+      target: { value: "更新直前のメモ" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "相関図タイトル" }), {
+      target: { value: "更新直前のタイトル" },
+    });
+    await act(async () => {
+      await prepareForUpdate();
+    });
+    expect(await api.chart(chartId)).toMatchObject({
+      title: "更新直前のタイトル",
+      nodes: [{ memo: "更新直前のメモ" }],
+    });
+  });
   it.each(["session", "fallback"] as const)(
     "%s の相関図を編集している間も警告と離脱防止を維持する",
     async (mode) => {

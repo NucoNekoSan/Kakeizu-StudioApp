@@ -12,6 +12,7 @@ import FileImportPage from "./features/backup/FileImportPage";
 import TutorialPage from "./features/tutorial/TutorialPage";
 import TutorialProvider from "./features/tutorial/TutorialProvider";
 import SeoMetadata from "./SeoMetadata";
+import EditorLoadBoundary from "./features/editor/EditorLoadBoundary";
 
 const ChartEditor = lazy(() => import("./features/editor/ChartEditor"));
 
@@ -37,11 +38,13 @@ export default function App() {
             <Route
               path="/charts/:id"
               element={
-                <Suspense
-                  fallback={<Spinner label="エディターを読み込んでいます" />}
-                >
-                  <ChartEditor />
-                </Suspense>
+                <EditorLoadBoundary>
+                  <Suspense
+                    fallback={<Spinner label="エディターを読み込んでいます" />}
+                  >
+                    <ChartEditor />
+                  </Suspense>
+                </EditorLoadBoundary>
               }
             />
             <Route path="/settings" element={<SettingsPage />} />

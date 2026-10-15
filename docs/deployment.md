@@ -11,11 +11,11 @@ npm run build
 
 `dist` に配信物が生成される。`dist/_headers` がセキュリティヘッダとキャッシュ制御の設定として読まれる。
 
-**SPA のルーティングに `_redirects` を置かないこと。** Git 連携で作成したプロジェクトは Workers として構成され（`wrangler deploy` で配信される）、静的アセットの `_redirects` は検証が厳しい。`/* /index.html 200` のような全体を受けるルールは「無限ループ」と判定されてデプロイが失敗する。クライアントルーティングは wrangler 設定の `not_found_handling: "single-page-application"` が担うため、`_redirects` は不要。
+**SPA のルーティングに `_redirects` を置かないこと。** 現在はWorkersとして配信する。`wrangler.jsonc` の `main` は `src/worker.ts`、assets bindingは `ASSETS`、`not_found_handling` は `none`。実在する資材は静的配信を優先し、見つからない画面URLだけをWorkerからルートHTMLへ渡す。`/assets/` の欠落は404・`Cache-Control: no-store` とし、HTMLを長期キャッシュしない。`run_worker_first` は設定せず、実在資材の要求ごとにWorkerを呼ばない。`/* /index.html 200` のような `_redirects` は不要。
 
-## 2. Cloudflare Pages プロジェクトの作成
+## 2. Cloudflare Workers のGit連携
 
-Cloudflare ダッシュボード → Workers & Pages → Create → Pages。
+既存の `kakeizu-studioapp` WorkerのGit連携を利用する。新規構築時も、配信ルーターを実行できるWorkersとしてリポジトリを連携する。静的なdistだけをPagesへアップロードする方式とは設定が異なる。
 
 GitHub 連携で作る場合のビルド設定:
 
@@ -25,6 +25,8 @@ GitHub 連携で作る場合のビルド設定:
 | Framework preset       | None            |
 | Build command          | `npm run build` |
 | Build output directory | `dist`          |
+
+デプロイコマンドは `npx wrangler deploy`。静的資材のディレクトリとWorkerエントリーは `wrangler.jsonc` を参照する。
 
 **Node のバージョンは環境変数で固定する。** Environment variables に `NODE_VERSION` = `22` を追加すること。Pages の既定 Node は古く、指定しないとビルドが失敗することがある。
 
@@ -91,7 +93,13 @@ curl.exe -I https://kakeizu-studioapp.nuconeko-garden.com/
 
 ## 7. 更新の反映
 
-`registerType: "autoUpdate"` により、新しい Service Worker は取得後に有効化される。アプリの起動時、画面へ戻った時、オンライン復帰時にも更新を確認する。古い Worker が更新待ちになる場合は「新しいバージョンがあります」のバーから「更新する」を押す。開いたままの画面が古い場合は、編集内容を保存してから再読み込みする。
+`registerType: "prompt"`、`skipWaiting: false`、`clientsClaim: false` とし、新しいService Workerは利用者の操作まで待機する。アプリ起動時・画面へ戻った時・オンライン復帰時に更新を確認し、更新バーを表示する。別タブでWorkerが有効になっても、このタブは自動再読み込みしない。
+
+「JSONを書き出す」または「更新する」の前に、エディターの保留中の保存を完了させる。保存が失敗した場合は更新しない。「更新する」は保存・書き出し済みの確認後だけ有効になる。一時利用の内容は、利用者が選んだ再読み込みでも消えるため、先にJSONを退避する。更新を見送ったタブは作業を続けられるが、旧エディター資材の取得に失敗した場合は退避用の画面からJSONを書き出して更新する。
+
+以前の自動更新版のタブには、この保護を後から適用できない。初回の切り替えでは必要なJSONを退避し、すべての旧版アプリタブを閉じてから開き直す。
+
+デプロイ後には正規JSがJavaScript・長期キャッシュ、`/assets/存在しない名前.js` が404・no-store、画面の深いURLがHTMLを返すことも確認する。
 
 ## 8. お問い合わせ窓口の確認
 

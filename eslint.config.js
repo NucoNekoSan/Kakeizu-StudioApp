@@ -13,6 +13,7 @@ export default tseslint.config(
       "server/vendor",
       ".claude",
       ".agents",
+      ".wrangler",
       ".superpowers",
     ],
   },

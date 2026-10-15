@@ -1,0 +1,11 @@
+import {pathToFileURL} from 'node:url';import {resolve} from 'node:path';import {cp,mkdir,readFile,writeFile} from 'node:fs/promises';
+const root=process.env.TEMP+'/kz-followup-20261015';await mkdir(root,{recursive:true});
+await cp('dist',root+'/site',{recursive:true,force:true});
+let observer=await readFile(process.env.TEMP+'/kz-retest2-20261015/site/retest-observer.js','utf8');
+observer=observer.replace('csp:[]','release:document.documentElement.dataset.auditRelease,pageShows:[],csp:[]').replace("const open=indexedDB.open.bind(indexedDB);","addEventListener('pageshow',e=>evidence.pageShows.push({persisted:e.persisted}));\nconst open=indexedDB.open.bind(indexedDB);");
+await writeFile(root+'/site/retest-observer.js',observer);
+let html=await readFile(root+'/site/index.html','utf8');html=html.replace('<html lang="ja">','<html lang="ja" data-audit-release="A">').replace('<head>','<head><script src="/retest-observer.js"></script>');await writeFile(root+'/site/index.html',html);
+await writeFile(root+'/site/away.html','<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>隔離された移動先</title></head><body><h1>履歴復帰の検証用ページ</h1><a href="/charts">相関図へ</a></body></html>');
+const {generateSW}=await import(pathToFileURL(resolve('node_modules/workbox-build/build/index.js')));
+await generateSW({globDirectory:root+'/site',globPatterns:['**/*.{js,css,html,png,svg,webmanifest}'],swDest:root+'/site/sw.js',navigateFallback:'/index.html',navigateFallbackDenylist:[/\/assets\//],cleanupOutdatedCaches:true,clientsClaim:false,skipWaiting:false});
+console.log('Prepared prompt-mode release A in isolated directory');

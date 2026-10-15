@@ -1,0 +1,82 @@
+[
+  {
+    "method": "GET",
+    "path": "/charts/fixture",
+    "navigation": true,
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "cacheControl": "public, max-age=0, must-revalidate",
+    "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+    "nosniff": "nosniff"
+  },
+  {
+    "method": "GET",
+    "path": "/help",
+    "navigation": true,
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "cacheControl": "public, max-age=0, must-revalidate",
+    "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+    "nosniff": "nosniff"
+  },
+  {
+    "method": "GET",
+    "path": "/assets/index-B8rk3Xz8.js",
+    "navigation": false,
+    "status": 200,
+    "contentType": "text/javascript; charset=utf-8",
+    "cacheControl": "public, max-age=31536000, immutable",
+    "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+    "nosniff": "nosniff"
+  },
+  {
+    "method": "GET",
+    "path": "/assets/missing-followup.js",
+    "navigation": false,
+    "status": 404,
+    "contentType": "text/plain; charset=utf-8",
+    "cacheControl": "no-store",
+    "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+    "nosniff": "nosniff"
+  },
+  {
+    "method": "GET",
+    "path": "/assets/missing-followup.js",
+    "navigation": true,
+    "status": 404,
+    "contentType": "text/plain; charset=utf-8",
+    "cacheControl": "no-store",
+    "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+    "nosniff": "nosniff"
+  },
+  {
+    "method": "HEAD",
+    "path": "/assets/missing-followup.css",
+    "navigation": false,
+    "status": 404,
+    "contentType": "text/plain; charset=utf-8",
+    "cacheControl": "no-store",
+    "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+    "nosniff": "nosniff"
+  },
+  {
+    "method": "POST",
+    "path": "/assets/missing-followup.js",
+    "navigation": false,
+    "status": 405,
+    "contentType": "text/plain; charset=utf-8",
+    "cacheControl": "no-store",
+    "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+    "nosniff": "nosniff"
+  },
+  {
+    "method": "GET",
+    "path": "/sw.js",
+    "navigation": false,
+    "status": 200,
+    "contentType": "text/javascript; charset=utf-8",
+    "cacheControl": "no-cache",
+    "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+    "nosniff": "nosniff"
+  }
+]

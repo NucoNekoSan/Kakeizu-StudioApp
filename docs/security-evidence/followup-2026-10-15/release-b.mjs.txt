@@ -1,0 +1,3 @@
+import {readFile,writeFile} from 'node:fs/promises';import {pathToFileURL} from 'node:url';import {resolve} from 'node:path';
+const root=process.env.TEMP+'/kz-followup-20261015';const html=await readFile(root+'/site/index.html','utf8');await writeFile(root+'/site/index.html',html.replace('data-audit-release="A"','data-audit-release="B"'));
+const {generateSW}=await import(pathToFileURL(resolve('node_modules/workbox-build/build/index.js')));await generateSW({globDirectory:root+'/site',globPatterns:['**/*.{js,css,html,png,svg,webmanifest}'],swDest:root+'/site/sw.js',navigateFallback:'/index.html',navigateFallbackDenylist:[/\/assets\//],cleanupOutdatedCaches:true,clientsClaim:false,skipWaiting:false});console.log('Prepared isolated release B');
