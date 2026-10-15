@@ -10,6 +10,12 @@ import { definitionsCodec } from "./defaults";
 import { uniqueIds } from "./documentValidation";
 import type { DefinitionsDocumentV1 } from "./defaults";
 import { createId } from "./ids";
+import {
+  exceedsCounts,
+  exceedsDefinitionCounts,
+  exceedsLimits,
+  IMPORT_CHARTS_MAX,
+} from "./importLimits";
 import { normalizeChartParents, parentPairIssue } from "./parentReferences";
 
 export const BACKUP_FORMAT = "kakeizu-studio-backup";
@@ -86,6 +92,13 @@ export function buildBackup(
   };
 }
 
+const tooLarge = () =>
+  new ApiError(
+    422,
+    "BACKUP_TOO_LARGE",
+    "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+  );
+
 export function parseBackup(raw: string): BackupFileV1 {
   let value: unknown;
   try {
@@ -123,6 +136,11 @@ export function parseBackup(raw: string): BackupFileV1 {
       "BACKUP_INVALID",
       "バックアップファイルの内容が壊れています。",
     );
+  if (
+    value.charts.length > IMPORT_CHARTS_MAX ||
+    exceedsDefinitionCounts(value.definitions)
+  )
+    throw tooLarge();
 
   const definitions = { ...value.definitions, schemaVersion: 1 };
   const invalid = () =>
@@ -138,6 +156,7 @@ export function parseBackup(raw: string): BackupFileV1 {
   const genderIds = new Set(definitions.genders.map((item) => item.id));
   const charts = value.charts.map((chart) => {
     if (!record(chart)) throw invalid();
+    if (exceedsCounts(chart)) throw tooLarge();
     const document = {
       ...chart,
       schemaVersion: 1,
@@ -155,6 +174,7 @@ export function parseBackup(raw: string): BackupFileV1 {
           : chart.cohabitation,
     };
     if (!chartDocumentCodec.isCurrent(document)) throw invalid();
+    if (exceedsLimits(document)) throw tooLarge();
     const nodeIds = new Set(document.nodes.map((node) => node.id));
     const validRef = (id: string | null, ownId: string) =>
       id === null || (id !== ownId && nodeIds.has(id));

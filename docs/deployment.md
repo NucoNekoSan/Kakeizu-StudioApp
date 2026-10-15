@@ -68,6 +68,7 @@ curl.exe -I https://kakeizu-studioapp.nuconeko-garden.com/
 ```
 
 - `Content-Security-Policy` が返ること
+- `Strict-Transport-Security: max-age=15552000` が返ること（`public/_headers` で設定。`includeSubDomains` は付けない。ゾーン全体へ広げる場合は Cloudflare 側の HSTS を使う）
 - `X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY` が返ること
 - `curl.exe -I https://kakeizu-studioapp.nuconeko-garden.com/sw.js` が `Cache-Control: no-cache` を返すこと
 - HTTP でアクセスすると HTTPS へ転送されること

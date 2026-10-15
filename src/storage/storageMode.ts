@@ -64,6 +64,13 @@ export function writeStorageMode(mode: StorageMode): void {
     void navigator.storage?.persist?.().catch(() => false);
     return;
   }
+  // 端末側の「残す」印が残っていると readStorageMode が常にそちらを返し、
+  // 一時利用へ切り替えても保存が続いてしまう。先に消す。
+  try {
+    local()?.removeItem(STORAGE_MODE_KEY);
+  } catch {
+    // 消せない環境では切り替えを反映できないが、読み取り側も同じ制約を受ける
+  }
   safeWrite(session(), STORAGE_MODE_KEY, "session");
 }
 

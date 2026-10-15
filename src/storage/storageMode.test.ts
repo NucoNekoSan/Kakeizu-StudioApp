@@ -36,6 +36,13 @@ describe("保存モード", () => {
     expect(readStorageMode()).toBe("session");
   });
 
+  it("端末に保存から一時利用へ切り替えると一時利用になる", () => {
+    writeStorageMode("persistent");
+    writeStorageMode("session");
+    expect(localStorage.getItem(STORAGE_MODE_KEY)).toBeNull();
+    expect(readStorageMode()).toBe("session");
+  });
+
   it("端末に保存する選択が一時選択より優先される", () => {
     writeStorageMode("session");
     writeStorageMode("persistent");

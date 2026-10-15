@@ -5,6 +5,9 @@
  * File System Access API は Firefox / Safari が非対応のため単独では使えない。
  * 機能があれば「保存先を選ぶ」体験にし、無ければ `<a download>` にフォールバックする。
  */
+import { ApiError } from "../api/errors";
+import { BACKUP_MAX_BYTES } from "./importLimits";
+
 type SaveFilePicker = (options: {
   suggestedName?: string;
   types?: { description: string; accept: Record<string, string[]> }[];
@@ -149,4 +152,13 @@ export const saveJsonFile = async (
 };
 
 /** `<input type="file">` から読み込む。全ブラウザで動くので分岐は不要。 */
-export const readTextFile = (file: File): Promise<string> => file.text();
+export const readTextFile = (file: File): Promise<string> => {
+  // 巨大なファイルを読み込む前に止める (メモリを使い切らせないため)。
+  if (file.size > BACKUP_MAX_BYTES)
+    throw new ApiError(
+      422,
+      "BACKUP_TOO_LARGE",
+      "バックアップファイルが大きすぎます。",
+    );
+  return file.text();
+};

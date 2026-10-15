@@ -10,6 +10,7 @@ import {
   type BackupFileV1,
   type ImportMode,
 } from "./backupModel";
+import { BACKUP_MAX_BYTES } from "./importLimits";
 import { decryptBackup, encryptBackup, isEncryptedBackup } from "./crypto";
 import { ApiError } from "../api/errors";
 import {
@@ -39,6 +40,12 @@ const DAY = 24 * 60 * 60 * 1000;
 
 /** 暗号化されていれば復号し、平文の JSON 文字列を返す。 */
 async function unseal(raw: string, passphrase?: string): Promise<string> {
+  if (raw.length > BACKUP_MAX_BYTES)
+    throw new ApiError(
+      422,
+      "BACKUP_TOO_LARGE",
+      "バックアップファイルが大きすぎます。",
+    );
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);

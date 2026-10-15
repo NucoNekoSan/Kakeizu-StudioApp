@@ -383,3 +383,73 @@ describe("validated atomic restore", () => {
     expect(await store.get("existing")).toEqual({ keep: true });
   });
 });
+
+describe("取り込みの上限", () => {
+  type Mutable = {
+    charts: { title: string; nodes: Record<string, unknown>[] }[];
+  };
+  const importMutated = async (mutate: (backup: Mutable) => void) => {
+    const { api } = await setup();
+    const { backup } = await api.createBackup();
+    const copy = JSON.parse(JSON.stringify(backup)) as Mutable;
+    mutate(copy);
+    const target = createLocalApi(createMemoryStore());
+    return target.importBackup(JSON.stringify(copy), "replace");
+  };
+
+  it("通常の書き出しは取り込める", async () => {
+    await expect(importMutated(() => undefined)).resolves.toMatchObject({
+      importedCharts: 1,
+    });
+  });
+
+  it("極端に長い title を拒否する", async () => {
+    await expectApiError(
+      importMutated((b) => (b.charts[0].title = "あ".repeat(10_000))),
+      "BACKUP_TOO_LARGE",
+    );
+  });
+
+  it("極端に長い memo を拒否する", async () => {
+    await expectApiError(
+      importMutated((b) => (b.charts[0].nodes[0].memo = "x".repeat(100_000))),
+      "BACKUP_TOO_LARGE",
+    );
+  });
+
+  it("範囲外の座標を拒否する", async () => {
+    await expectApiError(
+      importMutated((b) => (b.charts[0].nodes[0].x = 1e308)),
+      "BACKUP_TOO_LARGE",
+    );
+  });
+
+  it("ノード数が上限を超えると型検査の前に拒否する", async () => {
+    await expectApiError(
+      importMutated((b) => {
+        const node = b.charts[0].nodes[0];
+        b.charts[0].nodes = Array.from({ length: 5001 }, (_, i) => ({
+          ...node,
+          id: i.toString(16).padStart(32, "0"),
+        }));
+      }),
+      "BACKUP_TOO_LARGE",
+    );
+  });
+
+  it("ファイル全体のサイズ上限を超える入力を拒否する", async () => {
+    const { api } = await setup();
+    await expectApiError(
+      api.importBackup(" ".repeat(50 * 1024 * 1024 + 1), "replace"),
+      "BACKUP_TOO_LARGE",
+    );
+  });
+
+  it("__proto__ キーを含んでもプロトタイプを汚染しない", async () => {
+    const { api } = await setup();
+    const { json } = await api.createBackup();
+    const hostile = json.replace(/^\{/, '{"__proto__":{"polluted":"yes"},');
+    await createLocalApi(createMemoryStore()).importBackup(hostile, "replace");
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+});

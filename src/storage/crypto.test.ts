@@ -5,6 +5,7 @@ import {
   encryptBackup,
   isEncryptedBackup,
   KDF_ITERATIONS,
+  KDF_ITERATIONS_MAX,
 } from "./crypto";
 import { createMemoryStore } from "./kv";
 import { createLocalApi } from "./localApi";
@@ -110,5 +111,63 @@ describe("暗号化バックアップの往復", () => {
     const { json } = await api.createBackup("合言葉");
     const summary = await api.inspectBackup(json, "合言葉");
     expect(summary.titles).toEqual(["秘密の相関図"]);
+  });
+});
+
+describe("暗号化ファイルのヘッダ検証", () => {
+  const sealOnce = () => encryptBackup("{}", "合言葉");
+
+  it("反復回数が上限を超えるファイルは鍵導出を始めず拒否する", async () => {
+    const sealed = await sealOnce();
+    const started = performance.now();
+    await expectApiError(
+      decryptBackup(
+        {
+          ...sealed,
+          kdf: { ...sealed.kdf, iterations: KDF_ITERATIONS_MAX + 1 },
+        },
+        "合言葉",
+      ),
+      "BACKUP_INVALID",
+    );
+    expect(performance.now() - started).toBeLessThan(200);
+  });
+
+  it.each([0, -1, 0.5, Number.NaN, Number.POSITIVE_INFINITY, "600000"])(
+    "不正な反復回数 %s を拒否する",
+    async (iterations) => {
+      const sealed = await sealOnce();
+      await expectApiError(
+        decryptBackup(
+          {
+            ...sealed,
+            kdf: { ...sealed.kdf, iterations: iterations as number },
+          },
+          "合言葉",
+        ),
+        "BACKUP_INVALID",
+      );
+    },
+  );
+
+  it("kdf の欠落、base64 の不正、salt・iv の長さ違いを内容破損として扱う", async () => {
+    const sealed = await sealOnce();
+    const bad = [
+      { ...sealed, kdf: undefined },
+      { ...sealed, iv: "###" },
+      { ...sealed, iv: "AA==" },
+      { ...sealed, kdf: { ...sealed.kdf, salt: "AA==" } },
+      { ...sealed, ciphertext: "###" },
+    ];
+    for (const file of bad)
+      await expectApiError(
+        decryptBackup(file as never, "合言葉"),
+        "BACKUP_INVALID",
+      );
+  });
+
+  it("上限ちょうどの正規ファイルは復号できる", async () => {
+    const sealed = await sealOnce();
+    expect(await decryptBackup(sealed, "合言葉")).toBe("{}");
   });
 });

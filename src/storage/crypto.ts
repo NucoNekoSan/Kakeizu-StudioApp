@@ -13,6 +13,13 @@ import { BACKUP_FORMAT, BACKUP_VERSION } from "./backupModel";
  * docs/architecture-decisions.md を参照。
  */
 export const KDF_ITERATIONS = 600_000;
+/**
+ * 復号時に受け入れる反復回数の上限。ファイル側の値で処理時間が決まるため、
+ * 細工されたファイルで取り込みを延々と止められないように制限する。
+ */
+export const KDF_ITERATIONS_MAX = 2_000_000;
+const SALT_BYTES = 16;
+const IV_BYTES = 12;
 
 export interface EncryptedBackupFile {
   format: typeof BACKUP_FORMAT;
@@ -79,8 +86,8 @@ export async function encryptBackup(
       "PASSPHRASE_REQUIRED",
       "パスフレーズを入力してください",
     );
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES));
+  const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
   const key = await deriveKey(passphrase, salt, KDF_ITERATIONS);
   const ciphertext = await subtle().encrypt(
     { name: "AES-GCM", iv: iv as BufferSource },
@@ -121,23 +128,37 @@ export async function decryptBackup(
       "PASSPHRASE_REQUIRED",
       "パスフレーズを入力してください",
     );
-  const iterations = Number(file.kdf?.iterations);
-  if (!Number.isFinite(iterations) || iterations <= 0)
-    throw new ApiError(
+  const invalid = () =>
+    new ApiError(
       422,
       "BACKUP_INVALID",
       "バックアップファイルの内容が壊れています。",
     );
+  const iterations: unknown = file.kdf?.iterations;
+  if (
+    typeof iterations !== "number" ||
+    !Number.isInteger(iterations) ||
+    iterations <= 0 ||
+    iterations > KDF_ITERATIONS_MAX
+  )
+    throw invalid();
+  let salt: Uint8Array;
+  let iv: Uint8Array;
+  let ciphertext: Uint8Array;
   try {
-    const key = await deriveKey(
-      passphrase,
-      fromBase64(file.kdf.salt),
-      iterations,
-    );
+    salt = fromBase64(file.kdf.salt);
+    iv = fromBase64(file.iv);
+    ciphertext = fromBase64(file.ciphertext);
+  } catch {
+    throw invalid();
+  }
+  if (salt.length !== SALT_BYTES || iv.length !== IV_BYTES) throw invalid();
+  try {
+    const key = await deriveKey(passphrase, salt, iterations);
     const plain = await subtle().decrypt(
-      { name: "AES-GCM", iv: fromBase64(file.iv) as BufferSource },
+      { name: "AES-GCM", iv: iv as BufferSource },
       key,
-      fromBase64(file.ciphertext),
+      ciphertext as BufferSource,
     );
     return new TextDecoder().decode(plain);
   } catch (error) {

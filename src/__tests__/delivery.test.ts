@@ -88,6 +88,14 @@ describe("_headers", () => {
     expect(headers).toMatch(/object-src 'none'/);
   });
 
+  it("HSTS を返す (サブドメイン全体へは広げない)", () => {
+    const match = headers.match(/Strict-Transport-Security: ([^\r\n]+)/);
+    expect(match).not.toBeNull();
+    const maxAge = Number(match![1].match(/max-age=(\d+)/)?.[1]);
+    expect(maxAge).toBeGreaterThanOrEqual(15552000);
+    expect(match![1]).not.toMatch(/includeSubDomains|preload/i);
+  });
+
   it("Service Worker と manifest を長期キャッシュしない", () => {
     // ファイル名が変わらないため、長期キャッシュすると更新が届かなくなる。
     for (const path of ["/sw.js", "/index.html", "/manifest.webmanifest"])

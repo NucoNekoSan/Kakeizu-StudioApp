@@ -5,6 +5,7 @@
   Referrer-Policy: no-referrer
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=15552000
 
 # ハッシュ付きのビルド成果物だけ長期キャッシュしてよい
 /assets/*
