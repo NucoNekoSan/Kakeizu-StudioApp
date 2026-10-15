@@ -6,8 +6,7 @@
  * - 「今回だけ使う」一時利用モードでもインメモリ実装へ差し替えるだけでよい
  *   (IndexedDB へ一切書かないので端末に残留しないことが構造的に保証される)
  *
- * `src/features/editor/cohabitationStorage.ts` が `CohabitationStorage` を
- * 受け取る既存パターンと同じ考え方。
+ * 同居情報も含むすべての相関図データを、このストア経由で保存する。
  */
 export interface DocumentStore {
   get<T>(key: string): Promise<T | undefined>;
@@ -15,6 +14,7 @@ export interface DocumentStore {
   del(key: string): Promise<void>;
   keys(): Promise<string[]>;
   clear(): Promise<void>;
+  replaceAll(entries: readonly (readonly [string, unknown])[]): Promise<void>;
 }
 
 export const DATABASE_NAME = "kakeizu-studio";
@@ -42,6 +42,13 @@ export function createMemoryStore(
     async keys() {
       return [...map.keys()];
     },
+    async replaceAll(entries) {
+      const next = entries.map(
+        ([key, value]) => [key, JSON.stringify(value ?? null)] as const,
+      );
+      map.clear();
+      for (const [key, value] of next) map.set(key, value);
+    },
     async clear() {
       map.clear();
     },
@@ -49,7 +56,7 @@ export function createMemoryStore(
 }
 
 export async function createIndexedDbStore(): Promise<DocumentStore> {
-  const { createStore, get, set, del, keys, clear } =
+  const { createStore, get, set, del, keys, clear, promisifyRequest } =
     await import("idb-keyval");
   const store = createStore(DATABASE_NAME, STORE_NAME);
   return {
@@ -58,5 +65,25 @@ export async function createIndexedDbStore(): Promise<DocumentStore> {
     del: (key) => del(key, store),
     keys: async () => (await keys(store)).map(String),
     clear: () => clear(store),
+    replaceAll: (entries) =>
+      store("readwrite", (target) => {
+        const completion = promisifyRequest(target.transaction);
+        try {
+          target.clear();
+          for (const [key, value] of entries) target.put(value, key);
+        } catch (error) {
+          // A synchronous clone error must also roll back the preceding clear.
+          target.transaction.abort();
+          return completion.then(
+            () => {
+              throw error;
+            },
+            () => {
+              throw error;
+            },
+          );
+        }
+        return completion;
+      }),
   };
 }

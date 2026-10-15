@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import { createId } from "./ids";
 import type { DocumentCodec } from "./versioned";
+import { isGender, isRelationship, uniqueIds } from "./documentValidation";
 
 export const DEFINITIONS_SCHEMA_VERSION = 1;
 
@@ -149,7 +150,11 @@ export const definitionsCodec: DocumentCodec<DefinitionsDocumentV1> = {
       record(value) &&
       value.schemaVersion === DEFINITIONS_SCHEMA_VERSION &&
       Array.isArray(value.relationships) &&
-      Array.isArray(value.genders)
+      value.relationships.every(isRelationship) &&
+      uniqueIds(value.relationships) &&
+      Array.isArray(value.genders) &&
+      value.genders.every(isGender) &&
+      uniqueIds(value.genders)
     );
   },
   empty: seedDefinitions,

@@ -126,7 +126,6 @@ export function NodeForm({
     [relationshipFontSize, setRelationshipFontSize] = useState(
       value?.data.relationshipFontSize || 17,
     );
-  const hydrated = useRef(false);
   const hydratedNodeId = useRef<string | null>(null);
   useEffect(() => {
     if (!value) {
@@ -135,7 +134,6 @@ export function NodeForm({
     }
     if (hydratedNodeId.current === value.id) return;
     hydratedNodeId.current = value.id;
-    hydrated.current = false;
     const r = detail.nodes.find((n) => n.id === value.id);
     setRelationship(value.data.relationshipId);
     setGender(value.data.genderId);
@@ -149,14 +147,6 @@ export function NodeForm({
     setConnectionDirection(r?.connectionDirection || null);
     setDivorced(r?.divorced || false);
   }, [value, detail.nodes]);
-  useEffect(() => {
-    if (mode !== "edit" || !value?.id || !onChange) return;
-    if (!hydrated.current) {
-      hydrated.current = true;
-      return;
-    }
-    onChange({ fontSize, relationshipFontSize });
-  }, [mode, value?.id, onChange, fontSize, relationshipFontSize]);
   const draftNodeId = value?.id;
   useEffect(
     () => () => {
@@ -488,6 +478,8 @@ export function NodeForm({
         onFontSizeChange={(nextFontSize) => {
           setFontSize(nextFontSize);
           if (mode === "edit" && draftNodeId)
+            onChange?.({ fontSize: nextFontSize, relationshipFontSize });
+          if (mode === "edit" && draftNodeId)
             onDraftChange?.({
               nodeId: draftNodeId,
               memo,
@@ -497,6 +489,11 @@ export function NodeForm({
         }}
         onRelationshipFontSizeChange={(nextRelationshipFontSize) => {
           setRelationshipFontSize(nextRelationshipFontSize);
+          if (mode === "edit" && draftNodeId)
+            onChange?.({
+              fontSize,
+              relationshipFontSize: nextRelationshipFontSize,
+            });
           if (mode === "edit" && draftNodeId)
             onDraftChange?.({
               nodeId: draftNodeId,

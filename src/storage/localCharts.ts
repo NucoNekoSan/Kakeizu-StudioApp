@@ -1,4 +1,8 @@
 import { isFrameHeight, isFrameWidth } from "../frameSettings";
+import {
+  isCohabitationDocument,
+  type CohabitationDocument,
+} from "../cohabitation";
 import { validationError } from "../api/errors";
 import type {
   ChartDetail,
@@ -19,6 +23,7 @@ import { createChartDocument } from "./chartDocument";
 import { createId, isId } from "./ids";
 import type { Repository } from "./repository";
 import * as check from "./validation";
+import { parentPairIssue } from "./parentReferences";
 
 const summary = (document: ChartDocumentV1): ChartSummary => ({
   id: document.id,
@@ -76,9 +81,10 @@ function familyRefs(
     key in input ? (input[key] as string | null) || null : fallback;
   const parent1 = pick("parentNodeId1", previous?.parentNodeId1 ?? null);
   const parent2 = pick("parentNodeId2", previous?.parentNodeId2 ?? null);
-  if (!parent1 && parent2)
+  const issue = parentPairIssue(parent1, parent2);
+  if (issue === "missing-first")
     throw validationError("親2を指定する場合は親1も選択してください");
-  if (parent1 && parent1 === parent2)
+  if (issue === "duplicate")
     throw validationError("異なる2名の親を選択してください");
   const rawDirection =
     "placementDirection" in input
@@ -151,6 +157,30 @@ export function createChartApi(repository: Repository) {
     deleteChart: async (id: string): Promise<void> => {
       await repository.chart(id);
       await repository.deleteChart(id);
+    },
+
+    updateCohabitation: async (
+      chartId: string,
+      cohabitation: CohabitationDocument,
+    ): Promise<ChartDetail> => {
+      const document = await repository.chart(chartId);
+      const ids = new Set(document.nodes.map((node) => node.id));
+      if (!isCohabitationDocument(cohabitation))
+        throw validationError("同居情報を確認してください");
+      const cleaned = {
+        ...cohabitation,
+        cohabitations: cohabitation.cohabitations.flatMap((group) => {
+          const nodeIds = group.nodeIds.filter((id) => ids.has(id));
+          return nodeIds.length ? [{ ...group, nodeIds }] : [];
+        }),
+      };
+      return detail(
+        await repository.saveChart({
+          ...document,
+          cohabitation: cleaned,
+          legacyCohabitationMigrated: true,
+        }),
+      );
     },
 
     createNode: async (

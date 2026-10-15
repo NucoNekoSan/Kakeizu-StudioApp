@@ -1,3 +1,4 @@
+import { awaitAll } from "./awaitAll";
 import {
   backupFileName,
   buildBackup,
@@ -11,7 +12,13 @@ import {
 } from "./backupModel";
 import { decryptBackup, encryptBackup, isEncryptedBackup } from "./crypto";
 import { ApiError } from "../api/errors";
-import type { Repository } from "./repository";
+import {
+  chartKey,
+  DEFINITIONS_KEY,
+  META_KEY,
+  emptyMeta,
+  type Repository,
+} from "./repository";
 
 export interface BackupStatus {
   chartCount: number;
@@ -51,7 +58,7 @@ async function unseal(raw: string, passphrase?: string): Promise<string> {
 export function createBackupApi(repository: Repository) {
   return {
     backupStatus: async (): Promise<BackupStatus> => {
-      const [meta, ids] = await Promise.all([
+      const [meta, ids] = await awaitAll([
         repository.meta(),
         repository.chartIds(),
       ]);
@@ -77,7 +84,7 @@ export function createBackupApi(repository: Repository) {
       backup: BackupFileV1;
       encrypted: boolean;
     }> => {
-      const [definitions, charts] = await Promise.all([
+      const [definitions, charts] = await awaitAll([
         repository.definitions(),
         repository.allCharts(),
       ]);
@@ -101,7 +108,7 @@ export function createBackupApi(repository: Repository) {
 
     /** 現在の相関図だけを、通常の読み込み機能と互換性のある形式で書き出す。 */
     createChartBackup: async (chartId: string) => {
-      const [definitions, chart] = await Promise.all([
+      const [definitions, chart] = await awaitAll([
         repository.definitions(),
         repository.chart(chartId),
       ]);
@@ -151,14 +158,13 @@ export function createBackupApi(repository: Repository) {
 
       if (mode === "replace") {
         // 置き換えは現在のデータを完全に捨てる。UI 側で必ず確認を取ること。
-        await repository.clear();
-        await repository.saveDefinitions({
-          schemaVersion: 1,
-          relationships: backup.definitions.relationships,
-          genders: backup.definitions.genders,
-        });
-        for (const chart of backup.charts)
-          await repository.saveChart(toChartDocument(chart));
+        await repository.replaceAll([
+          [META_KEY, emptyMeta()],
+          [DEFINITIONS_KEY, { schemaVersion: 1, ...backup.definitions }],
+          ...backup.charts.map(
+            (chart) => [chartKey(chart.id), toChartDocument(chart)] as const,
+          ),
+        ]);
         return {
           mode,
           importedCharts: backup.charts.length,

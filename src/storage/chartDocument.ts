@@ -2,7 +2,7 @@ import {
   emptyCohabitationDocument,
   isCohabitationDocument,
   type CohabitationDocument,
-} from "../features/editor/cohabitationModel";
+} from "../cohabitation";
 import type {
   ChartDetail,
   ChartEdgeRecord,
@@ -13,6 +13,8 @@ import type {
 import { isFrameHeight, isFrameWidth } from "../frameSettings";
 import { createId, isId, nowIso } from "./ids";
 import type { DocumentCodec } from "./versioned";
+import { isNodeRecord, uniqueIds } from "./documentValidation";
+import { normalizeChartParents } from "./parentReferences";
 
 export const CHART_SCHEMA_VERSION = 1;
 
@@ -30,6 +32,8 @@ export interface StoredEdge {
 }
 
 export interface ChartDocumentV1 {
+  /** Prevent stale legacy keys from overwriting newer or restored data. */
+  legacyCohabitationMigrated?: true;
   frameWidth?: number;
   frameHeight?: number;
   schemaVersion: 1;
@@ -52,18 +56,6 @@ const isStoredEdge = (value: unknown): value is StoredEdge =>
   isId(value.target) &&
   isId(value.relationshipId);
 
-const isNodeRecord = (value: unknown): value is ChartNodeRecord =>
-  record(value) &&
-  isId(value.id) &&
-  isId(value.relationshipId) &&
-  isId(value.genderId) &&
-  typeof value.memo === "string" &&
-  Number.isFinite(value.fontSize) &&
-  Number.isFinite(value.relationshipFontSize) &&
-  Number.isFinite(value.scale) &&
-  Number.isFinite(value.x) &&
-  Number.isFinite(value.y);
-
 export const chartDocumentCodec: DocumentCodec<ChartDocumentV1> = {
   currentVersion: CHART_SCHEMA_VERSION,
   isCurrent(value): value is ChartDocumentV1 {
@@ -72,19 +64,36 @@ export const chartDocumentCodec: DocumentCodec<ChartDocumentV1> = {
       value.schemaVersion === CHART_SCHEMA_VERSION &&
       isId(value.id) &&
       typeof value.title === "string" &&
+      typeof value.createdAt === "string" &&
+      Number.isFinite(Date.parse(value.createdAt)) &&
+      typeof value.updatedAt === "string" &&
+      Number.isFinite(Date.parse(value.updatedAt)) &&
       (value.frameWidth === undefined || isFrameWidth(value.frameWidth)) &&
       (value.frameHeight === undefined || isFrameHeight(value.frameHeight)) &&
       Array.isArray(value.nodes) &&
       value.nodes.every(isNodeRecord) &&
+      uniqueIds(value.nodes) &&
       Array.isArray(value.edges) &&
       value.edges.every(isStoredEdge) &&
+      uniqueIds(value.edges) &&
       isCohabitationDocument(value.cohabitation)
     );
+  },
+  migrate(value) {
+    if (
+      !record(value) ||
+      value.schemaVersion !== 1 ||
+      value.cohabitation !== undefined
+    )
+      return null;
+    const migrated = { ...value, cohabitation: emptyCohabitationDocument() };
+    return this.isCurrent(migrated) ? migrated : null;
   },
   empty(): ChartDocumentV1 {
     const timestamp = nowIso();
     return {
       schemaVersion: CHART_SCHEMA_VERSION,
+      legacyCohabitationMigrated: true,
       id: createId(),
       title: "",
       createdAt: timestamp,
@@ -145,7 +154,7 @@ export function removeNode(
   document: ChartDocumentV1,
   nodeId: string,
 ): ChartDocumentV1 {
-  return {
+  return normalizeChartParents({
     ...document,
     nodes: document.nodes
       .filter((node) => node.id !== nodeId)
@@ -169,7 +178,7 @@ export function removeNode(
         }))
         .filter((group) => group.nodeIds.length >= 1),
     },
-  };
+  });
 }
 
 /**
@@ -198,6 +207,7 @@ export function toChartDetail(
     ];
   });
   return {
+    cohabitation: document.cohabitation,
     id: document.id,
     title: document.title,
     frameWidth: document.frameWidth,

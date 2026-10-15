@@ -64,6 +64,7 @@ export interface ChartEdgeRecord {
   lineColor: string;
 }
 export interface ChartDetail {
+  cohabitation: import("./cohabitation").CohabitationDocument;
   frameWidth?: number;
   frameHeight?: number;
   id: string;

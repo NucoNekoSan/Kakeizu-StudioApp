@@ -1,3 +1,4 @@
+import { awaitAll } from "./awaitAll";
 import { ApiError, validationError } from "../api/errors";
 import type { GenderDefinition, RelationshipDefinition } from "../types";
 import { createId } from "./ids";
@@ -31,7 +32,7 @@ export function createSettingsApi(repository: Repository) {
 
   return {
     relationships: async (): Promise<RelationshipDefinition[]> => {
-      const [definitions, counts] = await Promise.all([
+      const [definitions, counts] = await awaitAll([
         repository.definitions(),
         usage(),
       ]);
@@ -136,7 +137,7 @@ export function createSettingsApi(repository: Repository) {
     },
 
     genders: async (): Promise<GenderDefinition[]> => {
-      const [definitions, counts] = await Promise.all([
+      const [definitions, counts] = await awaitAll([
         repository.definitions(),
         usage(),
       ]);

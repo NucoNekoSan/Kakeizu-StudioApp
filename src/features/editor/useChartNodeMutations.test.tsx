@@ -18,6 +18,7 @@ vi.mock("../../api", () => ({
 
 function detail(id: string, title: string): ChartDetail {
   return {
+    cohabitation: { version: 1, cohabitations: [], labels: [] },
     id,
     title,
     updatedAt: "2026-09-11T00:00:00Z",

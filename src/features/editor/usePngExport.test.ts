@@ -183,4 +183,21 @@ describe("usePngExport", () => {
     expect(onSaved).toHaveBeenCalledOnce();
     expect(toCanvas).toHaveBeenCalledOnce();
   });
+  it("does not capture or save when the storage barrier rejects", async () => {
+    const root = document.createElement("div");
+    const viewport = document.createElement("div");
+    viewport.className = "react-flow__viewport";
+    root.append(viewport);
+    const beforeGenerate = vi.fn().mockRejectedValue(new Error("save failed"));
+    const { result } = renderHook(() =>
+      usePngExport({ current: root }, [], "家族", 1080, 540, {
+        beforeGenerate,
+      }),
+    );
+    await act(() => result.current.previewPng());
+    expect(beforeGenerate).toHaveBeenCalledOnce();
+    expect(toCanvas).not.toHaveBeenCalled();
+    expect(result.current.preview).toBeNull();
+    expect(result.current.exportError).not.toBe("");
+  });
 });

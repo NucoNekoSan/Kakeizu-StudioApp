@@ -5,7 +5,10 @@ import type { ChartDocumentV1 } from "./chartDocument";
 import { chartDocumentCodec } from "./chartDocument";
 import type { DocumentStore } from "./kv";
 import { nowIso } from "./ids";
+import { migrateCohabitation, type LegacyStorage } from "./migrateCohabitation";
 import { readDocument } from "./versioned";
+import { awaitAll } from "./awaitAll";
+import { normalizeChartParents } from "./parentReferences";
 
 export const META_KEY = "meta";
 export const DEFINITIONS_KEY = "definitions";
@@ -26,17 +29,12 @@ export const emptyMeta = (): MetaDocumentV1 => ({
   lastExportedAt: null,
 });
 
-/**
- * 保存ドキュメントへの読み書きを1か所にまとめる層。
- *
- * 上位 (localCharts / localSettings) は常に「読み出し → 変更 → 書き戻し」を
- * 行う。この read-modify-write は TanStack Query の
- * `scope: { id: "chart-node-write:<chartId>" }` によって同一チャート内で
- * 直列化されている前提で安全になっている (useChartNodeMutations.ts 参照)。
- * scope を外すと更新が失われるため、変更しないこと。
- */
+/** 保存ドキュメントへの読み書き。API全体の順序はstore単位のキューが保証する。 */
 export class Repository {
-  constructor(private readonly store: DocumentStore) {}
+  constructor(
+    private readonly store: DocumentStore,
+    private readonly legacyStorage?: LegacyStorage,
+  ) {}
 
   async meta(): Promise<MetaDocumentV1> {
     const raw = await this.store.get<unknown>(META_KEY);
@@ -75,7 +73,14 @@ export class Repository {
   async findChart(id: string): Promise<ChartDocumentV1 | null> {
     const raw = await this.store.get<unknown>(chartKey(id));
     if (raw === undefined) return null;
-    return readDocument(raw, chartDocumentCodec, "相関図");
+    const decoded = readDocument(raw, chartDocumentCodec, "相関図");
+    const document = normalizeChartParents(decoded);
+    if (document !== decoded) await this.store.set(chartKey(id), document);
+    return this.legacyStorage
+      ? migrateCohabitation(document, this.legacyStorage, (migrated) =>
+          this.store.set(chartKey(id), migrated),
+        )
+      : document;
   }
 
   async chart(id: string): Promise<ChartDocumentV1> {
@@ -86,7 +91,7 @@ export class Repository {
 
   async allCharts(): Promise<ChartDocumentV1[]> {
     const ids = await this.chartIds();
-    const documents = await Promise.all(ids.map((id) => this.findChart(id)));
+    const documents = await awaitAll(ids.map((id) => this.findChart(id)));
     return documents.filter((item): item is ChartDocumentV1 => item !== null);
   }
 
@@ -99,6 +104,12 @@ export class Repository {
 
   async deleteChart(id: string): Promise<void> {
     await this.store.del(chartKey(id));
+  }
+
+  async replaceAll(
+    entries: readonly (readonly [string, unknown])[],
+  ): Promise<void> {
+    await this.store.replaceAll(entries);
   }
 
   async clear(): Promise<void> {

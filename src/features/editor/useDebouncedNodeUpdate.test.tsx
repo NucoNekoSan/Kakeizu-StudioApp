@@ -123,4 +123,67 @@ describe("useDebouncedNodeUpdate", () => {
     second.unmount();
     expect(update).toHaveBeenCalledOnce();
   });
+  it("waits for a previously started save before resolving flushAndWait", async () => {
+    let release!: () => void;
+    const update = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve;
+        }),
+    );
+    const { result } = renderHook(() => useDebouncedNodeUpdate(update));
+    act(() => {
+      result.current.schedule({
+        chartId: "a",
+        nodeId: "n",
+        input: { memo: "draft" },
+      });
+      vi.advanceTimersByTime(500);
+    });
+    let complete = false;
+    let waiting!: Promise<void>;
+    act(() => {
+      waiting = result.current.flushAndWait().then(() => {
+        complete = true;
+      });
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(complete).toBe(false);
+    await act(async () => {
+      release();
+      await waiting;
+    });
+    expect(complete).toBe(true);
+  });
+  it("retries failed fields together with newer edits", async () => {
+    const update = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("failed"))
+      .mockResolvedValue(undefined);
+    const { result } = renderHook(() => useDebouncedNodeUpdate(update));
+    await act(async () => {
+      result.current.schedule({
+        chartId: "a",
+        nodeId: "n",
+        input: { memo: "keep" },
+      });
+      vi.advanceTimersByTime(500);
+    });
+    act(() =>
+      result.current.schedule({
+        chartId: "a",
+        nodeId: "n",
+        input: { fontSize: 24 },
+      }),
+    );
+    await act(() => result.current.flushAndWait());
+    expect(update).toHaveBeenLastCalledWith({
+      chartId: "a",
+      nodeId: "n",
+      input: { memo: "keep", fontSize: 24 },
+    });
+    expect(result.current.isPending).toBe(false);
+  });
 });

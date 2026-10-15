@@ -1,4 +1,4 @@
-import { useCallback, useState, type RefObject } from "react";
+import { useCallback, useRef, useState, type RefObject } from "react";
 import type { Node } from "@xyflow/react";
 import type { FamilyNodeData } from "../../familyGraph";
 import { prepareFileSave } from "../../storage/fileIo";
@@ -22,8 +22,14 @@ export function usePngExport(
   title?: string,
   frameWidth = PNG_WIDTH,
   frameHeight = PNG_HEIGHT,
-  callbacks: { onPreviewCreated?: () => void; onSaved?: () => void } = {},
+  callbacks: {
+    beforeGenerate?: () => Promise<void>;
+    onPreviewCreated?: () => void;
+    onSaved?: () => void;
+  } = {},
 ) {
+  const latest = useRef({ nodes, frameWidth, frameHeight });
+  latest.current = { nodes, frameWidth, frameHeight };
   const [isExporting, setIsExporting] = useState(false),
     [exportError, setExportError] = useState(""),
     [preview, setPreview] = useState<PngPreview | null>(null);
@@ -50,7 +56,14 @@ export function usePngExport(
       try {
         const target = showPreview ? null : await targetPromise;
         if (!showPreview && !target) return false;
+        await callbacks.beforeGenerate?.();
+        // Wait for React to commit the saved draft before capturing the DOM.
+        if (callbacks.beforeGenerate)
+          await new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          );
         if (!viewport) throw new Error("React Flow viewport was not found");
+        const { nodes, frameWidth, frameHeight } = latest.current;
         const { toCanvas } = await import("html-to-image"),
           exportViewport = getPngViewport(nodes, frameWidth, frameHeight),
           canvas = await toCanvas(viewport, {
@@ -93,7 +106,7 @@ export function usePngExport(
         setIsExporting(false);
       }
     },
-    [callbacks, flowRef, nodes, title, frameWidth, frameHeight],
+    [callbacks, flowRef, title],
   );
 
   const exportPng = useCallback(() => generatePng(false), [generatePng]);

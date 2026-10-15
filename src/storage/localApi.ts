@@ -8,21 +8,26 @@ import {
   type DocumentStore,
 } from "./kv";
 import { Repository } from "./repository";
+import { orderedApi } from "./operationQueue";
+import type { LegacyStorage } from "./migrateCohabitation";
 import {
   appStorageKeys,
   readStorageMode,
   STORAGE_MODE_KEY,
 } from "./storageMode";
 
-export function createLocalApi(store: DocumentStore) {
-  const repository = new Repository(store);
-  return {
+export function createLocalApi(
+  store: DocumentStore,
+  options: { legacyStorage?: LegacyStorage } = {},
+) {
+  const repository = new Repository(store, options.legacyStorage);
+  return orderedApi(store, {
     ...createChartApi(repository),
     ...createSettingsApi(repository),
     ...createBackupApi(repository),
     /** 設定画面の「このブラウザの全データを削除」から呼ぶ (Phase 5)。 */
     clearAllData: () => repository.clear(),
-  };
+  });
 }
 
 export type LocalApi = ReturnType<typeof createLocalApi>;
@@ -34,12 +39,33 @@ export type LocalApi = ReturnType<typeof createLocalApi>;
  * IndexedDB が使えない環境 (プライベートウィンドウの一部、file:// 等) でも
  * インメモリへ自動フォールバックし、アプリは動くがタブを閉じると消える。
  */
-let resolved: Promise<DocumentStore> | null = null;
-const defaultStore = () =>
-  (resolved ??=
-    readStorageMode() === "session"
-      ? Promise.resolve(createMemoryStore())
-      : createIndexedDbStore().catch(() => createMemoryStore()));
+let resolved: Promise<LocalApi> | null = null;
+const defaultApi = () => {
+  if (resolved) return resolved;
+  resolved = (async () => {
+    if (readStorageMode() === "session")
+      return createLocalApi(createMemoryStore());
+    let store: DocumentStore;
+    try {
+      store = await createIndexedDbStore();
+      // Opening a store is lazy: probe availability without decoding any chart.
+      await store.keys();
+    } catch {
+      return createLocalApi(createMemoryStore());
+    }
+    let storage: LegacyStorage | undefined;
+    try {
+      storage = globalThis.localStorage;
+    } catch {
+      /* unavailable */
+    }
+    return createLocalApi(store, { legacyStorage: storage });
+  })().catch((error) => {
+    resolved = null;
+    throw error;
+  });
+  return resolved;
+};
 
 /** 保存モードを切り替えたときに、次の呼び出しでストアを取り直す。 */
 export const resetStoreCache = () => {
@@ -79,7 +105,7 @@ const lazy =
     pick: (api: LocalApi) => (...args: A) => Promise<R>,
   ) =>
   async (...args: A): Promise<R> =>
-    pick(createLocalApi(await defaultStore()))(...args);
+    pick(await defaultApi())(...args);
 
 export const localApi = {
   charts: lazy((api) => api.charts),
@@ -91,6 +117,7 @@ export const localApi = {
   updateNode: lazy((api) => api.updateNode),
   deleteNode: lazy((api) => api.deleteNode),
   updateNodeLayout: lazy((api) => api.updateNodeLayout),
+  updateCohabitation: lazy((api) => api.updateCohabitation),
   relationships: lazy((api) => api.relationships),
   createRelationship: lazy((api) => api.createRelationship),
   updateRelationship: lazy((api) => api.updateRelationship),

@@ -131,12 +131,22 @@ export async function saveFile(
   return true;
 }
 
-export const saveJsonFile = (fileName: string, json: string) =>
-  saveFile(fileName, new Blob([json], { type: "application/json" }), {
+export const saveJsonFile = async (
+  fileName: string,
+  json: string,
+  prepared?: FileSaveTarget,
+) => {
+  const blob = new Blob([json], { type: "application/json" });
+  if (prepared) {
+    await prepared.save(blob);
+    return true;
+  }
+  return saveFile(fileName, blob, {
     description: "JSONファイル",
     mimeType: "application/json",
     extension: ".json",
   });
+};
 
 /** `<input type="file">` から読み込む。全ブラウザで動くので分岐は不要。 */
 export const readTextFile = (file: File): Promise<string> => file.text();

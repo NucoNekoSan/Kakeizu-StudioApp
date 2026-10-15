@@ -3,11 +3,14 @@ import { ApiError } from "../api/errors";
 import {
   isCohabitationDocument,
   emptyCohabitationDocument,
-} from "../features/editor/cohabitationModel";
+} from "../cohabitation";
 import type { GenderDefinition, RelationshipDefinition } from "../types";
-import type { ChartDocumentV1 } from "./chartDocument";
+import { chartDocumentCodec, type ChartDocumentV1 } from "./chartDocument";
+import { definitionsCodec } from "./defaults";
+import { uniqueIds } from "./documentValidation";
 import type { DefinitionsDocumentV1 } from "./defaults";
-import { createId, isId } from "./ids";
+import { createId } from "./ids";
+import { normalizeChartParents, parentPairIssue } from "./parentReferences";
 
 export const BACKUP_FORMAT = "kakeizu-studio-backup";
 export const BACKUP_VERSION = 1;
@@ -29,9 +32,9 @@ export interface BackupChart {
   title: string;
   createdAt: string;
   updatedAt: string;
-  nodes: unknown[];
-  edges: unknown[];
-  cohabitation: unknown;
+  nodes: ChartDocumentV1["nodes"];
+  edges: ChartDocumentV1["edges"];
+  cohabitation: ChartDocumentV1["cohabitation"];
 }
 
 export interface BackupFileV1 {
@@ -108,6 +111,12 @@ export function parseBackup(raw: string): BackupFileV1 {
       "BACKUP_TOO_NEW",
       "このファイルは新しいバージョンで作成されています。アプリを更新してから読み込んでください。",
     );
+  if (value.version !== BACKUP_VERSION)
+    throw new ApiError(
+      422,
+      "BACKUP_INVALID",
+      "バックアップのバージョンが不正です。",
+    );
   if (!record(value.definitions) || !Array.isArray(value.charts))
     throw new ApiError(
       422,
@@ -115,31 +124,23 @@ export function parseBackup(raw: string): BackupFileV1 {
       "バックアップファイルの内容が壊れています。",
     );
 
-  const definitions = value.definitions as Record<string, unknown>;
-  if (
-    !Array.isArray(definitions.relationships) ||
-    !Array.isArray(definitions.genders)
-  )
-    throw new ApiError(
+  const definitions = { ...value.definitions, schemaVersion: 1 };
+  const invalid = () =>
+    new ApiError(
       422,
       "BACKUP_INVALID",
-      "バックアップファイルの表示設定が壊れています。",
+      "バックアップファイルの内容が壊れています。",
     );
-
-  const charts = value.charts.map((chart, index) => {
-    if (!record(chart) || !isId(chart.id) || typeof chart.title !== "string")
-      throw new ApiError(
-        422,
-        "BACKUP_INVALID",
-        `${index + 1}件目の相関図を読み込めませんでした。`,
-      );
-    return {
-      id: chart.id,
-      title: chart.title,
-      frameWidth: isFrameWidth(chart.frameWidth) ? chart.frameWidth : undefined,
-      frameHeight: isFrameHeight(chart.frameHeight)
-        ? chart.frameHeight
-        : undefined,
+  if (!definitionsCodec.isCurrent(definitions)) throw invalid();
+  const relationshipIds = new Set(
+    definitions.relationships.map((item) => item.id),
+  );
+  const genderIds = new Set(definitions.genders.map((item) => item.id));
+  const charts = value.charts.map((chart) => {
+    if (!record(chart)) throw invalid();
+    const document = {
+      ...chart,
+      schemaVersion: 1,
       createdAt:
         typeof chart.createdAt === "string"
           ? chart.createdAt
@@ -148,11 +149,54 @@ export function parseBackup(raw: string): BackupFileV1 {
         typeof chart.updatedAt === "string"
           ? chart.updatedAt
           : new Date().toISOString(),
-      nodes: Array.isArray(chart.nodes) ? chart.nodes : [],
-      edges: Array.isArray(chart.edges) ? chart.edges : [],
-      cohabitation: chart.cohabitation,
-    } satisfies BackupChart;
+      cohabitation:
+        chart.cohabitation === undefined
+          ? emptyCohabitationDocument()
+          : chart.cohabitation,
+    };
+    if (!chartDocumentCodec.isCurrent(document)) throw invalid();
+    const nodeIds = new Set(document.nodes.map((node) => node.id));
+    const validRef = (id: string | null, ownId: string) =>
+      id === null || (id !== ownId && nodeIds.has(id));
+    if (
+      document.nodes.some(
+        (node) =>
+          !relationshipIds.has(node.relationshipId) ||
+          !genderIds.has(node.genderId) ||
+          !validRef(node.anchorNodeId, node.id) ||
+          !validRef(node.parentNodeId1, node.id) ||
+          !validRef(node.parentNodeId2, node.id),
+      )
+    )
+      throw invalid();
+    if (
+      document.edges.some(
+        (edge) =>
+          !nodeIds.has(edge.source) ||
+          !nodeIds.has(edge.target) ||
+          !relationshipIds.has(edge.relationshipId),
+      )
+    )
+      throw invalid();
+    const cohabitation = document.cohabitation;
+    if (
+      !uniqueIds([...cohabitation.cohabitations, ...cohabitation.labels]) ||
+      cohabitation.cohabitations.some((group) =>
+        group.nodeIds.some((id) => !nodeIds.has(id)),
+      )
+    )
+      throw invalid();
+    const normalized = normalizeChartParents(document);
+    if (
+      normalized.nodes.some(
+        (node) =>
+          parentPairIssue(node.parentNodeId1, node.parentNodeId2) !== null,
+      )
+    )
+      throw invalid();
+    return normalized satisfies BackupChart;
   });
+  if (!uniqueIds(charts)) throw invalid();
 
   return {
     format: BACKUP_FORMAT,
@@ -160,8 +204,8 @@ export function parseBackup(raw: string): BackupFileV1 {
     exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
     appVersion: typeof value.appVersion === "string" ? value.appVersion : "",
     definitions: {
-      relationships: definitions.relationships as RelationshipDefinition[],
-      genders: definitions.genders as GenderDefinition[],
+      relationships: definitions.relationships,
+      genders: definitions.genders,
     },
     charts,
   };
@@ -174,6 +218,7 @@ export function toChartDocument(
 ): ChartDocumentV1 {
   return {
     schemaVersion: 1,
+    legacyCohabitationMigrated: true,
     id,
     title: chart.title,
     frameWidth: isFrameWidth(chart.frameWidth) ? chart.frameWidth : undefined,
@@ -182,8 +227,8 @@ export function toChartDocument(
       : undefined,
     createdAt: chart.createdAt,
     updatedAt: chart.updatedAt,
-    nodes: chart.nodes as ChartDocumentV1["nodes"],
-    edges: chart.edges as ChartDocumentV1["edges"],
+    nodes: chart.nodes,
+    edges: chart.edges,
     cohabitation: isCohabitationDocument(chart.cohabitation)
       ? chart.cohabitation
       : emptyCohabitationDocument(),

@@ -7,7 +7,9 @@ export interface HydratedChart {
   readonly edges: Edge[];
 }
 
-export function hydrateChart(detail: ChartDetail): HydratedChart {
+export function hydrateChart(
+  detail: Pick<ChartDetail, "nodes" | "edges" | "relationships" | "genders">,
+): HydratedChart {
   const relationshipsById = new Map(
     detail.relationships.map((item) => [item.id, item]),
   );

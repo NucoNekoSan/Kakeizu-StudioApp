@@ -3,6 +3,7 @@ import type { ChartDetail } from "../../types";
 import { hydrateChart } from "./hydrateChart";
 
 const chart: ChartDetail = {
+  cohabitation: { version: 1, cohabitations: [], labels: [] },
   id: "chart",
   title: "テスト",
   updatedAt: "2026-09-08T00:00:00Z",

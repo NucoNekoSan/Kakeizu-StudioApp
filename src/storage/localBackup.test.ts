@@ -304,3 +304,82 @@ describe("外枠設定のバックアップ", () => {
     expect((await restored.chart(chartId)).frameHeight).toBe(1800);
   });
 });
+
+describe("validated atomic restore", () => {
+  it.each([
+    "definition",
+    "node",
+    "edge",
+    "duplicate",
+    "reference",
+    "cohabitation",
+    "version",
+  ])("rejects invalid %s before changing any data", async (kind) => {
+    const { api, chartId } = await setup();
+    const { json } = await api.createBackup();
+    const value = JSON.parse(json);
+    if (kind === "definition") value.definitions.genders[0].shape = "invalid";
+    if (kind === "node") value.charts[0].nodes[0].scale = -1;
+    if (kind === "edge") value.charts[0].edges[0].target = "f".repeat(32);
+    if (kind === "duplicate")
+      value.charts[0].nodes.push(value.charts[0].nodes[0]);
+    if (kind === "reference")
+      value.charts[0].nodes[0].genderId = "f".repeat(32);
+    if (kind === "cohabitation")
+      value.charts[0].cohabitation = {
+        version: 1,
+        labels: "broken",
+        cohabitations: [],
+      };
+    if (kind === "version") value.version = 0;
+    const before = await api.chart(chartId);
+    await expectApiError(
+      api.inspectBackup(JSON.stringify(value)),
+      "BACKUP_INVALID",
+    );
+    await expectApiError(
+      api.importBackup(JSON.stringify(value), "replace"),
+      "BACKUP_INVALID",
+    );
+    expect(await api.chart(chartId)).toEqual(before);
+  });
+  it("keeps all existing data when replacement storage fails", async () => {
+    const { api, store, chartId } = await setup();
+    const { json } = await api.createBackup();
+    const before = await api.chart(chartId);
+    store.replaceAll = async () => {
+      throw new Error("storage unavailable");
+    };
+    await expect(api.importBackup(json, "replace")).rejects.toThrow(
+      "storage unavailable",
+    );
+    expect(await api.chart(chartId)).toEqual(before);
+  });
+  it("accepts old v1 backups without cohabitation", async () => {
+    const { api, chartId } = await setup();
+    const value = JSON.parse((await api.createBackup()).json);
+    delete value.charts[0].cohabitation;
+    await api.importBackup(JSON.stringify(value), "replace");
+    expect((await api.chart(chartId)).cohabitation).toEqual({
+      version: 1,
+      cohabitations: [],
+      labels: [],
+    });
+  });
+  it("does not clear memory storage until every replacement entry can be serialized", async () => {
+    const store = createMemoryStore([["existing", { keep: true }]]);
+    await expect(
+      store.replaceAll([
+        [
+          "next",
+          {
+            toJSON() {
+              throw new Error("cannot serialize");
+            },
+          },
+        ],
+      ]),
+    ).rejects.toThrow();
+    expect(await store.get("existing")).toEqual({ keep: true });
+  });
+});

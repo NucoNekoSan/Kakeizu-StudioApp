@@ -2,7 +2,7 @@ import { ApiError } from "../api/errors";
 
 /**
  * 保存ドキュメントのバージョニング基盤。
- * `src/features/editor/cohabitationModel.ts` の
+ * `src/cohabitation.ts` の
  * 「バージョン定数 + 型ガード + empty() フォールバック」パターンの汎用化。
  */
 export interface VersionedDocument {
@@ -27,8 +27,7 @@ export const readVersion = (value: unknown): number | null => {
 /**
  * 保存値を読み出す。
  *
- * cohabitation の `loadCohabitationDocument` は壊れた値を黙って空に落とすが、
- * チャート本体でそれをやると利用者にはデータ消失に見える。読めない場合は
+ * 壊れた値を黙って空に落とすと、利用者にはデータ消失に見える。読めない場合は
  * 例外を投げ、UI 側で「バックアップから復元してください」と案内する。
  */
 export function readDocument<T extends VersionedDocument>(
