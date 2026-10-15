@@ -59,6 +59,8 @@ npx wrangler deploy
 - **HSTS (HTTP Strict Transport Security)**: 有効化し、`max-age` は 6 か月以上。サブドメインを他用途に使っていない場合のみ `includeSubDomains` を付ける
 - **Minimum TLS Version**: 1.2
 
+2026-10-15 16:18 JST に対象ゾーン `nuconeko-garden.com` の保存値を TLS 1.0 から TLS 1.2 へ変更し、ページ再読み込み後も保存されていることを確認済み。本番ホストで TLS 1.0/1.1 がサーバーの protocol version alert により拒否され、TLS 1.2/1.3 は証明書・ホスト名検証を含め接続成功することを確認した。詳細は [診断報告書 F9](pentest-report-2026-10.md#f9-tls-10--11-を受け付けている) を参照。
+
 v2 系で `.htaccess` が行っていた HTTP→HTTPS の転送は、Cloudflare 側で処理する。
 
 ## 5. 配信後の確認
