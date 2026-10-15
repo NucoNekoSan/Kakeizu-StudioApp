@@ -31,3 +31,7 @@ Windows の Brave（Chromium 系）で、`npm run build` の成果物を Vite pr
 - Firefox・Safari、OS の保存先選択ダイアログ、旧 Service Worker が waiting のまま残る移行パターンは未検証。
 - 一時利用・メモリ退避の相関図は再読み込みで失われる。beforeunload の確認ダイアログはブラウザの制約を受け、すべての終了方法を防ぐ保証はない。
 - 本番のヘッダ・TLS の確認結果は [診断報告書 F9](pentest-report-2026-10.md#f9-tls-10--11-を受け付けている) に記録。
+
+## 配信確認
+
+2026-10-15 16:35 JST にコミット `4ed6ce4` の production build を Cloudflare Worker へ配信した（Version ID: `acf0b916-796e-4854-a8e2-048ed2600136`）。本番ホストの HTML が新しいエントリー `index-BSaZGWtR.js` を参照し、配信された JavaScript に警告文と更新後のヘルプ文が含まれることを確認した。HTTP 200、CSP、HSTS も維持されている。PR #1 は現在の実装への移植済みとして閉じた。
