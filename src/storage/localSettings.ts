@@ -8,6 +8,68 @@ import * as check from "./validation";
 const RELATION_MESSAGE = "続柄の設定を確認してください";
 const GENDER_MESSAGE = "性別の設定を確認してください";
 
+function relationshipFields(
+  input: Partial<RelationshipDefinition>,
+  previous?: RelationshipDefinition,
+): Omit<RelationshipDefinition, "id" | "usageCount"> {
+  return {
+    name: check.text(
+      input.name ?? previous?.name,
+      "name",
+      check.DEFINITION_NAME_MAX,
+    ),
+    kind: check.oneOf(
+      input.kind ?? previous?.kind,
+      check.RELATION_KINDS,
+      RELATION_MESSAGE,
+    ),
+    direction: check.oneOf(
+      input.direction ?? previous?.direction,
+      check.DIRECTIONS,
+      RELATION_MESSAGE,
+    ),
+    lineStyle: check.oneOf(
+      input.lineStyle ?? previous?.lineStyle,
+      check.LINE_STYLES,
+      RELATION_MESSAGE,
+    ),
+    lineColor: check.color(
+      input.lineColor ?? previous?.lineColor,
+      RELATION_MESSAGE,
+    ),
+    sortOrder: check.sortOrder(input.sortOrder, previous?.sortOrder ?? 0),
+    active: input.active ?? previous?.active ?? true,
+  };
+}
+
+function genderFields(
+  input: Partial<GenderDefinition>,
+  previous?: GenderDefinition,
+): Omit<GenderDefinition, "id" | "usageCount"> {
+  return {
+    name: check.text(
+      input.name ?? previous?.name,
+      "name",
+      check.DEFINITION_NAME_MAX,
+    ),
+    shape: check.oneOf(
+      input.shape ?? previous?.shape,
+      check.SHAPES,
+      GENDER_MESSAGE,
+    ),
+    fillColor: check.color(
+      input.fillColor ?? previous?.fillColor,
+      GENDER_MESSAGE,
+    ),
+    textColor: check.color(
+      input.textColor ?? previous?.textColor,
+      GENDER_MESSAGE,
+    ),
+    sortOrder: check.sortOrder(input.sortOrder, previous?.sortOrder ?? 0),
+    active: input.active ?? previous?.active ?? true,
+  };
+}
+
 export function createSettingsApi(repository: Repository) {
   /** 全チャート横断の使用数。PHP 版の相関サブクエリ相当。 */
   const usage = async () => {
@@ -48,21 +110,7 @@ export function createSettingsApi(repository: Repository) {
       const definitions = await repository.definitions();
       const created: RelationshipDefinition = {
         id: createId(),
-        name: check.text(input.name, "name", check.DEFINITION_NAME_MAX),
-        kind: check.oneOf(input.kind, check.RELATION_KINDS, RELATION_MESSAGE),
-        direction: check.oneOf(
-          input.direction,
-          check.DIRECTIONS,
-          RELATION_MESSAGE,
-        ),
-        lineStyle: check.oneOf(
-          input.lineStyle,
-          check.LINE_STYLES,
-          RELATION_MESSAGE,
-        ),
-        lineColor: check.color(input.lineColor, RELATION_MESSAGE),
-        sortOrder: check.sortOrder(input.sortOrder, 0),
-        active: input.active ?? true,
+        ...relationshipFields(input),
       };
       await repository.saveDefinitions({
         ...definitions,
@@ -80,32 +128,7 @@ export function createSettingsApi(repository: Repository) {
       if (!previous) throw validationError("続柄を選び直してください");
       const updated: RelationshipDefinition = {
         ...previous,
-        name: check.text(
-          input.name ?? previous.name,
-          "name",
-          check.DEFINITION_NAME_MAX,
-        ),
-        kind: check.oneOf(
-          input.kind ?? previous.kind,
-          check.RELATION_KINDS,
-          RELATION_MESSAGE,
-        ),
-        direction: check.oneOf(
-          input.direction ?? previous.direction,
-          check.DIRECTIONS,
-          RELATION_MESSAGE,
-        ),
-        lineStyle: check.oneOf(
-          input.lineStyle ?? previous.lineStyle,
-          check.LINE_STYLES,
-          RELATION_MESSAGE,
-        ),
-        lineColor: check.color(
-          input.lineColor ?? previous.lineColor,
-          RELATION_MESSAGE,
-        ),
-        sortOrder: check.sortOrder(input.sortOrder, previous.sortOrder),
-        active: input.active ?? previous.active,
+        ...relationshipFields(input, previous),
       };
       await repository.saveDefinitions({
         ...definitions,
@@ -153,12 +176,7 @@ export function createSettingsApi(repository: Repository) {
       const definitions = await repository.definitions();
       const created: GenderDefinition = {
         id: createId(),
-        name: check.text(input.name, "name", check.DEFINITION_NAME_MAX),
-        shape: check.oneOf(input.shape, check.SHAPES, GENDER_MESSAGE),
-        fillColor: check.color(input.fillColor, GENDER_MESSAGE),
-        textColor: check.color(input.textColor, GENDER_MESSAGE),
-        sortOrder: check.sortOrder(input.sortOrder, 0),
-        active: input.active ?? true,
+        ...genderFields(input),
       };
       await repository.saveDefinitions({
         ...definitions,
@@ -176,26 +194,7 @@ export function createSettingsApi(repository: Repository) {
       if (!previous) throw validationError("性別を選び直してください");
       const updated: GenderDefinition = {
         ...previous,
-        name: check.text(
-          input.name ?? previous.name,
-          "name",
-          check.DEFINITION_NAME_MAX,
-        ),
-        shape: check.oneOf(
-          input.shape ?? previous.shape,
-          check.SHAPES,
-          GENDER_MESSAGE,
-        ),
-        fillColor: check.color(
-          input.fillColor ?? previous.fillColor,
-          GENDER_MESSAGE,
-        ),
-        textColor: check.color(
-          input.textColor ?? previous.textColor,
-          GENDER_MESSAGE,
-        ),
-        sortOrder: check.sortOrder(input.sortOrder, previous.sortOrder),
-        active: input.active ?? previous.active,
+        ...genderFields(input, previous),
       };
       await repository.saveDefinitions({
         ...definitions,
