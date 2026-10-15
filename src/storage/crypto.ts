@@ -18,6 +18,8 @@ export const KDF_ITERATIONS = 600_000;
  * 細工されたファイルで取り込みを延々と止められないように制限する。
  */
 export const KDF_ITERATIONS_MAX = 2_000_000;
+/** 書き出し時の暗号形式。ヘッダの改ざんを GCM のタグで検出できる。 */
+export const CIPHER_VERSION = 2;
 const SALT_BYTES = 16;
 const IV_BYTES = 12;
 
@@ -25,6 +27,11 @@ export interface EncryptedBackupFile {
   format: typeof BACKUP_FORMAT;
   version: typeof BACKUP_VERSION;
   encrypted: true;
+  /**
+   * 2 のとき、format・version・kdf の値を AES-GCM の追加認証データ (AAD) に含める。
+   * 無い (または 1 の) ファイルは AAD なしで作られた旧形式で、読み込みだけ受け付ける。
+   */
+  cipherVersion?: 1 | 2;
   kdf: { name: "PBKDF2"; hash: "SHA-256"; iterations: number; salt: string };
   iv: string;
   ciphertext: string;
@@ -76,6 +83,27 @@ async function deriveKey(
   );
 }
 
+/**
+ * ヘッダのうち復号結果を左右する値を AAD にする。
+ * 反復回数や形式の書き換えが「パスフレーズ違い」ではなく改ざんとして失敗する。
+ */
+const headerAad = (
+  file: Pick<EncryptedBackupFile, "format" | "version">,
+  iterations: number,
+  salt: string,
+) =>
+  new TextEncoder().encode(
+    JSON.stringify([
+      file.format,
+      file.version,
+      CIPHER_VERSION,
+      "PBKDF2",
+      "SHA-256",
+      iterations,
+      salt,
+    ]),
+  );
+
 export async function encryptBackup(
   json: string,
   passphrase: string,
@@ -89,8 +117,17 @@ export async function encryptBackup(
   const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES));
   const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
   const key = await deriveKey(passphrase, salt, KDF_ITERATIONS);
+  const saltText = toBase64(salt);
   const ciphertext = await subtle().encrypt(
-    { name: "AES-GCM", iv: iv as BufferSource },
+    {
+      name: "AES-GCM",
+      iv: iv as BufferSource,
+      additionalData: headerAad(
+        { format: BACKUP_FORMAT, version: BACKUP_VERSION },
+        KDF_ITERATIONS,
+        saltText,
+      ) as BufferSource,
+    },
     key,
     new TextEncoder().encode(json),
   );
@@ -100,11 +137,12 @@ export async function encryptBackup(
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
     encrypted: true,
+    cipherVersion: CIPHER_VERSION,
     kdf: {
       name: "PBKDF2",
       hash: "SHA-256",
       iterations: KDF_ITERATIONS,
-      salt: toBase64(salt),
+      salt: saltText,
     },
     iv: toBase64(iv),
     ciphertext: toBase64(new Uint8Array(ciphertext)),
@@ -134,6 +172,13 @@ export async function decryptBackup(
       "BACKUP_INVALID",
       "バックアップファイルの内容が壊れています。",
     );
+  const cipherVersion: unknown = file.cipherVersion;
+  if (
+    cipherVersion !== undefined &&
+    cipherVersion !== 1 &&
+    cipherVersion !== CIPHER_VERSION
+  )
+    throw invalid();
   const iterations: unknown = file.kdf?.iterations;
   if (
     typeof iterations !== "number" ||
@@ -156,7 +201,13 @@ export async function decryptBackup(
   try {
     const key = await deriveKey(passphrase, salt, iterations);
     const plain = await subtle().decrypt(
-      { name: "AES-GCM", iv: iv as BufferSource },
+      {
+        name: "AES-GCM",
+        iv: iv as BufferSource,
+        ...(cipherVersion === CIPHER_VERSION && {
+          additionalData: headerAad(file, iterations, file.kdf.salt),
+        }),
+      },
       key,
       ciphertext as BufferSource,
     );

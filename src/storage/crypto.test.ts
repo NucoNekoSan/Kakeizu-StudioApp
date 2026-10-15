@@ -5,6 +5,7 @@ import {
   encryptBackup,
   isEncryptedBackup,
   KDF_ITERATIONS,
+  CIPHER_VERSION,
   KDF_ITERATIONS_MAX,
 } from "./crypto";
 import { createMemoryStore } from "./kv";
@@ -169,5 +170,99 @@ describe("暗号化ファイルのヘッダ検証", () => {
   it("上限ちょうどの正規ファイルは復号できる", async () => {
     const sealed = await sealOnce();
     expect(await decryptBackup(sealed, "合言葉")).toBe("{}");
+  });
+});
+
+describe("ヘッダの認証", () => {
+  const toB64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));
+
+  it("書き出し形式を 2 とし、旧形式を示す印を付けない", async () => {
+    const sealed = await encryptBackup("{}", "合言葉");
+    expect(sealed.cipherVersion).toBe(CIPHER_VERSION);
+  });
+
+  it("反復回数を別の有効な値へ書き換えると改ざんとして拒否する", async () => {
+    const sealed = await encryptBackup("{}", "合言葉");
+    await expectApiError(
+      decryptBackup(
+        { ...sealed, kdf: { ...sealed.kdf, iterations: 1000 } },
+        "合言葉",
+      ),
+      "PASSPHRASE_MISMATCH",
+    );
+  });
+
+  it("version や format の書き換えを拒否する", async () => {
+    const sealed = await encryptBackup("{}", "合言葉");
+    await expectApiError(
+      decryptBackup({ ...sealed, version: 2 as never }, "合言葉"),
+      "PASSPHRASE_MISMATCH",
+    );
+    await expectApiError(
+      decryptBackup({ ...sealed, format: "other" as never }, "合言葉"),
+      "PASSPHRASE_MISMATCH",
+    );
+  });
+
+  it("形式の印を消して旧形式として読ませる細工を拒否する", async () => {
+    const sealed = await encryptBackup("{}", "合言葉");
+    const { cipherVersion, ...stripped } = sealed;
+    void cipherVersion;
+    await expectApiError(
+      decryptBackup(stripped as never, "合言葉"),
+      "PASSPHRASE_MISMATCH",
+    );
+    await expectApiError(
+      decryptBackup({ ...sealed, cipherVersion: 1 }, "合言葉"),
+      "PASSPHRASE_MISMATCH",
+    );
+  });
+
+  it("未知の形式番号を拒否する", async () => {
+    const sealed = await encryptBackup("{}", "合言葉");
+    await expectApiError(
+      decryptBackup({ ...sealed, cipherVersion: 3 as never }, "合言葉"),
+      "BACKUP_INVALID",
+    );
+  });
+
+  it("AAD なしで書き出された旧形式のファイルは引き続き復号できる", async () => {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const material = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode("旧合言葉"),
+      "PBKDF2",
+      false,
+      ["deriveKey"],
+    );
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt, hash: "SHA-256", iterations: 600_000 },
+      material,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt"],
+    );
+    const body = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv },
+      key,
+      new TextEncoder().encode('{"legacy":true}'),
+    );
+    const legacy = {
+      format: "kakeizu-studio-backup",
+      version: 1,
+      encrypted: true,
+      kdf: {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        iterations: 600_000,
+        salt: toB64(salt),
+      },
+      iv: toB64(iv),
+      ciphertext: toB64(new Uint8Array(body)),
+    } as const;
+    expect(await decryptBackup(legacy as never, "旧合言葉")).toBe(
+      '{"legacy":true}',
+    );
   });
 });
