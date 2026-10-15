@@ -1,7 +1,15 @@
 # 再診断R1〜R7の改善記録
 
 対象: [再診断報告書](pentest-retest-2026-10-15.md) / 作業元コミット `7030bb7`  
-実施日: 2026-10-15 / 状態: ローカルで実装・検証済み。本番・GitHubには未反映。
+実施日: 2026-10-15 / 状態: GitHub main・本番へ反映済み。
+
+## 本番反映
+
+- 実装コミット: [`770fc67`](https://github.com/NucoNekoSan/Kakeizu-StudioApp/commit/770fc67)。GitHub mainへpush済み。
+- Cloudflare Version ID: `cd1b4a45-11a9-464f-8993-33cf5a9efae2`。
+- 2026-10-15 19:33 JST、[本番](https://kakeizu-studioapp.nuconeko-garden.com)のHTTP 200と、メイン資材 `/assets/index-DwH8AD78.js`・`/sw.js` のSHA-256が検証済みローカルビルドと一致することを確認。
+- CSP・HSTS・X-Content-Type-Options・X-Frame-Optionsの配信、Service Workerの `Cache-Control: no-cache`、HTTPからHTTPSへのパス・クエリを保持した308転送を確認。
+- TLS 1.0/1.1はサーバーから拒否（alert 70）、TLS 1.2/1.3は証明書・ホスト名検証に成功。
 
 ## 改善内容
 
