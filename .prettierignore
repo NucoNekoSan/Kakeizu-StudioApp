@@ -1,5 +1,6 @@
 dist/
 release/
 .claude/
+.superpowers/
 package-lock.json
 *.sqlite*
