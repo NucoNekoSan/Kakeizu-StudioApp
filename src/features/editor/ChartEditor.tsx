@@ -19,6 +19,7 @@ import type { Direction } from "../../types";
 import { type FamilyNodeData } from "../../familyGraph";
 
 import { Notice, Shell, Spinner } from "../../components/ui";
+import TemporaryModeBanner from "../storage/TemporaryModeBanner";
 
 import { getErrorMessage } from "../../domain";
 import { hydrateChart } from "./hydrateChart";
@@ -236,6 +237,7 @@ function ChartEditor() {
         exportCurrentChart={exportCurrentChart}
         isJsonExporting={isJsonExporting}
       />
+      <TemporaryModeBanner />
       <main className="editor-body">
         <EditorPanel
           detail={chart.data}

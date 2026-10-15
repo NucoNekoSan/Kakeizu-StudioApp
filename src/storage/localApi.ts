@@ -41,6 +41,7 @@ export type LocalApi = ReturnType<typeof createLocalApi>;
  * インメモリへ自動フォールバックし、アプリは動くがタブを閉じると消える。
  */
 let resolved: Promise<LocalApi> | null = null;
+let didFallback = false;
 const defaultApi = () => {
   if (resolved) return resolved;
   resolved = (async () => {
@@ -52,6 +53,7 @@ const defaultApi = () => {
       // Opening a store is lazy: probe availability without decoding any chart.
       await store.keys();
     } catch {
+      didFallback = true;
       return createLocalApi(createMemoryStore());
     }
     let storage: LegacyStorage | undefined;
@@ -71,7 +73,11 @@ const defaultApi = () => {
 /** 保存モードを切り替えたときに、次の呼び出しでストアを取り直す。 */
 export const resetStoreCache = () => {
   resolved = null;
+  didFallback = false;
 };
+
+/** 永続保存を選んだが IndexedDB が利用できずメモリへ退避したか。 */
+export const isStorageFallback = () => didFallback;
 
 /**
  * この端末に残るアプリのデータをすべて消す。
@@ -79,7 +85,7 @@ export const resetStoreCache = () => {
  * 旧キー (kakeizu:cohabitation-*) もまとめて消す。
  */
 export async function clearBrowserData(): Promise<void> {
-  resolved = null;
+  resetStoreCache();
   // 先に本体を消す。保留や失敗で例外になったとき、一部だけ消えた状態にしない。
   await deleteDatabase();
   for (const getStorage of [() => localStorage, () => sessionStorage])

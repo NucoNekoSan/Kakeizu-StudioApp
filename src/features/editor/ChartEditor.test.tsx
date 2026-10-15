@@ -16,6 +16,8 @@ import type { FamilyNodeData } from "../../familyGraph";
 import { api } from "../../api";
 import { saveJsonFile } from "../../storage/fileIo";
 import ChartEditor from "./ChartEditor";
+import * as storageMode from "../../storage/storageMode";
+import * as localStorageApi from "../../storage/localApi";
 
 vi.mock("../../api", async () => {
   const { createLocalApi } = await import("../../storage/localApi");
@@ -112,6 +114,32 @@ const exportButton = () =>
   });
 
 describe("ChartEditor persistence integration", () => {
+  it.each(["session", "fallback"] as const)(
+    "%s の相関図を編集している間も警告と離脱防止を維持する",
+    async (mode) => {
+      vi.spyOn(storageMode, "readStorageMode").mockReturnValue(
+        mode === "session" ? "session" : "persistent",
+      );
+      vi.spyOn(localStorageApi, "isStorageFallback").mockReturnValue(
+        mode === "fallback",
+      );
+      openEditor();
+      await screen.findByRole("button", { name: "人物を選択" });
+      expect(
+        screen.getByText(
+          mode === "session"
+            ? /^一時利用モードです/
+            : /ストレージが利用できません/,
+        ),
+      ).toHaveAttribute("role", mode === "session" ? "status" : "alert");
+      await waitFor(() => {
+        const event = new Event("beforeunload", { cancelable: true });
+        window.dispatchEvent(event);
+        expect(event.defaultPrevented).toBe(true);
+      });
+    },
+  );
+
   it("exports the newest memo and title immediately after editing", async () => {
     openEditor();
     fireEvent.click(await screen.findByRole("button", { name: "人物を選択" }));

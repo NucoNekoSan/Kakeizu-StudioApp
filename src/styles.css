@@ -690,8 +690,14 @@ p {
 .editor-shell {
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.editor-shell > .temporary-banner {
+  flex-shrink: 0;
 }
 .editor-topbar {
+  flex-shrink: 0;
   position: relative;
   padding: 0 18px;
   gap: 12px;
@@ -1080,7 +1086,8 @@ p {
   background: var(--gold);
 }
 .editor-body {
-  height: calc(100vh - 72px);
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 310px 1fr;
 }
@@ -1539,9 +1546,6 @@ p {
     justify-content: center;
     padding-bottom: 8px;
   }
-  .editor-body {
-    height: calc(100vh - 120px);
-  }
 }
 @media (max-width: 850px) {
   .chart-grid {
@@ -1818,6 +1822,9 @@ p {
   color: var(--paper);
   font-size: 0.85rem;
   text-align: center;
+}
+.temporary-banner.fallback-warning {
+  background: #b45309;
 }
 .storage-mode,
 .danger-zone {
