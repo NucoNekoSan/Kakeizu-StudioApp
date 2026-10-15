@@ -1,18 +1,10 @@
-import { type FormEvent, useEffect, useRef, useState } from "react";
 import type { Node } from "@xyflow/react";
 import { Baby, Plus, Trash2, UserRoundPlus, Users } from "lucide-react";
-import type { ChartDetail, ChartNodeRecord, Direction } from "../../types";
-import { findFreePosition } from "../../placement";
+import type { Direction } from "../../types";
 import type { FamilyNodeData } from "../../familyGraph";
 import { directionLabels } from "../../domain";
-import {
-  findPartnerIds,
-  quickDirection,
-  quickRelationLabels,
-  type AddPreset,
-  type NodeDraft,
-  type QuickRelation,
-} from "./editorPresets";
+import { quickRelationLabels, type QuickRelation } from "./editorPresets";
+import { useNodeForm, type NodeFormProps } from "./useNodeForm";
 import { NodeTextFields } from "./NodeTextFields";
 
 export function QuickAddActions({
@@ -48,160 +40,43 @@ export function QuickAddActions({
   );
 }
 
-export function NodeForm({
-  mode,
-  detail,
-  nodes,
-  value,
-  preset,
-  onSubmit,
-  onDelete,
-  onConnectionPreview,
-  onDraftChange,
-  onChange,
-}: {
-  mode: "add" | "edit";
-  detail: ChartDetail;
-  nodes: Node<FamilyNodeData>[];
-  value?: Node<FamilyNodeData> | null;
-  preset?: AddPreset | null;
-  onSubmit(v: Omit<ChartNodeRecord, "id">): void;
-  onDelete?(): void;
-  onConnectionPreview?(direction: Direction | null): void;
-  onDraftChange?(draft: NodeDraft | null): void;
-  onChange?(input: Partial<Omit<ChartNodeRecord, "id">>): void;
-}) {
-  const presetKinds =
-      preset?.kind === "partner"
-        ? ["partner", "divorce"]
-        : preset
-          ? [preset.kind]
-          : null,
-    activeR = detail.relationships.filter(
-      (v) =>
-        (v.active || v.id === value?.data.relationshipId) &&
-        (!presetKinds || presetKinds.includes(v.kind)),
-    ),
-    activeG = detail.genders.filter(
-      (v) => v.active || v.id === value?.data.genderId,
-    ),
-    presetAnchor = nodes.find((node) => node.id === preset?.anchorId),
-    partnerIds = findPartnerIds(preset?.anchorId, nodes),
-    record = value ? detail.nodes.find((n) => n.id === value.id) : undefined,
-    [relationshipId, setRelationship] = useState(
-      value?.data.relationshipId || activeR[0]?.id || "",
-    ),
-    [genderId, setGender] = useState(
-      value?.data.genderId || activeG[0]?.id || "",
-    ),
-    [anchorNodeId, setAnchor] = useState<string | null>(
-      record?.anchorNodeId || preset?.anchorId || nodes[0]?.id || null,
-    ),
-    [parentNodeId1, setParent1] = useState<string | null>(
-      record?.parentNodeId1 ||
-        (preset?.kind === "child" ? preset.anchorId : null) ||
-        (preset?.kind === "sibling"
-          ? nodes.find((node) => node.id === preset.anchorId)?.data
-              .parentNodeId1 || null
-          : null),
-    ),
-    [parentNodeId2, setParent2] = useState<string | null>(
-      record?.parentNodeId2 ||
-        (preset?.kind === "child" && partnerIds.length === 1
-          ? partnerIds[0]
-          : preset?.kind === "sibling"
-            ? nodes.find((node) => node.id === preset.anchorId)?.data
-                .parentNodeId2 || null
-            : null),
-    ),
-    [placementDirection, setDirection] = useState<Direction>(
-      record?.placementDirection || quickDirection(preset, nodes),
-    ),
-    [connectionDirection, setConnectionDirection] = useState<Direction | null>(
-      record?.connectionDirection || null,
-    ),
-    [divorced, setDivorced] = useState(record?.divorced || false),
-    [memo, setMemo] = useState(value?.data.memo || ""),
-    [fontSize, setFontSize] = useState(value?.data.fontSize || 16),
-    [relationshipFontSize, setRelationshipFontSize] = useState(
-      value?.data.relationshipFontSize || 17,
-    );
-  const hydratedNodeId = useRef<string | null>(null);
-  useEffect(() => {
-    if (!value) {
-      hydratedNodeId.current = null;
-      return;
-    }
-    if (hydratedNodeId.current === value.id) return;
-    hydratedNodeId.current = value.id;
-    const r = detail.nodes.find((n) => n.id === value.id);
-    setRelationship(value.data.relationshipId);
-    setGender(value.data.genderId);
-    setMemo(value.data.memo);
-    setFontSize(value.data.fontSize);
-    setRelationshipFontSize(value.data.relationshipFontSize);
-    setAnchor(r?.anchorNodeId || null);
-    setParent1(r?.parentNodeId1 || null);
-    setParent2(r?.parentNodeId2 || null);
-    setDirection(r?.placementDirection || "right");
-    setConnectionDirection(r?.connectionDirection || null);
-    setDivorced(r?.divorced || false);
-  }, [value, detail.nodes]);
-  const draftNodeId = value?.id;
-  useEffect(
-    () => () => {
-      if (mode === "edit" && draftNodeId) onDraftChange?.(null);
-    },
-    [draftNodeId, mode, onDraftChange],
-  );
-  const options = nodes.filter((n) => n.id !== value?.id),
-    pairValid = !parentNodeId2 || parentNodeId1 !== parentNodeId2,
-    hasParentPair = !!(parentNodeId1 && parentNodeId2),
-    selectedRelation = detail.relationships.find(
-      (r) => r.id === relationshipId,
-    ),
-    parentPartnerIds = findPartnerIds(parentNodeId1, nodes),
-    suggestedParent2 =
-      mode === "edit" &&
-      selectedRelation?.kind === "child" &&
-      parentNodeId1 &&
-      !parentNodeId2 &&
-      parentPartnerIds.length === 1
-        ? nodes.find((node) => node.id === parentPartnerIds[0])
-        : undefined,
-    submit = (e: FormEvent) => {
-      e.preventDefault();
-      const anchor = nodes.find((n) => n.id === anchorNodeId),
-        base = anchor?.position || value?.position || { x: 240, y: 180 },
-        placed =
-          mode === "add"
-            ? selectedRelation?.kind === "self"
-              ? { x: 0, y: 0 }
-              : findFreePosition(
-                  base,
-                  placementDirection,
-                  nodes
-                    .filter((n) => n.id !== value?.id)
-                    .map((n) => n.position),
-                )
-            : value?.position || base;
-      onSubmit({
-        relationshipId,
-        genderId,
-        anchorNodeId: nodes.length ? anchorNodeId : null,
-        parentNodeId1,
-        parentNodeId2,
-        placementDirection,
-        connectionDirection,
-        divorced,
-        memo: memo.slice(0, 2000),
-        fontSize,
-        relationshipFontSize,
-        scale: value?.data.scale || 1,
-        x: placed.x,
-        y: placed.y,
-      });
-    };
+export function NodeForm(props: NodeFormProps) {
+  const { mode, nodes, preset, onDelete } = props;
+  const {
+    relationshipId,
+    genderId,
+    anchorNodeId,
+    parentNodeId1,
+    parentNodeId2,
+    placementDirection,
+    connectionDirection,
+    divorced,
+    memo,
+    fontSize,
+    relationshipFontSize,
+    activeR,
+    activeG,
+    presetAnchor,
+    partnerIds,
+    options,
+    pairValid,
+    hasParentPair,
+    selectedRelation,
+    suggestedParent2,
+    submit,
+    changePlacementDirection,
+    changeAnchor,
+    changeRelationship,
+    changeGender,
+    changeConnectionDirection,
+    changeParent2,
+    changeParent1,
+    applySuggestedParent,
+    toggleDivorced,
+    changeMemo,
+    changeFontSize,
+    changeRelationshipFontSize,
+  } = useNodeForm(props);
   return (
     <form className="node-form" onSubmit={submit}>
       <div className="panel-title">
@@ -229,11 +104,7 @@ export function NodeForm({
           基準ノード
           <select
             value={anchorNodeId || ""}
-            onChange={(e) => {
-              const next = e.target.value;
-              setAnchor(next);
-              if (mode === "edit") onChange?.({ anchorNodeId: next });
-            }}
+            onChange={(e) => changeAnchor(e.target.value)}
             required
           >
             <option value="" disabled>
@@ -252,11 +123,7 @@ export function NodeForm({
         続柄
         <select
           value={relationshipId}
-          onChange={(e) => {
-            const next = e.target.value;
-            setRelationship(next);
-            if (mode === "edit") onChange?.({ relationshipId: next });
-          }}
+          onChange={(e) => changeRelationship(e.target.value)}
           required
         >
           {activeR.map((r) => (
@@ -275,11 +142,7 @@ export function NodeForm({
         性別
         <select
           value={genderId}
-          onChange={(e) => {
-            const next = e.target.value;
-            setGender(next);
-            if (mode === "edit") onChange?.({ genderId: next });
-          }}
+          onChange={(e) => changeGender(e.target.value)}
           required
         >
           {activeG.map((g) => (
@@ -294,7 +157,9 @@ export function NodeForm({
           配置方向
           <select
             value={placementDirection}
-            onChange={(e) => setDirection(e.target.value as Direction)}
+            onChange={(e) =>
+              changePlacementDirection(e.target.value as Direction)
+            }
           >
             {Object.entries(directionLabels).map(([k, n]) => (
               <option key={k} value={k}>
@@ -310,13 +175,7 @@ export function NodeForm({
           <select
             value={connectionDirection || ""}
             disabled={!anchorNodeId || hasParentPair}
-            onChange={(e) => {
-              const direction = (e.target.value || null) as Direction | null;
-              setConnectionDirection(direction);
-              onConnectionPreview?.(direction);
-              if (mode === "edit")
-                onChange?.({ connectionDirection: direction });
-            }}
+            onChange={(e) => changeConnectionDirection(e.target.value)}
           >
             <option value="">自動（現在位置から判定）</option>
             {Object.entries(directionLabels).map(([k, n]) => (
@@ -338,11 +197,7 @@ export function NodeForm({
             配偶者
             <select
               value={parentNodeId2 || ""}
-              onChange={(e) => {
-                const next = e.target.value || null;
-                setParent2(next);
-                if (mode === "edit") onChange?.({ parentNodeId2: next });
-              }}
+              onChange={(e) => changeParent2(e.target.value)}
             >
               <option value="">指定しない（片親）</option>
               {options
@@ -382,11 +237,7 @@ export function NodeForm({
             父
             <select
               value={parentNodeId1 || ""}
-              onChange={(e) => {
-                const next = e.target.value || null;
-                setParent1(next);
-                if (mode === "edit") onChange?.({ parentNodeId1: next });
-              }}
+              onChange={(e) => changeParent1(e.target.value)}
             >
               <option value="">指定なし</option>
               {options
@@ -403,11 +254,7 @@ export function NodeForm({
             母
             <select
               value={parentNodeId2 || ""}
-              onChange={(e) => {
-                const next = e.target.value || null;
-                setParent2(next);
-                if (mode === "edit") onChange?.({ parentNodeId2: next });
-              }}
+              onChange={(e) => changeParent2(e.target.value)}
             >
               <option value="">指定なし</option>
               {options
@@ -424,14 +271,7 @@ export function NodeForm({
             <button
               type="button"
               className="button compact"
-              onClick={() => {
-                setParent2(suggestedParent2.id);
-                if (mode === "edit")
-                  onChange?.({
-                    parentNodeId1,
-                    parentNodeId2: suggestedParent2.id,
-                  });
-              }}
+              onClick={applySuggestedParent}
             >
               配偶者「{suggestedParent2.data.relationshipName}」を母に設定
             </button>
@@ -450,11 +290,7 @@ export function NodeForm({
             type="button"
             className={`button wide divorce-toggle ${divorced ? "danger" : ""}`}
             aria-pressed={divorced}
-            onClick={() => {
-              const next = !divorced;
-              setDivorced(next);
-              if (mode === "edit") onChange?.({ divorced: next });
-            }}
+            onClick={toggleDivorced}
           >
             {divorced ? "離婚を解除" : "離婚に設定（二重斜線）"}
           </button>
@@ -463,45 +299,9 @@ export function NodeForm({
         memo={memo}
         fontSize={fontSize}
         relationshipFontSize={relationshipFontSize}
-        onMemoChange={(nextMemo) => {
-          setMemo(nextMemo);
-          if (mode === "edit" && draftNodeId) {
-            onDraftChange?.({
-              nodeId: draftNodeId,
-              memo: nextMemo,
-              fontSize,
-              relationshipFontSize,
-            });
-            onChange?.({ memo: nextMemo.slice(0, 2000) });
-          }
-        }}
-        onFontSizeChange={(nextFontSize) => {
-          setFontSize(nextFontSize);
-          if (mode === "edit" && draftNodeId)
-            onChange?.({ fontSize: nextFontSize, relationshipFontSize });
-          if (mode === "edit" && draftNodeId)
-            onDraftChange?.({
-              nodeId: draftNodeId,
-              memo,
-              fontSize: nextFontSize,
-              relationshipFontSize,
-            });
-        }}
-        onRelationshipFontSizeChange={(nextRelationshipFontSize) => {
-          setRelationshipFontSize(nextRelationshipFontSize);
-          if (mode === "edit" && draftNodeId)
-            onChange?.({
-              fontSize,
-              relationshipFontSize: nextRelationshipFontSize,
-            });
-          if (mode === "edit" && draftNodeId)
-            onDraftChange?.({
-              nodeId: draftNodeId,
-              memo,
-              fontSize,
-              relationshipFontSize: nextRelationshipFontSize,
-            });
-        }}
+        onMemoChange={changeMemo}
+        onFontSizeChange={changeFontSize}
+        onRelationshipFontSizeChange={changeRelationshipFontSize}
       />
       {mode === "add" && (
         <button
