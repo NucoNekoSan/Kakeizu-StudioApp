@@ -55,10 +55,56 @@ export function createMemoryStore(
   };
 }
 
+/**
+ * idb-keyval の createStore と同じ形のストア取得関数。
+ *
+ * 違いは `versionchange` で接続を閉じること。idb-keyval 既定の接続は
+ * 閉じないため、別タブや同じタブの接続が残っていると
+ * `indexedDB.deleteDatabase` が待たされ、「全データ削除」が完了しない。
+ * 閉じたあとの操作は次回アクセス時に開き直す。
+ */
+function createClosableStore(
+  promisifyRequest: <T>(request: IDBRequest<T>) => Promise<T>,
+): UseStoreFn {
+  let dbp: Promise<IDBDatabase> | undefined;
+  const getDB = () => {
+    if (dbp) return dbp;
+    const request = indexedDB.open(DATABASE_NAME);
+    request.onupgradeneeded = () =>
+      request.result.createObjectStore(STORE_NAME);
+    const opened = promisifyRequest(request);
+    dbp = opened;
+    opened.then(
+      (db) => {
+        db.onversionchange = () => {
+          db.close();
+          if (dbp === opened) dbp = undefined;
+        };
+        db.onclose = () => {
+          if (dbp === opened) dbp = undefined;
+        };
+      },
+      () => {
+        if (dbp === opened) dbp = undefined;
+      },
+    );
+    return opened;
+  };
+  return (mode, callback) =>
+    getDB().then((db) =>
+      callback(db.transaction(STORE_NAME, mode).objectStore(STORE_NAME)),
+    );
+}
+
+type UseStoreFn = <T>(
+  mode: IDBTransactionMode,
+  callback: (store: IDBObjectStore) => T | PromiseLike<T>,
+) => Promise<T>;
+
 export async function createIndexedDbStore(): Promise<DocumentStore> {
-  const { createStore, get, set, del, keys, clear, promisifyRequest } =
+  const { get, set, del, keys, clear, promisifyRequest } =
     await import("idb-keyval");
-  const store = createStore(DATABASE_NAME, STORE_NAME);
+  const store = createClosableStore(promisifyRequest);
   return {
     get: <T>(key: string) => get<T>(key, store),
     set: (key, value) => set(key, value, store),

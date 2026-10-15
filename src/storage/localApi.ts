@@ -1,3 +1,4 @@
+import { ApiError } from "../api/errors";
 import { createBackupApi } from "./localBackup";
 import { createChartApi } from "./localCharts";
 import { createSettingsApi } from "./localSettings";
@@ -79,6 +80,8 @@ export const resetStoreCache = () => {
  */
 export async function clearBrowserData(): Promise<void> {
   resolved = null;
+  // 先に本体を消す。保留や失敗で例外になったとき、一部だけ消えた状態にしない。
+  await deleteDatabase();
   for (const getStorage of [() => localStorage, () => sessionStorage])
     try {
       const storage = getStorage();
@@ -87,17 +90,44 @@ export async function clearBrowserData(): Promise<void> {
     } catch {
       // 消せないキーがあっても続行する
     }
-  await deleteDatabase();
 }
 
+/** 別タブの接続が閉じるのを待つ時間。超えたら削除できていないと報告する。 */
+export const DELETE_BLOCKED_TIMEOUT_MS = 4000;
+
 const deleteDatabase = () =>
-  new Promise<void>((resolve) => {
+  new Promise<void>((resolve, reject) => {
     if (typeof indexedDB === "undefined") return resolve();
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const request = indexedDB.deleteDatabase(DATABASE_NAME);
-    request.onsuccess = () => resolve();
-    request.onerror = () => resolve();
-    // 別タブが開いているとブロックされる。待ち続けないよう解決してしまう。
-    request.onblocked = () => resolve();
+    request.onsuccess = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    request.onerror = () => {
+      clearTimeout(timer);
+      reject(
+        new ApiError(
+          500,
+          "DATA_DELETE_FAILED",
+          "データを削除できませんでした。ブラウザの設定からこのサイトのデータを削除してください。",
+        ),
+      );
+    };
+    // 別タブが開いていると削除が保留される。成功扱いにせず、閉じるのを待つ。
+    request.onblocked = () => {
+      timer ??= setTimeout(
+        () =>
+          reject(
+            new ApiError(
+              409,
+              "DATA_DELETE_BLOCKED",
+              "別のタブでこのアプリが開かれているため、データを削除できませんでした。他のタブを閉じてからもう一度お試しください。",
+            ),
+          ),
+        DELETE_BLOCKED_TIMEOUT_MS,
+      );
+    };
   });
 
 const lazy =

@@ -17,3 +17,10 @@ server/vendor/
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
+
+# ローカルのエージェント作業領域と Wrangler の作業・秘密情報 (誤ってコミットしない)
+.claude/
+.superpowers/
+.wrangler/
+.dev.vars
+.env.local
