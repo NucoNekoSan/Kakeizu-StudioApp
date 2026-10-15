@@ -42,13 +42,24 @@ npx wrangler deploy
 
 ## 4. HTTPS の強制
 
-SSL/TLS → Edge Certificates で次を有効にする。
+本番では Cloudflare のリダイレクト ルール `Kakeizu Studio HTTPS` を有効にしている。対象をこのアプリのホストに限定し、HTTP のみ HTTPS に転送する。
+
+| 項目                   | 設定                                                 |
+| ---------------------- | ---------------------------------------------------- |
+| リクエスト URL         | `http://kakeizu-studioapp.nuconeko-garden.com/*`     |
+| ターゲット URL         | `https://kakeizu-studioapp.nuconeko-garden.com/${1}` |
+| ステータス コード      | `308`（恒久転送、HTTP メソッドを保持）               |
+| クエリ文字列を保存する | オン                                                 |
+
+パスとクエリ文字列を保持する。ルールは Cloudflare 側の設定であり、Worker の再デプロイでは変更されない。他のホストへの転送設定は別途管理する。
+
+ゾーン全体へ HTTPS を強制する場合は、SSL/TLS → Edge Certificates で次を設定する。`Always Use HTTPS` は他のサブドメインにも適用されるため、このアプリだけを対象にする場合は上記のルールを使う。
 
 - **Always Use HTTPS**: オン
 - **HSTS (HTTP Strict Transport Security)**: 有効化し、`max-age` は 6 か月以上。サブドメインを他用途に使っていない場合のみ `includeSubDomains` を付ける
 - **Minimum TLS Version**: 1.2
 
-v2 系で `.htaccess` が行っていた HTTP→HTTPS の 308 転送は、この設定が代わりを果たす。
+v2 系で `.htaccess` が行っていた HTTP→HTTPS の転送は、Cloudflare 側で処理する。
 
 ## 5. 配信後の確認
 
