@@ -38,9 +38,8 @@ import { PNG_FRAME } from "./pngExport";
 import { PngPreviewDialog } from "./PngPreviewDialog";
 import { ExportFileDialog } from "./ExportFileDialog";
 import { usePngExport } from "./usePngExport";
+import { useChartJsonExport } from "./useChartJsonExport";
 import { clampNodeToFrame, nodeSize } from "./nodeLayout";
-import { prepareFileSave, saveJsonFile } from "../../storage/fileIo";
-import { chartBackupFileName } from "../../storage/backupModel";
 import { EditorToolbar } from "./EditorToolbar";
 import { EditorPanel } from "./EditorPanel";
 import { useCohabitationActions } from "./useCohabitationActions";
@@ -63,7 +62,6 @@ function ChartEditor() {
     [addPreset, setAddPreset] = useState<AddPreset | null>(null),
     [nodeDraft, setNodeDraft] = useState<NodeDraft | null>(null),
     [frameVisible, setFrameVisible] = useState(readFrameVisibility),
-    [isJsonExporting, setIsJsonExporting] = useState(false),
     [connectionPreview, setConnectionPreview] = useState<{
       nodeId: string;
       direction: Direction | null;
@@ -152,41 +150,14 @@ function ChartEditor() {
       setEdges(h.edges);
     }
   }, [storedNodes, storedEdges, relationships, genders, setNodes, setEdges]);
-  const exportCurrentChart = useCallback(async () => {
-    setIsJsonExporting(true);
-    try {
-      const suggestedName = chartBackupFileName(
-        persistence.titleValue.trim() || chart.data?.title || "相関図",
-      );
-      // Open the picker during the click, before waiting for storage writes.
-      const target = await prepareFileSave(suggestedName, {
-        description: "JSONファイル",
-        mimeType: "application/json",
-        extension: ".json",
-      });
-      if (!target) return;
-      await flushAndWait();
-      const { fileName, json } = await api.createChartBackup(id);
-      const saved = await saveJsonFile(fileName, json, target);
-      if (saved) {
-        setAnnouncement(`${fileName} を書き出しました。`);
-        tutorial.reportAction("json-exported", id);
-      }
-    } catch (caught) {
-      setAnnouncement(
-        `JSONファイルを書き出せませんでした。${getErrorMessage(caught)}`,
-      );
-    } finally {
-      setIsJsonExporting(false);
-    }
-  }, [
-    flushAndWait,
-    id,
-    tutorial,
-    setAnnouncement,
-    persistence.titleValue,
-    chart.data?.title,
-  ]);
+  const { exportCurrentChart, isJsonExporting } = useChartJsonExport({
+    chartId: id,
+    title: chart.data?.title,
+    draftTitle: persistence.titleValue,
+    beforeExport: flushAndWait,
+    announce: setAnnouncement,
+    onSaved: () => tutorial.reportAction("json-exported", id),
+  });
   const { display, pngFrame } = useEditorPreview(
       nodes,
       edges,
