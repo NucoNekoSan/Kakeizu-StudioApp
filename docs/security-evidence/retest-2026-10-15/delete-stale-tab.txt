@@ -1,0 +1,141 @@
+- banner:
+  - button "一覧へ戻る":
+  - link "Kakeizu STUDIO":
+    - /url: /charts
+    - generic: Kakeizu
+    - generic: STUDIO
+  - textbox "相関図タイトル": Stale tab edit after deletion
+  - status:
+    - text: 保存失敗
+  - link "チュートリアル":
+    - /url: /tutorial
+    - generic: チュートリアル
+  - link "ヘルプ":
+    - /url: /help
+    - generic: ヘルプ
+  - link "コンタクト（新しいタブで開く）":
+    - /url: https://nuconeko-garden.com/contact/?work=kakeizu-studio
+    - generic: コンタクト
+  - group "同居編集":
+    - button "同居輪":
+    - button "同居文字":
+  - group "外枠とファイル書き出し":
+    - button "外枠":
+    - button "全体プレビュー":
+    - button "ファイル書き出し":
+  - group "データと設定":
+    - button "表示中の相関図をJSONファイルに書き出す":
+    - link "バックアップファイルを読み込む":
+      - /url: /file-import
+    - button "表示設定":
+- main:
+  - complementary:
+    - button "追加":
+      - text: 追加
+    - button "編集" [disabled]:
+      - text: 編集
+    - generic: NEW NODE
+    - heading "ノードを追加" [level=2]
+    - text: 基準ノード
+    - combobox "基準ノード":
+      - option "選択してください" [disabled] [selected]
+      - option "本人 — <img src=x one"
+    - text: 続柄
+    - combobox "続柄":
+      - option "本人" [selected]
+      - option "父"
+      - option "母"
+      - option "祖父"
+      - option "祖母"
+      - option "兄"
+      - option "姉"
+      - option "弟"
+      - option "妹"
+      - option "配偶者"
+      - option "内縁・事実婚"
+      - option "婚約者"
+      - option "別居"
+      - option "離婚"
+      - option "子"
+      - option "孫"
+      - option "義父"
+      - option "義母"
+      - option "義兄"
+      - option "義姉"
+      - option "義弟"
+      - option "義妹"
+      - option "養父"
+      - option "養母"
+      - option "養子"
+      - option "伯父・叔父"
+      - option "伯母・叔母"
+      - option "甥"
+      - option "姪"
+      - option "いとこ"
+    - text: 性別
+    - combobox "性別":
+      - option "男性" [selected]
+      - option "女性"
+      - option "その他"
+    - text: 配置方向
+    - combobox "配置方向":
+      - option "上"
+      - option "下"
+      - option "左"
+      - option "右" [selected]
+    - group "兄弟姉妹追加時に":
+      - generic: 兄弟姉妹追加時に
+      - paragraph: 兄弟姉妹を追加する場合は、同じ父母を指定すると共通の兄弟線でまとめられます。
+      - text: 父
+      - combobox "父":
+        - option "指定なし" [selected]
+        - option "本人 — <img src=x one"
+      - text: 母
+      - combobox "母":
+        - option "指定なし" [selected]
+        - option "本人 — <img src=x one"
+    - text: メモ
+    - textbox "メモ 0 / 2000":
+      - /placeholder: "自由に記入できます\n例：連絡事項、特徴、家族内での役割"
+    - generic: 0 / 2000
+    - text: メモのフォントサイズ
+    - status: 16px
+    - slider "メモのフォントサイズ": "16"
+    - text: 続柄のフォントサイズ
+    - status: 17px
+    - slider "続柄のフォントサイズ": "17"
+    - button "自動配置して追加":
+      - text: 自動配置して追加
+    - alert: 相関図が見つかりません
+    - paragraph: 書き出した画像・PDFには入力した氏名やメモがそのまま含まれます。保存先と共有範囲にご注意ください。
+    - region "同居要素":
+      - heading "同居要素" [level=2]
+      - group "人物を選んで同居輪を作成":
+        - generic: 人物を選んで同居輪を作成
+        - checkbox "本人 — <img src=x one"
+        - text: 本人 — <img src=x one
+        - button "選択した人物を同居輪で囲む" [disabled]
+        - generic: 1人以上を選択してください。
+    - status
+    - paragraph: 1 ノード
+    - paragraph: ドラッグして自由に配置
+  - application:
+    - generic: 男
+    - strong: 本人
+    - generic: 男性
+    - paragraph: <img src=x onerror=alert(1)> <script>alert(1)</script> & "テスト" ‮abc
+    - img "Mini Map"
+    - generic "Control Panel":
+      - button "Zoom In" [disabled]:
+      - button "Zoom Out":
+      - button "Fit View":
+      - button "Toggle Interactivity":
+    - link "React Flow attribution":
+      - /url: https://reactflow.dev?utm_source=attribution
+      - text: React Flow
+- generic "RETEST diagnostics"
+- generic: "{ \"csp\": [], \"opens\": 2, \"unloadCanceled\": 0, \"controllerChanges\": 0, \"downloads\": [ { \"name\": \"RETEST <img src=x onerror=alert(1)>-2026-10-15-09-54.png\", \"type\": \"image/png\", \"bytes\": 132367, \"signature\": [ 137, 80, 78, 71, 13, 10, 26, 10 ] }, { \"name\": \"RETEST <img src=x onerror=alert(1)>-2026-10-15-09-54.pdf\", \"type\": \"application/pdf\", \"bytes\": 89862, \"signature\": [ 37, 80, 68, 70, 45, 49, 46, 55 ] } ], \"databases\": [ \"kakeizu-studio\" ], \"active\": \"activated\", \"controller\": true, \"held\": false }"
+- button "RETEST inspect" [active]
+- button "RETEST hold DB"
+- button "RETEST release DB"
+- button "RETEST check update"

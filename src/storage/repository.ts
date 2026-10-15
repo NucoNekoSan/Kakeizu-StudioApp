@@ -3,7 +3,7 @@ import type { DefinitionsDocumentV1 } from "./defaults";
 import { definitionsCodec } from "./defaults";
 import type { ChartDocumentV1 } from "./chartDocument";
 import { chartDocumentCodec } from "./chartDocument";
-import type { DocumentStore } from "./kv";
+import type { DocumentStore, StoreEntries } from "./kv";
 import { nowIso } from "./ids";
 import { migrateCohabitation, type LegacyStorage } from "./migrateCohabitation";
 import { readDocument } from "./versioned";
@@ -110,6 +110,12 @@ export class Repository {
     entries: readonly (readonly [string, unknown])[],
   ): Promise<void> {
     await this.store.replaceAll(entries);
+  }
+
+  async updateAll(
+    update: (entries: StoreEntries) => StoreEntries,
+  ): Promise<void> {
+    await this.store.updateAll(update);
   }
 
   async clear(): Promise<void> {

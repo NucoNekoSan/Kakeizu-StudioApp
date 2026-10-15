@@ -1,0 +1,23 @@
+{
+  "commit": "7030bb72c958f01d58f16e3392ab3e1414e19738",
+  "node": "24.15.0",
+  "npm": "11.12.1",
+  "openssl": "3.2.1",
+  "vitest": {
+    "files": 48,
+    "tests": 395,
+    "result": "pass"
+  },
+  "lint": "pass",
+  "typecheck": "pass",
+  "format": "pass",
+  "production_build": "pass",
+  "npm_audit": {
+    "all": 0,
+    "production": 0
+  },
+  "signatures": {
+    "verified_packages": 557,
+    "attestations": 158
+  }
+}

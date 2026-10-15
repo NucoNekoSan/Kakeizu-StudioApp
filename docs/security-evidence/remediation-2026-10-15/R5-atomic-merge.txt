@@ -1,0 +1,3 @@
+- heading "修正後の実DB検証（架空データ）" [level=1]
+- button "Run atomic merge checks" [active]
+- generic: "[ { \"case\": \"concurrent independent stores\", \"titles\": [ \"incoming A\", \"incoming B\", \"original\" ] }, { \"case\": \"atomic merge failure in real IndexedDB\", \"error\": \"QuotaExceededError\", \"chartsUnchanged\": true, \"definitionsUnchanged\": true } ]"

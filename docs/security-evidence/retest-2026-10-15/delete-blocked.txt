@@ -1,0 +1,60 @@
+- banner:
+  - link "Kakeizu STUDIO":
+    - /url: /charts
+    - generic: Kakeizu
+    - generic: STUDIO
+  - navigation "メインナビゲーション":
+    - link "相関図":
+      - /url: /charts
+      - text: 相関図
+    - link "表示設定":
+      - /url: /settings
+      - text: 表示設定
+    - link "データ管理":
+      - /url: /data-management
+      - text: データ管理
+  - button "全データをバックアップ":
+  - link "バックアップファイルを読み込む":
+    - /url: /file-import
+  - link "チュートリアル":
+    - /url: /tutorial
+  - link "ヘルプ":
+    - /url: /help
+  - link "コンタクト（新しいタブで開く）":
+    - /url: https://nuconeko-garden.com/contact/?work=kakeizu-studio
+- main:
+  - generic: DATA MANAGEMENT
+  - heading "データ管理" [level=1]
+  - paragraph: 保存方法と、この端末に保存されたデータを管理します。
+  - heading "保存方法" [level=3]
+  - paragraph: "現在の設定: この端末に保存する"
+  - button "この端末に保存する"
+  - button "今回だけ使う（端末に残さない）"
+  - heading "この端末のデータを削除" [level=3]
+  - paragraph: この端末のブラウザに保存されている相関図と表示設定をすべて消します。共有の端末を使い終えたときにお使いください。元に戻すことはできません。
+  - alert: 別のタブでこのアプリが開かれているため、データを削除できませんでした。他のタブを閉じてからもう一度お試しください。
+  - button "この端末のデータをすべて削除":
+    - text: この端末のデータをすべて削除
+  - dialog "本当に削除しますか":
+    - heading "本当に削除しますか" [level=2]
+    - button "閉じる":
+    - alert: 相関図 1 件と、続柄・性別の設定をすべて削除します。元に戻せません。
+    - paragraph: 必要な場合は、削除する前に書き出して保管してください。
+    - button "削除する前に書き出す"
+    - button "キャンセル"
+    - button "すべて削除する" [active]
+- contentinfo:
+  - navigation "このアプリについて":
+    - link "使い方":
+      - /url: /help
+    - link "利用規約":
+      - /url: /terms
+    - link "プライバシーポリシー":
+      - /url: /privacy
+  - paragraph: データはこの端末内にのみ保存されます。
+- generic "RETEST diagnostics"
+- generic: "{ \"csp\": [], \"opens\": 1, \"unloadCanceled\": 0, \"controllerChanges\": 0, \"downloads\": [], \"databases\": [ \"kakeizu-studio\" ], \"active\": \"activated\", \"controller\": true, \"held\": false }"
+- button "RETEST inspect"
+- button "RETEST hold DB"
+- button "RETEST release DB"
+- button "RETEST check update"

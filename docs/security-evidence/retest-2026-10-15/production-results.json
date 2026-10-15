@@ -1,0 +1,152 @@
+{
+  "at": "2026-10-15T18:50:59.554604+09:00",
+  "requests": [
+    {
+      "path": "/",
+      "exit": 0,
+      "status": "HTTP/1.1 200 OK",
+      "type": "text/html",
+      "bytes": 1419,
+      "hsts": "max-age=15552000",
+      "cache": "public, max-age=0, must-revalidate",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+      "is_spa": true
+    },
+    {
+      "path": "/sw.js",
+      "exit": 0,
+      "status": "HTTP/1.1 200 OK",
+      "type": "text/javascript",
+      "bytes": 1963,
+      "hsts": "max-age=15552000",
+      "cache": "no-cache",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+      "is_spa": false
+    },
+    {
+      "path": "/manifest.webmanifest",
+      "exit": 0,
+      "status": "HTTP/1.1 200 OK",
+      "type": "application/manifest+json",
+      "bytes": 640,
+      "hsts": "max-age=15552000",
+      "cache": "no-cache",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+      "is_spa": false
+    },
+    {
+      "path": "/robots.txt",
+      "exit": 0,
+      "status": "HTTP/1.1 200 OK",
+      "type": "text/plain",
+      "bytes": 91,
+      "hsts": "max-age=15552000",
+      "cache": "public, max-age=0, must-revalidate",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+      "is_spa": false
+    },
+    {
+      "path": "/sitemap.xml",
+      "exit": 0,
+      "status": "HTTP/1.1 200 OK",
+      "type": "application/xml",
+      "bytes": 416,
+      "hsts": "max-age=15552000",
+      "cache": "public, max-age=0, must-revalidate",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+      "is_spa": false
+    },
+    {
+      "path": "/no-such-path-retest-20261015",
+      "exit": 0,
+      "status": "HTTP/1.1 200 OK",
+      "type": "text/html",
+      "bytes": 1419,
+      "hsts": "max-age=15552000",
+      "cache": "public, max-age=0, must-revalidate",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+      "is_spa": true
+    },
+    {
+      "path": "/.env",
+      "exit": 0,
+      "status": "HTTP/1.1 200 OK",
+      "type": "text/html",
+      "bytes": 1419,
+      "hsts": "max-age=15552000",
+      "cache": "public, max-age=0, must-revalidate",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+      "is_spa": true
+    },
+    {
+      "path": "/.git/config",
+      "exit": 0,
+      "status": "HTTP/1.1 200 OK",
+      "type": "text/html",
+      "bytes": 1419,
+      "hsts": "max-age=15552000",
+      "cache": "public, max-age=0, must-revalidate",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+      "is_spa": true
+    },
+    {
+      "path": "/wrangler.jsonc",
+      "exit": 0,
+      "status": "HTTP/1.1 200 OK",
+      "type": "text/html",
+      "bytes": 1419,
+      "hsts": "max-age=15552000",
+      "cache": "public, max-age=0, must-revalidate",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+      "is_spa": true
+    },
+    {
+      "path": "/package.json",
+      "exit": 0,
+      "status": "HTTP/1.1 200 OK",
+      "type": "text/html",
+      "bytes": 1419,
+      "hsts": "max-age=15552000",
+      "cache": "public, max-age=0, must-revalidate",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'; worker-src 'self'",
+      "is_spa": true
+    },
+    {
+      "path": "/assets/index-BSaZGWtR.js",
+      "status": "HTTP/1.1 200 OK",
+      "bytes": 398430,
+      "is_spa": false
+    },
+    {
+      "path": "/assets/index-BSaZGWtR.js.map",
+      "status": "HTTP/1.1 200 OK",
+      "bytes": 1419,
+      "is_spa": true
+    }
+  ],
+  "redirect": "HTTP/1.1 308 Permanent Redirect\nDate: Thu, 15 Oct 2026 09:50:59 GMT\nContent-Type: text/html; charset=UTF-8\nConnection: keep-alive\nLocation: https://kakeizu-studioapp.nuconeko-garden.com/charts?retest=20261015\nReport-To: {\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=qkq2V3CvbufzEVoifux5aoTU2bPu%2Fckv%2BN%2FlAryGvnw6XvfoktpVKNOkx0r3qeMH9hofc7JDG0npJI5qQ9%2F3iDJLhDwtlYQ1%2B2ASSk%2BYptlztbtl3pSF5eFkRrMw39Q%2Bn8tuoT50GPyxMdER8ZXyDeBNGY%2FydoPeFeYUZ90bpF1lpCFt\"}]}\nNel: {\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}\nServer: cloudflare\nCF-RAY: a4adec355ea9eb92-NRT\n\n",
+  "tls": [
+    {
+      "version": "tls1",
+      "exit": 1,
+      "result": "Connecting to 2606:4700:3032::6815:69c\n100000000A000000:error:0A00042E:SSL routines:ssl3_read_bytes:tlsv1 alert protocol version:ssl/record/rec_layer_s3.c:865:SSL alert number 70"
+    },
+    {
+      "version": "tls1_1",
+      "exit": 1,
+      "result": "Connecting to 2606:4700:3032::6815:69c\n100000000A000000:error:0A00042E:SSL routines:ssl3_read_bytes:tlsv1 alert protocol version:ssl/record/rec_layer_s3.c:865:SSL alert number 70"
+    },
+    {
+      "version": "tls1_2",
+      "exit": 0,
+      "result": "Connecting to 2606:4700:3032::6815:69c\nCONNECTION ESTABLISHED\nProtocol version: TLSv1.2\nCiphersuite: ECDHE-ECDSA-CHACHA20-POLY1305\nPeer certificate: CN=nuconeko-garden.com\nHash used: SHA256\nSignature type: ECDSA\nVerification: OK\nVerified peername: kakeizu-studioapp.nuconeko-garden.com\nSupported Elliptic Curve Point Formats: uncompressed\nServer Temp Key: X25519, 253 bits\nDONE"
+    },
+    {
+      "version": "tls1_3",
+      "exit": 0,
+      "result": "Connecting to 2606:4700:3032::6815:69c\nCONNECTION ESTABLISHED\nProtocol version: TLSv1.3\nCiphersuite: TLS_AES_256_GCM_SHA384\nPeer certificate: CN=nuconeko-garden.com\nHash used: SHA256\nSignature type: ECDSA\nVerification: OK\nVerified peername: kakeizu-studioapp.nuconeko-garden.com\nServer Temp Key: X25519, 253 bits\nDONE"
+    }
+  ],
+  "local_entry": true,
+  "local_maps": 0
+}

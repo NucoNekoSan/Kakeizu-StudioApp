@@ -43,10 +43,17 @@ describe("保存モード", () => {
     expect(readStorageMode()).toBe("session");
   });
 
-  it("端末に保存する選択が一時選択より優先される", () => {
+  it("このタブで永続保存を選び直すと一時選択を解除する", () => {
     writeStorageMode("session");
     writeStorageMode("persistent");
     expect(readStorageMode()).toBe("persistent");
+    expect(sessionStorage.getItem(STORAGE_MODE_KEY)).toBeNull();
+  });
+
+  it("他タブが永続保存を選んでも、このタブの一時利用を維持する", () => {
+    writeStorageMode("session");
+    localStorage.setItem(STORAGE_MODE_KEY, "persistent");
+    expect(readStorageMode()).toBe("session");
   });
 
   it("選択を解除できる", () => {

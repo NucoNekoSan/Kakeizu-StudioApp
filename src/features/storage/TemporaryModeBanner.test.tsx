@@ -9,6 +9,7 @@ import {
   resetStoreCache,
 } from "../../storage/localApi";
 import { writeStorageMode } from "../../storage/storageMode";
+import { STORAGE_MODE_KEY } from "../../storage/storageMode";
 import TemporaryModeBanner from "./TemporaryModeBanner";
 
 vi.mock("../../storage/kv", async (original) => ({
@@ -48,6 +49,18 @@ const unload = () => {
 };
 
 describe("保存できない場合の警告", () => {
+  it("他タブの永続マーカーが追加されても一時利用の警告と離脱保護を維持する", async () => {
+    writeStorageMode("session");
+    await localApi.createChart("一時データ");
+    const view = renderBanner();
+    await waitFor(() => expect(unload()).toBe(true));
+    localStorage.setItem(STORAGE_MODE_KEY, "persistent");
+    view.unmount();
+    renderBanner();
+    expect(screen.getByRole("status").textContent).toContain("一時利用モード");
+    await waitFor(() => expect(unload()).toBe(true));
+    expect(createIndexedDbStore).not.toHaveBeenCalled();
+  });
   it.each(["initialization", "probe"])(
     "%s 失敗後のクエリ完了で警告を表示し、作成後は離脱を引き止める",
     async (failure) => {

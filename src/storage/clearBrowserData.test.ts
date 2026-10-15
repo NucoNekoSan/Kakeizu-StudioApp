@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError } from "../api/errors";
 import { createIndexedDbStore } from "./kv";
 import { clearBrowserData, DELETE_BLOCKED_TIMEOUT_MS } from "./localApi";
 
@@ -50,17 +49,27 @@ describe("全データ削除", () => {
     expect(localStorage.getItem("kakeizu:cohabitations:abc")).toBeNull();
   });
 
-  it("保留されたままなら成功扱いにせず、データも半端に消さない", async () => {
+  it("保留を通知し、重複要求を抑え、後から成功した時に初めて削除を完了する", async () => {
     vi.useFakeTimers();
-    stubDelete((request) => request.onblocked?.());
-    const done = clearBrowserData();
-    const result = expect(done).rejects.toMatchObject({
-      code: "DATA_DELETE_BLOCKED",
+    let held: FakeRequest;
+    const remove = stubDelete((request) => {
+      held = request;
+      request.onblocked?.();
     });
+    const onBlocked = vi.fn(),
+      settled = vi.fn();
+    const done = clearBrowserData({ onBlocked });
+    void done.then(settled);
+    expect(clearBrowserData()).toBe(done);
     await vi.advanceTimersByTimeAsync(DELETE_BLOCKED_TIMEOUT_MS);
-    await result;
-    await done.catch((error) => expect(error).toBeInstanceOf(ApiError));
+    expect(onBlocked).toHaveBeenCalledTimes(1);
+    expect(settled).not.toHaveBeenCalled();
+    expect(remove).toHaveBeenCalledTimes(1);
     expect(localStorage.getItem("kakeizu:cohabitations:abc")).not.toBeNull();
+    held!.onsuccess?.();
+    await done;
+    expect(settled).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem("kakeizu:cohabitations:abc")).toBeNull();
   });
 
   it("削除に失敗したら失敗として報告する", async () => {

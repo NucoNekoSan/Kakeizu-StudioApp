@@ -1,0 +1,28 @@
+- link "Kakeizu STUDIO":
+  - /url: /charts
+  - generic: Kakeizu
+  - generic: STUDIO
+- heading "この端末での保存方法を選んでください" [level=1]
+- paragraph: 続柄を選んで人物と関係線を描き、家族相関図を作成できます。配置を調整し、画像やPDFで書き出せます。
+- paragraph: 作成した相関図は、この端末のブラウザ内にのみ保存されます。サーバーへ送信されることはありません。
+- button "この端末に保存する 自分専用の端末向け。次に開いたときも続きから作業できます。":
+  - strong: この端末に保存する
+  - text: 自分専用の端末向け。次に開いたときも続きから作業できます。
+- button "今回だけ使う 共有の端末向け。端末には一切保存しません。タブを閉じるか再読み込みすると消えるため、必要な内容はその都度書き出して保管してください。":
+  - strong: 今回だけ使う
+  - text: 共有の端末向け。端末には一切保存しません。タブを閉じるか再読み込みすると消えるため、必要な内容はその都度書き出して保管してください。
+- paragraph: この選択はあとから設定画面で変更できます。
+- navigation:
+  - link "利用規約":
+    - /url: /terms
+  - link "プライバシーポリシー":
+    - /url: /privacy
+  - link "使い方":
+    - /url: /help
+- generic "RETEST diagnostics"
+- generic: "{ \"csp\": [], \"opens\": 0, \"unloadCanceled\": 2, \"controllerChanges\": 1, \"downloads\": [], \"lastUnloadPrevented\": true, \"databases\": [ \"kakeizu-studio\" ], \"active\": \"activated\", \"controller\": true, \"held\": false }"
+- button "RETEST inspect" [active]
+- button "RETEST unload guard"
+- button "RETEST hold DB"
+- button "RETEST release DB"
+- button "RETEST check update"

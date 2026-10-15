@@ -1,0 +1,241 @@
+[
+  {
+    "name": "roundtrip",
+    "result": {
+      "charts": 1,
+      "nodes": 1
+    },
+    "ms": 2
+  },
+  {
+    "name": "title160",
+    "result": {
+      "accepted": true,
+      "nodes": 1,
+      "polluted": false
+    },
+    "ms": 0
+  },
+  {
+    "name": "title161",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 0
+  },
+  {
+    "name": "memo4000",
+    "result": {
+      "accepted": true,
+      "nodes": 1,
+      "polluted": false
+    },
+    "ms": 0
+  },
+  {
+    "name": "memo4001",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 0
+  },
+  {
+    "name": "coord-limit",
+    "result": {
+      "accepted": true,
+      "nodes": 1,
+      "polluted": false
+    },
+    "ms": 0
+  },
+  {
+    "name": "coord-over",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 0
+  },
+  {
+    "name": "nodes-over",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 12
+  },
+  {
+    "name": "charts-over",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 5
+  },
+  {
+    "name": "definitions-over",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルの内容が大きすぎるか、値が範囲外です。",
+    "ms": 1
+  },
+  {
+    "name": "bad-reference",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 1
+  },
+  {
+    "name": "bad-color",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "future-version",
+    "error": "BACKUP_TOO_NEW",
+    "message": "このファイルは新しいバージョンで作成されています。アプリを更新してから読み込んでください。",
+    "ms": 0
+  },
+  {
+    "name": "prototype-key",
+    "result": {
+      "accepted": true,
+      "nodes": 1,
+      "polluted": false
+    },
+    "ms": 1
+  },
+  {
+    "name": "two-node-cycle",
+    "result": {
+      "accepted": true,
+      "nodes": 2,
+      "polluted": false
+    },
+    "ms": 1
+  },
+  {
+    "name": "invalid-replace-preserves-original",
+    "result": {
+      "error": "BACKUP_TOO_LARGE",
+      "originalTitle": "Synthetic retest"
+    },
+    "ms": 1
+  },
+  {
+    "name": "raw-over50MiB",
+    "error": "BACKUP_TOO_LARGE",
+    "message": "バックアップファイルが大きすぎます。",
+    "ms": 0
+  },
+  {
+    "name": "encrypted-roundtrip",
+    "result": {
+      "decryptedMatches": true
+    },
+    "ms": 113
+  },
+  {
+    "name": "ciphertext-tamper",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 109
+  },
+  {
+    "name": "aad-format-tamper",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 112
+  },
+  {
+    "name": "aad-version-tamper",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 113
+  },
+  {
+    "name": "cipher-version-stripped",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 110
+  },
+  {
+    "name": "cipher-version1",
+    "error": "PASSPHRASE_MISMATCH",
+    "message": "パスフレーズが違うか、ファイルが壊れています。",
+    "ms": 111
+  },
+  {
+    "name": "kdf-name-tamper",
+    "result": {
+      "decryptedMatches": true
+    },
+    "ms": 110
+  },
+  {
+    "name": "kdf-hash-tamper",
+    "result": {
+      "decryptedMatches": true
+    },
+    "ms": 110
+  },
+  {
+    "name": "iterations-over",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "iterations-fraction",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "salt-short",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "iv-short",
+    "error": "BACKUP_INVALID",
+    "message": "バックアップファイルの内容が壊れています。",
+    "ms": 0
+  },
+  {
+    "name": "merge-partial-on-quota",
+    "result": {
+      "error": "QuotaExceededError",
+      "chartCount": 2,
+      "titles": ["Synthetic retest", "Original preserved"],
+      "originalStillPresent": "Original preserved"
+    },
+    "ms": 2
+  },
+  {
+    "name": "persistent-to-session",
+    "result": {
+      "mode": "session",
+      "persistentMarker": null
+    },
+    "ms": 0
+  },
+  {
+    "name": "other-tab-persistent-marker",
+    "result": {
+      "sessionMarker": "session",
+      "effectiveMode": "persistent"
+    },
+    "ms": 0
+  },
+  {
+    "name": "application-own1001chart-backup",
+    "result": {
+      "created": 1001,
+      "exported": 1001,
+      "bytes": 346278,
+      "inspectError": "BACKUP_TOO_LARGE"
+    },
+    "ms": 40
+  },
+  {
+    "name": "legacy-actual2million-iterations",
+    "result": {
+      "plain": "{}"
+    },
+    "ms": 473
+  }
+]

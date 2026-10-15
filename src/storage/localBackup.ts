@@ -13,8 +13,12 @@ import {
 import { BACKUP_MAX_BYTES } from "./importLimits";
 import { decryptBackup, encryptBackup, isEncryptedBackup } from "./crypto";
 import { ApiError } from "../api/errors";
+import { definitionsCodec } from "./defaults";
+import { readDocument } from "./versioned";
+import { nowIso } from "./ids";
 import {
   chartKey,
+  isChartKey,
   DEFINITIONS_KEY,
   META_KEY,
   emptyMeta,
@@ -37,6 +41,21 @@ export interface ImportResult {
 
 const APP_VERSION = "3.0.0-dev";
 const DAY = 24 * 60 * 60 * 1000;
+
+/** アプリが出力したファイルも、必ず同じ取り込み検証を通せるようにする。 */
+function validateExport(json: string): void {
+  try {
+    if (new TextEncoder().encode(json).byteLength > BACKUP_MAX_BYTES)
+      throw new Error("size");
+    parseBackup(json);
+  } catch {
+    throw new ApiError(
+      422,
+      "BACKUP_EXPORT_LIMIT",
+      "一括バックアップの上限（相関図1,000件・ファイル50MBなど）を超えているか、保存データに問題があります。一覧または編集画面から図ごとにJSONを書き出してください。図ごとの書き出しもできない場合は表示設定や図の内容を確認してください。",
+    );
+  }
+}
 
 /** 暗号化されていれば復号し、平文の JSON 文字列を返す。 */
 async function unseal(raw: string, passphrase?: string): Promise<string> {
@@ -97,6 +116,7 @@ export function createBackupApi(repository: Repository) {
       ]);
       const backup = buildBackup(definitions, charts, APP_VERSION);
       const plain = JSON.stringify(backup, null, 2);
+      validateExport(plain);
       if (!passphrase)
         return {
           fileName: backupFileName(),
@@ -105,9 +125,16 @@ export function createBackupApi(repository: Repository) {
           encrypted: false,
         };
       const sealed = await encryptBackup(plain, passphrase);
+      const json = JSON.stringify(sealed);
+      if (new TextEncoder().encode(json).byteLength > BACKUP_MAX_BYTES)
+        throw new ApiError(
+          422,
+          "BACKUP_EXPORT_LIMIT",
+          "暗号化後のバックアップが50MBを超えます。図ごとにJSONを書き出すか、図の件数を減らしてからお試しください。",
+        );
       return {
         fileName: backupFileName().replace(/\.json$/, "-encrypted.json"),
-        json: JSON.stringify(sealed),
+        json,
         backup,
         encrypted: true,
       };
@@ -120,9 +147,11 @@ export function createBackupApi(repository: Repository) {
         repository.chart(chartId),
       ]);
       const backup = buildBackup(definitions, [chart], APP_VERSION);
+      const json = JSON.stringify(backup, null, 2);
+      validateExport(json);
       return {
         fileName: chartBackupFileName(chart.title),
-        json: JSON.stringify(backup, null, 2),
+        json,
         backup,
       };
     },
@@ -180,27 +209,44 @@ export function createBackupApi(repository: Repository) {
         };
       }
 
-      const current = await repository.definitions();
-      const merged = mergeDefinitions(current, backup.definitions);
-      await repository.saveDefinitions(merged);
-
-      const taken = new Set(await repository.chartIds());
-      let renamedCharts = 0;
-      for (const chart of backup.charts) {
-        const id = resolveChartId(chart, taken);
-        if (id !== chart.id) renamedCharts += 1;
-        taken.add(id);
-        await repository.saveChart(toChartDocument(chart, id));
-      }
-      return {
-        mode,
-        importedCharts: backup.charts.length,
-        renamedCharts,
-        addedDefinitions:
-          merged.relationships.length -
-          current.relationships.length +
-          (merged.genders.length - current.genders.length),
-      };
+      let result!: ImportResult;
+      await repository.updateAll((entries) => {
+        const next = new Map(entries);
+        const rawDefinitions = next.get(DEFINITIONS_KEY);
+        const current =
+          rawDefinitions === undefined
+            ? definitionsCodec.empty()
+            : readDocument(rawDefinitions, definitionsCodec, "表示設定");
+        const merged = mergeDefinitions(current, backup.definitions);
+        next.set(DEFINITIONS_KEY, merged);
+        const taken = new Set(
+          [...next.keys()]
+            .filter(isChartKey)
+            .map((key) => key.slice("chart:".length)),
+        );
+        let renamedCharts = 0;
+        for (const chart of backup.charts) {
+          const id = resolveChartId(chart, taken);
+          if (id !== chart.id) renamedCharts += 1;
+          taken.add(id);
+          next.set(chartKey(id), {
+            ...toChartDocument(chart, id),
+            updatedAt: nowIso(),
+          });
+        }
+        result = {
+          mode,
+          importedCharts: backup.charts.length,
+          renamedCharts,
+          addedDefinitions:
+            merged.relationships.length -
+            current.relationships.length +
+            merged.genders.length -
+            current.genders.length,
+        };
+        return [...next];
+      });
+      return result;
     },
   };
 }

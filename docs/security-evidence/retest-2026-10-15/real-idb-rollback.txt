@@ -1,0 +1,3 @@
+- heading "ローカルの架空データのみを使う検証" [level=1]
+- button "Run real IndexedDB checks" [active]
+- generic: "[ { \"case\": \"real IndexedDB transaction rollback\", \"error\": \"DataCloneError\", \"sentinel\": { \"text\": \"synthetic before rollback\" } }, { \"case\": \"invalid restore preserves actual DB\", \"error\": \"BACKUP_TOO_LARGE\", \"original\": \"Synthetic restore protection\" } ]"

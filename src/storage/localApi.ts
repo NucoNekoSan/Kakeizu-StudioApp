@@ -11,10 +11,12 @@ import {
 import { Repository } from "./repository";
 import { orderedApi } from "./operationQueue";
 import type { LegacyStorage } from "./migrateCohabitation";
+import { publishStorageReset } from "./storageReset";
 import {
   appStorageKeys,
   readStorageMode,
   STORAGE_MODE_KEY,
+  clearStorageMode,
 } from "./storageMode";
 
 export function createLocalApi(
@@ -84,10 +86,33 @@ export const isStorageFallback = () => didFallback;
  * IndexedDB のデータベースごと削除し、localStorage に残る同居データの
  * 旧キー (kakeizu:cohabitation-*) もまとめて消す。
  */
-export async function clearBrowserData(): Promise<void> {
+let pendingClear: Promise<void> | null = null;
+let deletionBlocked = false;
+const blockedListeners = new Set<() => void>();
+
+export function clearBrowserData(
+  options: { onBlocked?: () => void } = {},
+): Promise<void> {
+  if (options.onBlocked) {
+    blockedListeners.add(options.onBlocked);
+    if (deletionBlocked) queueMicrotask(options.onBlocked);
+  }
+  if (pendingClear) return pendingClear;
   resetStoreCache();
+  pendingClear = finishBrowserDataDeletion().finally(() => {
+    pendingClear = null;
+    deletionBlocked = false;
+    blockedListeners.clear();
+  });
+  return pendingClear;
+}
+
+async function finishBrowserDataDeletion(): Promise<void> {
   // 先に本体を消す。保留や失敗で例外になったとき、一部だけ消えた状態にしない。
-  await deleteDatabase();
+  await deleteDatabase(() => {
+    deletionBlocked = true;
+    for (const listener of blockedListeners) listener();
+  });
   for (const getStorage of [() => localStorage, () => sessionStorage])
     try {
       const storage = getStorage();
@@ -96,12 +121,15 @@ export async function clearBrowserData(): Promise<void> {
     } catch {
       // 消せないキーがあっても続行する
     }
+  clearStorageMode();
+  resetStoreCache();
+  publishStorageReset();
 }
 
-/** 別タブの接続が閉じるのを待つ時間。超えたら削除できていないと報告する。 */
+/** この時間を超えたら保留を通知する。要求自体は完了まで待ち続ける。 */
 export const DELETE_BLOCKED_TIMEOUT_MS = 4000;
 
-const deleteDatabase = () =>
+const deleteDatabase = (onBlocked: () => void) =>
   new Promise<void>((resolve, reject) => {
     if (typeof indexedDB === "undefined") return resolve();
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -122,17 +150,7 @@ const deleteDatabase = () =>
     };
     // 別タブが開いていると削除が保留される。成功扱いにせず、閉じるのを待つ。
     request.onblocked = () => {
-      timer ??= setTimeout(
-        () =>
-          reject(
-            new ApiError(
-              409,
-              "DATA_DELETE_BLOCKED",
-              "別のタブでこのアプリが開かれているため、データを削除できませんでした。他のタブを閉じてからもう一度お試しください。",
-            ),
-          ),
-        DELETE_BLOCKED_TIMEOUT_MS,
-      );
+      timer ??= setTimeout(onBlocked, DELETE_BLOCKED_TIMEOUT_MS);
     };
   });
 

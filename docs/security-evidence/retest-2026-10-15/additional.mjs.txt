@@ -1,0 +1,22 @@
+import {pathToFileURL} from 'node:url';
+import {resolve} from 'node:path';
+import {readFile,writeFile} from 'node:fs/promises';
+const {createServer}=await import(pathToFileURL(resolve('node_modules/vite/dist/node/index.js')));
+const v=await createServer({configFile:false,optimizeDeps:{noDiscovery:true},server:{middlewareMode:true},appType:'custom'});
+const {createLocalApi}=await v.ssrLoadModule('/src/storage/localApi.ts');
+const {createMemoryStore}=await v.ssrLoadModule('/src/storage/kv.ts');
+const {decryptBackup}=await v.ssrLoadModule('/src/storage/crypto.ts');
+const api=createLocalApi(createMemoryStore()),t=performance.now();
+for(let i=0;i<1001;i++)await api.createChart('Synthetic chart '+i);
+const exported=await api.createBackup();let reject;
+try{await api.inspectBackup(exported.json);}catch(e){reject=e.code;}
+const records=[{name:'application-own1001chart-backup',result:{created:1001,exported:exported.backup.charts.length,bytes:Buffer.byteLength(exported.json),inspectError:reject},ms:Math.round(performance.now()-t)}];
+const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+const material=await crypto.subtle.importKey('raw',new TextEncoder().encode('synthetic-passphrase'),'PBKDF2',false,['deriveKey']);
+const key=await crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt,iterations:2000000},material,{name:'AES-GCM',length:256},false,['encrypt']);
+const encrypted=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode('{}'));
+const b64=x=>Buffer.from(x).toString('base64');
+const legacy={format:'kakeizu-studio-backup',version:1,encrypted:true,kdf:{name:'PBKDF2',hash:'SHA-256',iterations:2000000,salt:b64(salt)},iv:b64(iv),ciphertext:b64(encrypted)};
+const start=performance.now();records.push({name:'legacy-actual2million-iterations',result:{plain:await decryptBackup(legacy,'synthetic-passphrase')},ms:Math.round(performance.now()-start)});
+const file='./probe-results.json';
+const prior=JSON.parse(await readFile(file,'utf8'));await writeFile(file,JSON.stringify([...prior,...records],null,2));console.log(JSON.stringify(records,null,2));await v.close();

@@ -52,13 +52,19 @@ const session = () => pick(() => sessionStorage);
 
 /** 未選択なら null。呼び出し側は初回案内を出す。 */
 export function readStorageMode(): StorageMode | null {
-  if (safeRead(local(), STORAGE_MODE_KEY) === "persistent") return "persistent";
+  // このタブの明示的な一時利用を、他タブが変更できる既定値より優先する。
   if (safeRead(session(), STORAGE_MODE_KEY) === "session") return "session";
+  if (safeRead(local(), STORAGE_MODE_KEY) === "persistent") return "persistent";
   return null;
 }
 
 export function writeStorageMode(mode: StorageMode): void {
   if (mode === "persistent") {
+    try {
+      session()?.removeItem(STORAGE_MODE_KEY);
+    } catch {
+      // 読み取りもできない環境ではタブの選択は記憶されない。
+    }
     safeWrite(local(), STORAGE_MODE_KEY, "persistent");
     // 端末に残す選択をしたときだけ、ブラウザの自動削除対象から外すよう要求する。
     void navigator.storage?.persist?.().catch(() => false);

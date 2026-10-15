@@ -1,0 +1,57 @@
+- banner:
+  - link "Kakeizu STUDIO":
+    - /url: /charts
+    - generic: Kakeizu
+    - generic: STUDIO
+  - navigation "メインナビゲーション":
+    - link "相関図":
+      - /url: /charts
+      - text: 相関図
+    - link "表示設定":
+      - /url: /settings
+      - text: 表示設定
+    - link "データ管理":
+      - /url: /data-management
+      - text: データ管理
+  - button "相関図を選択してバックアップ" [disabled]:
+  - link "バックアップファイルを読み込む":
+    - /url: /file-import
+  - link "チュートリアル":
+    - /url: /tutorial
+  - link "ヘルプ":
+    - /url: /help
+  - link "コンタクト（新しいタブで開く）":
+    - /url: https://nuconeko-garden.com/contact/?work=kakeizu-studio
+- main:
+  - generic: MY FAMILY MAPS
+  - heading "相関図" [level=1]
+  - paragraph: 続柄とメモから、家族のつながりを整理します。
+  - button "新しい相関図":
+    - text: 新しい相関図
+  - heading "最初の相関図を作成" [level=2]
+  - paragraph: 続柄と性別を選ぶだけで、ノードと関係線を自動で配置します。
+  - button "相関図を作る":
+    - text: 相関図を作る
+- contentinfo:
+  - navigation "このアプリについて":
+    - link "使い方":
+      - /url: /help
+    - link "利用規約":
+      - /url: /terms
+    - link "プライバシーポリシー":
+      - /url: /privacy
+  - paragraph: データはこの端末内にのみ保存されます。
+- dialog "Kakeizu Studio の使い方を練習しますか？":
+  - banner:
+    - heading "Kakeizu Studio の使い方を練習しますか？" [level=2]
+    - button "閉じる" [active]:
+  - paragraph: 練習用の相関図を使い、作成からバックアップまでを5章・約20分で確認できます。好きな章を選べて、途中で通常使用に戻っても続きから再開できます。
+  - button "後で"
+  - button "今後表示しない"
+  - button "チュートリアルを始める"
+- generic "RETEST diagnostics"
+- generic: "{ \"csp\": [], \"opens\": 1, \"unloadCanceled\": 0, \"controllerChanges\": 0, \"downloads\": [], \"databases\": [ \"kakeizu-studio\" ], \"active\": \"activated\", \"controller\": true, \"held\": false }"
+- button "RETEST inspect"
+- button "RETEST hold DB"
+- button "RETEST release DB"
+- button "RETEST check update"

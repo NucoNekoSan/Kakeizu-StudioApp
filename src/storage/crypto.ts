@@ -181,6 +181,8 @@ export async function decryptBackup(
     throw invalid();
   const iterations: unknown = file.kdf?.iterations;
   if (
+    file.kdf?.name !== "PBKDF2" ||
+    file.kdf?.hash !== "SHA-256" ||
     typeof iterations !== "number" ||
     !Number.isInteger(iterations) ||
     iterations <= 0 ||

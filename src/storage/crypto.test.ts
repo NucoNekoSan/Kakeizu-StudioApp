@@ -174,6 +174,17 @@ describe("暗号化ファイルのヘッダ検証", () => {
 });
 
 describe("ヘッダの認証", () => {
+  it("kdf のアルゴリズム・ハッシュ宣言の書き換えを拒否する", async () => {
+    const sealed = await encryptBackup("{}", "合言葉");
+    for (const kdf of [
+      { ...sealed.kdf, name: "scrypt" },
+      { ...sealed.kdf, hash: "SHA-1" },
+    ])
+      await expectApiError(
+        decryptBackup({ ...sealed, kdf } as never, "合言葉"),
+        "BACKUP_INVALID",
+      );
+  });
   const toB64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));
 
   it("書き出し形式を 2 とし、旧形式を示す印を付けない", async () => {

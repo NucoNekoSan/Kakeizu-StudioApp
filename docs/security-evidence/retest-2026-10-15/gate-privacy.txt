@@ -1,0 +1,46 @@
+- article:
+  - heading "プライバシーポリシー" [level=1]
+  - paragraph: "最終改定日: 2026-09-24"
+  - paragraph: Kakeizu Studio（以下「本アプリ」）は、利用者の個人情報を収集しません。本ポリシーは、本アプリが何を取得せず、何が利用者の端末内に保存されるかを説明するものです。
+  - heading "1. 提供者が取得しない情報" [level=2]
+  - paragraph: 本アプリは、次のいずれも行いません。これは方針であると同時に、技術的な構成上そうなっています。
+  - list:
+    - listitem: 利用者が入力した氏名、続柄、メモその他の内容の取得
+    - listitem: アカウント登録および認証情報の取得
+    - listitem: アクセス解析（解析タグ、計測用スクリプトの設置）
+    - listitem: Cookie による利用者の識別および追跡
+    - listitem: 広告配信および第三者への情報提供
+    - listitem: 外部サービスへの通信（外部フォント、CDN、エラー監視を含む）
+  - heading "2. 端末内に保存される情報" [level=2]
+  - paragraph: 作成した相関図、続柄・性別の表示設定、および保存方法の選択結果は、利用者の端末のブラウザ内（IndexedDB および localStorage）にのみ保存されます。これらがサーバーへ送信されることはありません。
+  - paragraph: 「今回だけ使う」を選んだ場合、データは端末に書き込まれず、メモリ上にのみ保持されます。タブを閉じるか再読み込みすると失われます。
+  - heading "3. 端末内のデータの削除" [level=2]
+  - paragraph: 設定画面の「この端末のデータをすべて削除」から、本アプリが端末に保存した内容をすべて削除できます。ブラウザの「Cookie とサイトデータの削除」によっても削除されます。
+  - paragraph: データは提供者の管理下にないため、削除は利用者自身の操作によって完結します。提供者への削除請求は必要ありません。
+  - heading "4. 書き出したファイルの取り扱い" [level=2]
+  - paragraph: 書き出した画像および JSON ファイルには、入力した氏名やメモがそのまま含まれます。これらのファイルは本アプリの管理外に置かれるため、保存先と共有範囲の管理は利用者が行ってください。
+  - paragraph: JSON の書き出しでは、任意のパスフレーズによる暗号化を選択できます。暗号化した場合、パスフレーズを失うと復元できません。
+  - heading "5. ホスティング事業者が取得する情報" [level=2]
+  - paragraph: 本アプリは静的ファイルとして配信されます。配信基盤である Cloudflare Pages（Cloudflare, Inc.）において、通信の成立に必要な範囲でアクセスログ（IP アドレス、日時、取得ファイル等）が記録されることがあります。これは提供者が閲覧・利用する目的で収集しているものではなく、取り扱いは同社の定めるところによります。
+  - paragraph: なお、本アプリを端末にインストールして利用する場合、起動後の操作で配信基盤への通信は発生しません。
+  - paragraph: お問い合わせは、公式サイトのお問い合わせ窓口をご利用ください。移動先で送信する情報は、同サイトに掲示された方針に従って取り扱われます。
+  - heading "6. 本ポリシーの変更" [level=2]
+  - paragraph: 提供者は、本ポリシーを変更することがあります。変更後のポリシーは、本アプリ上に表示された時点で効力を生じます。
+  - heading "お問い合わせ" [level=2]
+  - paragraph: "提供者: ひでき（ぬこねこの庭 運営）"
+  - paragraph:
+    - text: "連絡先:"
+    - link "https://nuconeko-garden.com/":
+      - /url: https://nuconeko-garden.com/
+  - link "利用規約":
+    - /url: /terms
+  - link "使い方":
+    - /url: /help
+  - link "相関図に戻る":
+    - /url: /charts
+- generic "RETEST diagnostics"
+- generic: "{ \"csp\": [], \"opens\": 0, \"unloadCanceled\": 0, \"controllerChanges\": 0, \"downloads\": [], \"databases\": [], \"active\": \"activated\", \"controller\": true, \"held\": false }"
+- button "RETEST inspect"
+- button "RETEST hold DB"
+- button "RETEST release DB"
+- button "RETEST check update"

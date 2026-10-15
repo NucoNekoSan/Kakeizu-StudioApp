@@ -1,0 +1,43 @@
+- banner:
+  - link "Kakeizu STUDIO":
+    - /url: /charts
+    - generic: Kakeizu
+    - generic: STUDIO
+  - navigation "メインナビゲーション":
+    - link "相関図":
+      - /url: /charts
+      - text: 相関図
+    - link "表示設定":
+      - /url: /settings
+      - text: 表示設定
+    - link "データ管理":
+      - /url: /data-management
+      - text: データ管理
+  - button "全データをバックアップ":
+  - link "バックアップファイルを読み込む":
+    - /url: /file-import
+  - link "チュートリアル":
+    - /url: /tutorial
+  - link "ヘルプ":
+    - /url: /help
+  - link "コンタクト（新しいタブで開く）":
+    - /url: https://nuconeko-garden.com/contact/?work=kakeizu-studio
+- status: 一時利用モードです。このタブを閉じるか再読み込みすると、作成した内容は消えます。
+- main:
+  - alert: 相関図が見つかりません
+- contentinfo:
+  - navigation "このアプリについて":
+    - link "使い方":
+      - /url: /help
+    - link "利用規約":
+      - /url: /terms
+    - link "プライバシーポリシー":
+      - /url: /privacy
+  - paragraph: データはこの端末内にのみ保存されます。
+- generic "RETEST diagnostics"
+- generic: "{ \"csp\": [], \"opens\": 0, \"unloadCanceled\": 0, \"controllerChanges\": 0, \"downloads\": [], \"databases\": [], \"active\": \"activated\", \"controller\": true, \"held\": false }"
+- button "RETEST inspect"
+- button "RETEST unload guard"
+- button "RETEST hold DB"
+- button "RETEST release DB"
+- button "RETEST check update"

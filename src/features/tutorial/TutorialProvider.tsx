@@ -19,6 +19,7 @@ import {
 import { readTutorialProgress, writeTutorialProgress } from "./tutorialStorage";
 import TutorialCoach from "./TutorialCoach";
 import { TutorialContext, type TutorialContextValue } from "./tutorialContext";
+import { invalidateChartCollections } from "../charts/chartQueries";
 
 const promptWasDeferred = () => {
   try {
@@ -88,7 +89,7 @@ export default function TutorialProvider({
       }
     }
     const chart = await api.createChart("練習用相関図");
-    await queryClient.invalidateQueries({ queryKey: ["charts"] });
+    await invalidateChartCollections(queryClient);
     updateProgress((current) => ({
       ...current,
       practiceChartId: chart.id,
@@ -243,7 +244,7 @@ export default function TutorialProvider({
   const deletePracticeChart = useCallback(async () => {
     if (!progress?.practiceChartId) return;
     await api.deleteChart(progress.practiceChartId);
-    await queryClient.invalidateQueries({ queryKey: ["charts"] });
+    await invalidateChartCollections(queryClient);
     updateProgress((current) => ({
       ...current,
       practiceChartId: null,

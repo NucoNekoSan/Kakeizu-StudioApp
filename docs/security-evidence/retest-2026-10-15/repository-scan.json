@@ -1,0 +1,6 @@
+{
+  "tracked_files": 183,
+  "high_confidence_secret_patterns": [],
+  "tracked_local_agent_files": [],
+  "tracked_env_files": [".env.example"]
+}

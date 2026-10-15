@@ -9,6 +9,7 @@ import { saveJsonFile } from "../../storage/fileIo";
 import type { ChartSummary } from "../../types";
 import BackupReminder from "../backup/BackupReminder";
 import { useTutorial } from "../tutorial/tutorialContext";
+import { invalidateChartCollections } from "./chartQueries";
 
 function ChartPreview() {
   return (
@@ -47,15 +48,15 @@ function ChartsPage() {
   const charts = useQuery({ queryKey: ["charts"], queryFn: api.charts });
   const create = useMutation({
     mutationFn: api.createChart,
-    onSuccess: (c) => {
-      qc.invalidateQueries({ queryKey: ["charts"] });
+    onSuccess: async (c) => {
+      await invalidateChartCollections(qc);
       tutorial.reportAction("chart-created", c.id);
       nav(`/charts/${c.id}`);
     },
   });
   const remove = useMutation({
     mutationFn: api.deleteChart,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["charts"] }),
+    onSuccess: () => invalidateChartCollections(qc),
   });
 
   const cancelBackupSelection = useCallback(() => {
@@ -130,7 +131,7 @@ function ChartsPage() {
             if (typeof value.title !== "string" || !value.title.trim())
               throw new Error("title is required");
             const result = await api.createChart(value.title.trim());
-            await qc.invalidateQueries({ queryKey: ["charts"] });
+            await invalidateChartCollections(qc);
             return { id: result.id, title: result.title };
           },
         },

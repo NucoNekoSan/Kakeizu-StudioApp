@@ -3,6 +3,7 @@ import { ApiError } from "../api/errors";
 import { BACKUP_FORMAT, backupFileName } from "./backupModel";
 import { createMemoryStore, type DocumentStore } from "./kv";
 import { createLocalApi } from "./localApi";
+import type { ChartDocumentV1 } from "./chartDocument";
 
 const seedChart = async (
   api: ReturnType<typeof createLocalApi>,
@@ -53,6 +54,22 @@ const expectApiError = async (promise: Promise<unknown>, code: string) => {
 };
 
 describe("エクスポート", () => {
+  it("1,000件までは読み戻せる全件出力を許可し、1,001件では個別出力を案内する", async () => {
+    const { api, store, chartId } = await setup();
+    const chart = (await store.get<ChartDocumentV1>(`chart:${chartId}`))!;
+    for (let i = 0; i < 999; i++) {
+      const id = i.toString(16).padStart(32, "0");
+      await store.set(`chart:${id}`, { ...chart, id });
+    }
+    const all = await api.createBackup();
+    expect((await api.inspectBackup(all.json)).chartCount).toBe(1000);
+    const id = "f".repeat(32);
+    await store.set(`chart:${id}`, { ...chart, id });
+    await expectApiError(api.createBackup(), "BACKUP_EXPORT_LIMIT");
+    const single = await api.createChartBackup(chartId);
+    expect((await api.inspectBackup(single.json)).chartCount).toBe(1);
+    expect(await api.charts()).toHaveLength(1001);
+  });
   it("書き出したファイルに識別子とバージョンを含める", async () => {
     const { api } = await setup();
     const { backup } = await api.createBackup();
@@ -306,6 +323,37 @@ describe("外枠設定のバックアップ", () => {
 });
 
 describe("validated atomic restore", () => {
+  it("追加インポートの最後の書き込み準備で失敗しても定義・図を一切変更しない", async () => {
+    const { api, store } = await setup();
+    const incoming = createLocalApi(createMemoryStore());
+    await incoming.createChart("追加1");
+    await incoming.createChart("追加2");
+    const { json } = await incoming.createBackup();
+    const before = await api.createBackup();
+    const updateAll = store.updateAll.bind(store);
+    store.updateAll = (update) =>
+      updateAll((entries) => {
+        const next = update(entries);
+        return [
+          ...next,
+          [
+            "synthetic-failure",
+            {
+              toJSON() {
+                throw new Error("quota simulation");
+              },
+            },
+          ],
+        ];
+      });
+    await expect(api.importBackup(json, "merge")).rejects.toThrow(
+      "quota simulation",
+    );
+    const after = await api.createBackup();
+    expect(after.backup.charts).toEqual(before.backup.charts);
+    expect(after.backup.definitions).toEqual(before.backup.definitions);
+  });
+
   it.each([
     "definition",
     "node",

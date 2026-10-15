@@ -8,6 +8,8 @@
  *
  * 同居情報も含むすべての相関図データを、このストア経由で保存する。
  */
+export type StoreEntries = readonly (readonly [string, unknown])[];
+
 export interface DocumentStore {
   get<T>(key: string): Promise<T | undefined>;
   set(key: string, value: unknown): Promise<void>;
@@ -15,6 +17,8 @@ export interface DocumentStore {
   keys(): Promise<string[]>;
   clear(): Promise<void>;
   replaceAll(entries: readonly (readonly [string, unknown])[]): Promise<void>;
+  /** 同じreadwriteトランザクションで現状を読み、変更を全件まとめて確定する。 */
+  updateAll(update: (entries: StoreEntries) => StoreEntries): Promise<void>;
 }
 
 export const DATABASE_NAME = "kakeizu-studio";
@@ -44,6 +48,16 @@ export function createMemoryStore(
     },
     async replaceAll(entries) {
       const next = entries.map(
+        ([key, value]) => [key, JSON.stringify(value ?? null)] as const,
+      );
+      map.clear();
+      for (const [key, value] of next) map.set(key, value);
+    },
+    async updateAll(update) {
+      const entries = [...map].map(
+        ([key, raw]) => [key, JSON.parse(raw)] as const,
+      );
+      const next = update(entries).map(
         ([key, value]) => [key, JSON.stringify(value ?? null)] as const,
       );
       map.clear();
@@ -111,6 +125,26 @@ export async function createIndexedDbStore(): Promise<DocumentStore> {
     del: (key) => del(key, store),
     keys: async () => (await keys(store)).map(String),
     clear: () => clear(store),
+    updateAll: (update) =>
+      store("readwrite", async (target) => {
+        const completion = promisifyRequest(target.transaction);
+        try {
+          const [keys, values] = await Promise.all([
+            promisifyRequest(target.getAllKeys()),
+            promisifyRequest(target.getAll()),
+          ]);
+          const next = update(
+            keys.map((key, index) => [String(key), values[index]] as const),
+          );
+          target.clear();
+          for (const [key, value] of next) target.put(value, key);
+        } catch (error) {
+          target.transaction.abort();
+          await completion.catch(() => undefined);
+          throw error;
+        }
+        await completion;
+      }),
     replaceAll: (entries) =>
       store("readwrite", (target) => {
         const completion = promisifyRequest(target.transaction);

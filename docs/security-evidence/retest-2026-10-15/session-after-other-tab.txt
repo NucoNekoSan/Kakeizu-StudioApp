@@ -1,0 +1,50 @@
+- banner:
+  - link "Kakeizu STUDIO":
+    - /url: /charts
+    - generic: Kakeizu
+    - generic: STUDIO
+  - navigation "メインナビゲーション":
+    - link "相関図":
+      - /url: /charts
+      - text: 相関図
+    - link "表示設定":
+      - /url: /settings
+      - text: 表示設定
+    - link "データ管理":
+      - /url: /data-management
+      - text: データ管理
+  - button "相関図を選択してバックアップ":
+  - link "バックアップファイルを読み込む":
+    - /url: /file-import
+  - link "チュートリアル":
+    - /url: /tutorial
+  - link "ヘルプ":
+    - /url: /help
+  - link "コンタクト（新しいタブで開く）":
+    - /url: https://nuconeko-garden.com/contact/?work=kakeizu-studio
+- main:
+  - generic: MY FAMILY MAPS
+  - heading "相関図" [level=1]
+  - paragraph: 続柄とメモから、家族のつながりを整理します。
+  - button "新しい相関図":
+    - text: 新しい相関図
+  - article:
+    - button "Volatile cross-tab fixtureを開く"
+    - heading "Volatile cross-tab fixture" [level=2]
+    - paragraph: 0 ノード · 2026/10/15 18:56
+    - button "Volatile cross-tab fixtureを削除":
+- contentinfo:
+  - navigation "このアプリについて":
+    - link "使い方":
+      - /url: /help
+    - link "利用規約":
+      - /url: /terms
+    - link "プライバシーポリシー":
+      - /url: /privacy
+  - paragraph: データはこの端末内にのみ保存されます。
+- generic "RETEST diagnostics"
+- generic: "{ \"csp\": [], \"opens\": 0, \"unloadCanceled\": 0, \"controllerChanges\": 1, \"downloads\": [], \"databases\": [ \"kakeizu-studio\" ], \"active\": \"activated\", \"controller\": true, \"held\": false }"
+- button "RETEST inspect"
+- button "RETEST hold DB"
+- button "RETEST release DB"
+- button "RETEST check update"
